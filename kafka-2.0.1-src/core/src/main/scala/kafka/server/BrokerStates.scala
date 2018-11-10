@@ -21,6 +21,7 @@ package kafka.server
  * Broker states are the possible state that a kafka broker can be in.
  * A broker should be only in one state at a time.
  * The expected state transition with the following defined states is:
+  * 经纪人状态是卡夫卡经纪人可以参与的可能状态。经纪人应该每次只能处于一种状态。具有以下定义状态的期望状态转换为：
  *
  *                +-----------+
  *                |Not Running|
@@ -55,6 +56,11 @@ package kafka.server
  *
  * Custom states is also allowed for cases where there are custom kafka states for different scenarios.
  */
+/**
+  * 其修饰的trait，class只能在当前文件里面被继承
+  * 用sealed修饰这样做的目的是告诉scala编译器在检查模式匹配的时候，
+  * 让scala知道这些case的所有情况，scala就能够在编译的时候进行检查，看你写的代码是否有没有漏掉什么没case到，减少编程的错误。
+  */
 sealed trait BrokerStates { def state: Byte }
 case object NotRunning extends BrokerStates { val state: Byte = 0 }
 case object Starting extends BrokerStates { val state: Byte = 1 }

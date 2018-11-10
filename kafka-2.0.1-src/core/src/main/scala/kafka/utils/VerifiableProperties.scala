@@ -23,8 +23,12 @@ import scala.collection._
 import kafka.message.{CompressionCodec, NoCompressionCodec}
 import scala.collection.JavaConverters._
 
-
+/**
+  * 校验输入参数
+  * @param props
+  */
 class VerifiableProperties(val props: Properties) extends Logging {
+  //可变hashset，泛型是string
   private val referenceSet = mutable.HashSet[String]()
 
   def this() = this(new Properties)
@@ -76,6 +80,7 @@ class VerifiableProperties(val props: Properties) extends Logging {
         getProperty(name).toInt
       else
         default
+    //require方法如果第一个参数不成立则抛出异常
     require(v >= range._1 && v <= range._2, name + " has value " + v + " which is not in the range " + range + ".")
     v
   }

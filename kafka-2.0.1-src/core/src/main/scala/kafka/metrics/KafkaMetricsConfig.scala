@@ -22,16 +22,20 @@ package kafka.metrics
 
 import kafka.utils.{VerifiableProperties, CoreUtils}
 
+/**
+  * 指定reporter类，以逗号分隔的reporter类，比如kafka.metrics.KafkaCSVMetricsReporter，这些类必须要在claasspath中指定。另外指定了度量的轮询间隔，默认是10秒
+  * @param props
+  */
 class KafkaMetricsConfig(props: VerifiableProperties) {
 
   /**
    * Comma-separated list of reporter types. These classes should be on the
-   * classpath and will be instantiated at run-time.
+   * classpath and will be instantiated at run-time.以逗号分隔的列表reporters类型。这些类应该在类路径上，并且将在运行时实例化
    */
-  val reporters = CoreUtils.parseCsvList(props.getString("kafka.metrics.reporters", ""))
+  val reporters: Seq[String]  = CoreUtils.parseCsvList(props.getString("kafka.metrics.reporters", ""))
 
   /**
-   * The metrics polling interval (in seconds).
+   * The metrics polling interval (in seconds). 请求轮询间隔时间
    */
   val pollingIntervalSecs = props.getInt("kafka.metrics.polling.interval.secs", 10)
 }

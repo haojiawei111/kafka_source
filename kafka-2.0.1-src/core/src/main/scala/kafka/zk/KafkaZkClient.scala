@@ -1333,10 +1333,12 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
 
   /**
     * Create the cluster Id. If the cluster id already exists, return the current cluster id.
+    * 创建群集ID。如果群集ID已经存在，返回当前群集ID。 这个可以防止脑裂
     * @return  cluster id
     */
   def createOrGetClusterId(proposedClusterId: String): String = {
     try {
+      ///cluster/id 存储集群ID
       createRecursive(ClusterIdZNode.path, ClusterIdZNode.toJson(proposedClusterId))
       proposedClusterId
     } catch {
@@ -1364,14 +1366,28 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   }
 
   /**
+    * 第一次连接zookeeper，创建顶级目录
     * Pre-create top level paths in ZK if needed.
     */
   def createTopLevelPaths(): Unit = {
+//      /consumers
+//      /brokers/ids
+//      /brokers/topics
+//      /config/changes
+//      /admin/delete_topics
+//      /brokers/seqid
+//      /isr_change_notification
+//      /latest_producer_id_block
+//      /log_dir_event_notification
+//      /config/topics
+//      /config/clients
+//      /config/users
+//      /config/brokers
     ZkData.PersistentZkPaths.foreach(makeSurePersistentPathExists(_))
-  }
+   }
 
   /**
-    * Make sure a persistent path exists in ZK.
+    * Make sure a persistent path exists in ZK. 在zookeeper确保存在持久路径
     * @param path
     */
   def makeSurePersistentPathExists(path: String): Unit = {
@@ -1431,6 +1447,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
     def createRecursive0(path: String): Unit = {
       val createRequest = CreateRequest(path, null, acls(path), CreateMode.PERSISTENT)
       var createResponse = retryRequestUntilConnected(createRequest)
+      //Code.NONODE 节点不存在
       if (createResponse.resultCode == Code.NONODE) {
         createRecursive0(parentPath(path))
         createResponse = retryRequestUntilConnected(createRequest)

@@ -40,6 +40,7 @@ public final class Java {
     public static final boolean IS_JAVA9_COMPATIBLE = VERSION.isJava9Compatible();
 
     public static boolean isIbmJdk() {
+        //Java 运行时环境供应商
         return System.getProperty("java.vendor").contains("IBM");
     }
 

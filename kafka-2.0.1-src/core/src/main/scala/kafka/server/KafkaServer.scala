@@ -56,7 +56,7 @@ object KafkaServer {
   // Copy the subset of properties that are relevant to Logs
   // I'm listing out individual properties here since the names are slightly different in each Config class...
   private[kafka] def copyKafkaConfigToLog(kafkaConfig: KafkaConfig): java.util.Map[String, Object] = {
-    val logProps = new util.HashMap[String, Object]()
+    val logProps: util.HashMap[String, Object] = new util.HashMap[String, Object]()
     logProps.put(LogConfig.SegmentBytesProp, kafkaConfig.logSegmentBytes)
     logProps.put(LogConfig.SegmentMsProp, kafkaConfig.logRollTimeMillis)
     logProps.put(LogConfig.SegmentJitterMsProp, kafkaConfig.logRollTimeJitterMillis)
@@ -193,19 +193,19 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
 
       if (startupComplete.get)
         return
-
+      //compareAndSet 如果当前值 == 预期值，则以原子方式将该值设置为给定的更新值
       val canStartup = isStartingUp.compareAndSet(false, true)
       if (canStartup) {
         brokerState.newState(Starting)
 
-        /* setup zookeeper */
+        /* setup zookeeper 初始化zookeeper 这里的time是系统时间，不是连接超时时间 */
         initZkClient(time)
 
-        /* Get or create cluster_id */
+        /* Get or create cluster_id 创建集群ID，并注册到Kafka中 */
         _clusterId = getOrGenerateClusterId(zkClient)
         info(s"Cluster ID = $clusterId")
 
-        /* generate brokerId */
+        /* generate brokerId 生成broker ID*/
         val (brokerId, initialOfflineDirs) = getBrokerIdAndOfflineDirs
         config.brokerId = brokerId
         logContext = new LogContext(s"[KafkaServer id=${config.brokerId}] ")
@@ -215,7 +215,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         // applied after DynamicConfigManager starts.
         config.dynamicConfig.initialize(zkClient)
 
-        /* start scheduler */
+        /* start scheduler 开启调度线程 */
         kafkaScheduler = new KafkaScheduler(config.backgroundThreads)
         kafkaScheduler.startup()
 
@@ -249,11 +249,12 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         socketServer = new SocketServer(config, metrics, time, credentialProvider)
         socketServer.startup(startupProcessors = false)
 
-        /* start replica manager */
+        /* start replica manager 开启复制数据块管理 */
         replicaManager = createReplicaManager(isShuttingDown)
         replicaManager.startup()
 
         val brokerInfo = createBrokerInfo
+        //把brokerInfo发送到zookeeper的/brokers/ids/目录下创建brokerID节点并写入brokerInfo
         zkClient.registerBrokerInZk(brokerInfo)
 
         // Now that the broker id is successfully registered, checkpoint it
@@ -325,6 +326,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     catch {
       case e: Throwable =>
         fatal("Fatal error during KafkaServer startup. Prepare to shutdown", e)
+        //启动失败，isStartingUp设置为false，这是钩子函数还没有注册，手动执行shutdown方法
         isStartingUp.set(false)
         shutdown()
         throw e
@@ -341,6 +343,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     new ReplicaManager(config, metrics, time, zkClient, kafkaScheduler, logManager, isShuttingDown, quotaManagers,
       brokerTopicStats, metadataCache, logDirFailureChannel)
 
+  /**
+    * 初始化zookeeper连接
+    * 在zookeeper中创建顶级目录
+    * @param time
+    */
   private def initZkClient(time: Time): Unit = {
     info(s"Connecting to zookeeper on ${config.zkConnect}")
 
@@ -353,7 +360,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
       if (chrootIndex > 0) Some(config.zkConnect.substring(chrootIndex))
       else None
     }
-
+    //zookeeper可以设置Acl进行访问控制
     val secureAclsEnabled = config.zkEnableSecureAcls
     val isZkSecurityEnabled = JaasUtils.isZkSecurityEnabled()
 
@@ -373,6 +380,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     _zkClient.createTopLevelPaths()
   }
 
+  /**
+    * 创建集群ID并写入zookeeper中，如果zookeeper存在集群ID，则返回现有集群ID
+    * @param zkClient
+    * @return
+    */
   private def getOrGenerateClusterId(zkClient: KafkaZkClient): String = {
     zkClient.getClusterId.getOrElse(zkClient.createOrGetClusterId(CoreUtils.generateUuidAsBase64))
   }
@@ -637,6 +649,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
   }
 
   /**
+    * private var shutdownLatch = new CountDownLatch(1)  调用await()方法的线程会被挂起，它会等待直到count值为0才继续执行
    * After calling shutdown(), use this API to wait until the shutdown is complete
    */
   def awaitShutdown(): Unit = shutdownLatch.await()
@@ -663,9 +676,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     val brokerIdSet = mutable.HashSet[Int]()
     val offlineDirs = mutable.ArrayBuffer.empty[String]
 
+    //这里log文件可以设置多个
     for (logDir <- config.logDirs) {
       try {
         val brokerMetadataOpt = brokerMetadataCheckpoints(logDir).read()
+        //这里brokerMetadata管理broker元数据，然后把brokerId添加进brokerIdSet中进行管理
         brokerMetadataOpt.foreach { brokerMetadata =>
           brokerIdSet.add(brokerMetadata.brokerId)
         }
@@ -685,6 +700,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         s"Configured broker.id $brokerId doesn't match stored broker.id ${brokerIdSet.last} in meta.properties. " +
         s"If you moved your data, make sure your configured broker.id matches. " +
         s"If you intend to create a new broker, you should remove all data in your data directories (log.dirs).")
+      //config.brokerIdGenerationEnable  brokerId自动生成
     else if (brokerIdSet.isEmpty && brokerId < 0 && config.brokerIdGenerationEnable) // generate a new brokerId from Zookeeper
       brokerId = generateBrokerId
     else if (brokerIdSet.size == 1) // pick broker.id from meta.properties

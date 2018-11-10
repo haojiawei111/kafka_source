@@ -52,6 +52,7 @@ trait KafkaMetricsReporter {
 }
 
 object KafkaMetricsReporter {
+  //标识该reporter是否已经启动
   val ReporterStarted: AtomicBoolean = new AtomicBoolean(false)
   private var reporters: ArrayBuffer[KafkaMetricsReporter] = null
 
@@ -70,6 +71,7 @@ object KafkaMetricsReporter {
               case _ =>
             }
           })
+          //启动完成 设置ReporterStarted标准为true
           ReporterStarted.set(true)
         }
       }

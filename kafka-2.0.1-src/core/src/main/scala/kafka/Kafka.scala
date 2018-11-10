@@ -27,6 +27,9 @@ import org.apache.kafka.common.utils.{Java, LoggingSignalHandler, OperatingSyste
 
 import scala.collection.JavaConverters._
 
+/**
+  * kafka brokerserverr入口main方法
+  */
 object Kafka extends Logging {
 
   def getPropsFromArgs(args: Array[String]): Properties = {
@@ -55,11 +58,12 @@ object Kafka extends Logging {
 
   def main(args: Array[String]): Unit = {
     try {
-      val serverProps = getPropsFromArgs(args)
+      val serverProps: Properties = getPropsFromArgs(args)
       val kafkaServerStartable = KafkaServerStartable.fromProps(serverProps)
 
       try {
         if (!OperatingSystem.IS_WINDOWS && !Java.isIbmJdk)
+          //不是WINDOWS环境并且Java运行时环境供应商不是IBM的时候执行日志处理器注册
           new LoggingSignalHandler().register()
       } catch {
         case e: ReflectiveOperationException =>

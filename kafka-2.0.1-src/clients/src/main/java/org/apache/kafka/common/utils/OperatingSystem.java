@@ -28,6 +28,7 @@ public final class OperatingSystem {
     public static final boolean IS_WINDOWS;
 
     static {
+        //是否是windows环境
         NAME = System.getProperty("os.name").toLowerCase(Locale.ROOT);
         IS_WINDOWS = NAME.startsWith("windows");
     }

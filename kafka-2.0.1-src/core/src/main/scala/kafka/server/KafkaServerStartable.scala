@@ -22,13 +22,25 @@ import java.util.Properties
 import kafka.metrics.KafkaMetricsReporter
 import kafka.utils.{Exit, Logging, VerifiableProperties}
 
+/**
+  * kafka brokerserverr启动主要类
+  */
 object KafkaServerStartable {
   def fromProps(serverProps: Properties) = {
     val reporters = KafkaMetricsReporter.startReporters(new VerifiableProperties(serverProps))
+    //KafkaConfig.fromProps创建KafkaConfig对象，初始化配置参数
     new KafkaServerStartable(KafkaConfig.fromProps(serverProps, false), reporters)
   }
 }
 
+/**
+  * 创建KafkaServer（new KafkaServer(staticServerConfig, kafkaMetricsReporters = reporters)）对象，
+  * 调用KafkaServer的startup、shutdown、awaitShutdown、brokerState.newState(newState)方法
+  * brokerState.newState(newState)可以改变broker状态
+  *
+  * @param staticServerConfig
+  * @param reporters
+  */
 class KafkaServerStartable(val staticServerConfig: KafkaConfig, reporters: Seq[KafkaMetricsReporter]) extends Logging {
   private val server = new KafkaServer(staticServerConfig, kafkaMetricsReporters = reporters)
 
@@ -44,6 +56,9 @@ class KafkaServerStartable(val staticServerConfig: KafkaConfig, reporters: Seq[K
     }
   }
 
+  /**
+    * 注册的钩子函数，jvm退出的时候执行
+    */
   def shutdown() {
     try server.shutdown()
     catch {
@@ -55,7 +70,7 @@ class KafkaServerStartable(val staticServerConfig: KafkaConfig, reporters: Seq[K
   }
 
   /**
-   * Allow setting broker state from the startable.
+   * Allow setting broker state from the startable. 允许从启动设置broker的状态
    * This is needed when a custom kafka server startable want to emit new states that it introduces.
    */
   def setServerState(newState: Byte) {
