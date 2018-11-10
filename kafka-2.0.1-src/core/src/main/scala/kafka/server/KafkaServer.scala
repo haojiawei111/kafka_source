@@ -201,7 +201,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         /* setup zookeeper 初始化zookeeper 这里的time是系统时间，不是连接超时时间 */
         initZkClient(time)
 
-        /* Get or create cluster_id 创建集群ID，并注册到Kafka中 */
+        /* Get or create cluster_id 创建集群ID，并注册到zookeeper中 */
         _clusterId = getOrGenerateClusterId(zkClient)
         info(s"Cluster ID = $clusterId")
 
@@ -212,10 +212,10 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         this.logIdent = logContext.logPrefix
 
         // initialize dynamic broker configs from ZooKeeper. Any updates made after this will be
-        // applied after DynamicConfigManager starts.
+        // applied after DynamicConfigManager starts. 从kafka初始化broker动态配置，在DynamicConfigManager启动之后进行的任何更新都将被应用
         config.dynamicConfig.initialize(zkClient)
 
-        /* start scheduler 开启调度线程 */
+        /* start scheduler 开启调度线程 backgroundThreads为后台线程数background.threads*/
         kafkaScheduler = new KafkaScheduler(config.backgroundThreads)
         kafkaScheduler.startup()
 
