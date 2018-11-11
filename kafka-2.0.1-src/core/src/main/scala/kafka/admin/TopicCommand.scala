@@ -50,7 +50,7 @@ object TopicCommand extends Logging {
     val actions = Seq(opts.createOpt, opts.listOpt, opts.alterOpt, opts.describeOpt, opts.deleteOpt).count(opts.options.has _)
     if(actions != 1)
       CommandLineUtils.printUsageAndDie(opts.parser, "Command must include exactly one action: --list, --describe, --create, --alter or --delete")
-
+    //校验参数
     opts.checkArgs()
 
     val time = Time.SYSTEM
@@ -81,7 +81,14 @@ object TopicCommand extends Logging {
 
   }
 
+  /**
+    *
+    * @param zkClient
+    * @param opts
+    * @return
+    */
   private def getTopics(zkClient: KafkaZkClient, opts: TopicCommandOptions): Seq[String] = {
+    //拿到所有的topic
     val allTopics = zkClient.getAllTopicsInCluster.sorted
     if (opts.options.has(opts.topicOpt)) {
       val topicsSpec = opts.options.valueOf(opts.topicOpt)
@@ -91,6 +98,11 @@ object TopicCommand extends Logging {
       allTopics
   }
 
+  /**
+    * --create
+    * @param zkClient
+    * @param opts
+    */
   def createTopic(zkClient: KafkaZkClient, opts: TopicCommandOptions) {
     val topic = opts.options.valueOf(opts.topicOpt)
     val configs = parseTopicConfigsToBeAdded(opts)
@@ -115,7 +127,11 @@ object TopicCommand extends Logging {
       case e: TopicExistsException => if (!ifNotExists) throw e
     }
   }
-
+  /**
+    * --alter
+    * @param zkClient
+    * @param opts
+    */
   def alterTopic(zkClient: KafkaZkClient, opts: TopicCommandOptions) {
     val topics = getTopics(zkClient, opts)
     val ifExists = opts.options.has(opts.ifExistsOpt)
@@ -164,6 +180,11 @@ object TopicCommand extends Logging {
     }
   }
 
+  /**
+    * --list
+    * @param zkClient
+    * @param opts
+    */
   def listTopics(zkClient: KafkaZkClient, opts: TopicCommandOptions) {
     val topics = getTopics(zkClient, opts)
     for(topic <- topics) {
@@ -175,6 +196,11 @@ object TopicCommand extends Logging {
     }
   }
 
+  /**
+    * --delete
+    * @param zkClient
+    * @param opts
+    */
   def deleteTopic(zkClient: KafkaZkClient, opts: TopicCommandOptions) {
     val topics = getTopics(zkClient, opts)
     val ifExists = opts.options.has(opts.ifExistsOpt)
@@ -202,6 +228,11 @@ object TopicCommand extends Logging {
     }
   }
 
+  /**
+    * --describe
+    * @param zkClient
+    * @param opts
+    */
   def describeTopic(zkClient: KafkaZkClient, opts: TopicCommandOptions) {
     val topics = getTopics(zkClient, opts)
     val reportUnderReplicatedPartitions = opts.options.has(opts.reportUnderReplicatedPartitionsOpt)

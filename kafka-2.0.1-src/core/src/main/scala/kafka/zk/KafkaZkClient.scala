@@ -344,11 +344,11 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
     getChildren(BrokerIdsZNode.path).map(_.toInt).sorted
 
   /**
-   * Gets all topics in the cluster.
+   * Gets all topics in the cluster.  /brokers/topics
    * @return sequence of topics in the cluster.
    */
   def getAllTopicsInCluster: Seq[String] = {
-    val getChildrenResponse = retryRequestUntilConnected(GetChildrenRequest(TopicsZNode.path))
+    val getChildrenResponse: GetChildrenResponse = retryRequestUntilConnected(GetChildrenRequest(TopicsZNode.path))
     getChildrenResponse.resultCode match {
       case Code.OK => getChildrenResponse.children
       case Code.NONODE => Seq.empty
