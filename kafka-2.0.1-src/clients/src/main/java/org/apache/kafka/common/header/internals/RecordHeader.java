@@ -29,6 +29,7 @@ public class RecordHeader implements Header {
     private byte[] value;
 
     public RecordHeader(String key, byte[] value) {
+        //判断key是否为空
         Objects.requireNonNull(key, "Null header keys are not permitted");
         this.key = key;
         this.value = value;

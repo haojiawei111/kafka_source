@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * (when they are garbage-collected without having been release()ed).
  * THIS IMPLEMENTATION IS A DEVELOPMENT/DEBUGGING AID AND IS NOT MEANT PRO PRODUCTION USE.
  */
-public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements AutoCloseable {
+public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements AutoCloseable {//AutoCloseable 自动释放资源
 
     private final ReferenceQueue<ByteBuffer> garbageCollectedBuffers = new ReferenceQueue<>();
     //serves 2 purposes - 1st it maintains the ref objects reachable (which is a requirement for them

@@ -26,6 +26,9 @@ public class LRUCache<K, V> implements Cache<K, V> {
     private final LinkedHashMap<K, V> cache;
 
     public LRUCache(final int maxSize) {
+        //LinkedHashMap有一个removeEldestEntry(Map.Entry eldest)方法，
+        // 通过覆盖这个方法，加入一定的条件，满足条件返回true。当put进新的值方法返回true时，便移除该map中最老的键和值。
+        //当参数accessOrder为true时，即会按照访问顺序排序，最近访问的放在最前，最早访问的放在后面
         cache = new LinkedHashMap<K, V>(16, .75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {

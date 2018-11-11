@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
 
 
 /**
- * A common memory pool interface for non-blocking pools.
+ * A common memory pool interface for non-blocking pools.用于非阻塞池的公共内存池接口。
  * Every buffer returned from {@link #tryAllocate(int)} must always be {@link #release(ByteBuffer) released}.
  */
 public interface MemoryPool {
@@ -34,7 +34,7 @@ public interface MemoryPool {
         public void release(ByteBuffer previouslyAllocated) {
             //nop
         }
-
+        //long MAX_VALUE = 0x7fffffffffffffffL
         @Override
         public long size() {
             return Long.MAX_VALUE;
@@ -57,7 +57,7 @@ public interface MemoryPool {
     };
 
     /**
-     * Tries to acquire a ByteBuffer of the specified size
+     * Tries to acquire a ByteBuffer of the specified size 试图获取指定大小的ByteBuffer。
      * @param sizeBytes size required
      * @return a ByteBuffer (which later needs to be release()ed), or null if no memory available.
      *         the buffer will be of the exact size requested, even if backed by a larger chunk of memory

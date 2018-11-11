@@ -62,6 +62,9 @@ public class SimpleMemoryPool implements MemoryPool {
         //in strict mode we will only allocate memory if we have at least the size required.
         //in non-strict mode we will allocate memory if we have _any_ memory available (so available memory
         //can dip into the negative and max allocated memory would be sizeBytes + maxSingleAllocationSize)
+        //在严格模式下，我们只会在至少需要大小时才分配内存。
+        //在非严格模式下，如果我们有_._memory可用，我们将分配内存
+        //（因此可用内存可以取负值，而最大分配内存将是sizeBytes+maxSingleAllocationSize）
         long threshold = strict ? sizeBytes : 1;
         while ((available = availableMemory.get()) >= threshold) {
             success = availableMemory.compareAndSet(available, available - sizeBytes);
@@ -80,7 +83,7 @@ public class SimpleMemoryPool implements MemoryPool {
         }
 
         ByteBuffer allocated = ByteBuffer.allocate(sizeBytes);
-        bufferToBeReturned(allocated);
+        bufferToBeReturned(allocated); //打日志，显示分配了多大
         return allocated;
     }
 
@@ -111,12 +114,12 @@ public class SimpleMemoryPool implements MemoryPool {
 
     //allows subclasses to do their own bookkeeping (and validation) _before_ memory is returned to client code.
     protected void bufferToBeReturned(ByteBuffer justAllocated) {
-        log.trace("allocated buffer of size {} ", justAllocated.capacity());
+        log.trace("allocated buffer of size {} ", justAllocated.capacity());//分配的大小
     }
 
     //allows subclasses to do their own bookkeeping (and validation) _before_ memory is marked as reclaimed.
     protected void bufferToBeReleased(ByteBuffer justReleased) {
-        log.trace("released buffer of size {}", justReleased.capacity());
+        log.trace("released buffer of size {}", justReleased.capacity());//justReleased.capacity() buffer的大小 释放的大小
     }
 
     @Override
@@ -129,7 +132,7 @@ public class SimpleMemoryPool implements MemoryPool {
         if (oomTimeSensor != null) {
             long startOfDrySpell = startOfNoMemPeriod.getAndSet(0);
             if (startOfDrySpell != 0) {
-                //how long were we refusing allocation requests for
+                //how long were we refusing allocation requests for 我们拒绝分配请求的时间有多长？
                 oomTimeSensor.record((System.nanoTime() - startOfDrySpell) / 1000000.0); //fractional (double) millis
             }
         }

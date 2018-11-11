@@ -21,7 +21,7 @@ import java.util.Map;
 import org.apache.kafka.common.header.Headers;
 
 /**
- * A Serializer that has access to the headers associated with the record.
+ * A Serializer that has access to the headers associated with the record.  这个是用来扩展的序列化接口
  *
  * Prefer {@link Serializer} if access to the headers is not required. Once Kafka drops support for Java 7, the
  * {@code serialize()} method introduced by this interface will be added to Serializer with a default implementation

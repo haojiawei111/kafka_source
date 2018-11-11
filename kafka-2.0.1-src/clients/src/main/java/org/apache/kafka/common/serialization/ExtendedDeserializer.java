@@ -21,7 +21,7 @@ import java.util.Map;
 import org.apache.kafka.common.header.Headers;
 
 /**
- * A Deserializer that has access to the headers associated with the record.
+ * A Deserializer that has access to the headers associated with the record. 这个是用来扩展的反序列化接口
  *
  * Prefer {@link Deserializer} if access to the headers is not required. Once Kafka drops support for Java 7, the
  * {@code deserialize()} method introduced by this interface will be added to Deserializer with a default implementation
