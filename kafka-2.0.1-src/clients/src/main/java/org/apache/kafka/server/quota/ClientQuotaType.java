@@ -17,10 +17,11 @@
 package org.apache.kafka.server.quota;
 
 /**
- * Types of quotas that may be configured on brokers for client requests.
+ * Quota：配额
+ * Types of quotas that may be configured on brokers for client requests. 客户端请求中可配置在brokers上的配额类型
  */
 public enum ClientQuotaType {
-    PRODUCE,
-    FETCH,
-    REQUEST
+    PRODUCE,  //生产
+    FETCH,  //取
+    REQUEST  //请求
 }

@@ -22,6 +22,7 @@ import java.nio.ByteBuffer
 import kafka.utils.VerifiableProperties
 
 /**
+  * 解码器
  * A decoder is a method of turning byte arrays into objects.
  * An implementation is required to provide a constructor that
  * takes a VerifiableProperties instance.

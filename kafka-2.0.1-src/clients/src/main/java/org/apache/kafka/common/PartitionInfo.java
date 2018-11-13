@@ -17,7 +17,7 @@
 package org.apache.kafka.common;
 
 /**
- * This is used to describe per-partition state in the MetadataResponse.
+ * This is used to describe per-partition state in the MetadataResponse.这用于描述元数据响应中的每个分区状态。
  */
 public class PartitionInfo {
 
@@ -79,7 +79,7 @@ public class PartitionInfo {
     }
 
     /**
-     * The subset of the replicas that are offline
+     * The subset of the replicas that are offline  落后排除出isr列表的replicas
      */
     public Node[] offlineReplicas() {
         return offlineReplicas;

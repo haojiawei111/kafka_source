@@ -24,17 +24,18 @@ import java.util.List;
 
 /**
  * A class containing leadership, replicas and ISR information for a topic partition.
+ * 包含主题分区的leader、副本和ISR信息的类。
  */
 public class TopicPartitionInfo {
     private final int partition;
     private final Node leader;
-    private final List<Node> replicas;
-    private final List<Node> isr;
+    private final List<Node> replicas;  //副本列表
+    private final List<Node> isr;     //isr列表
 
     /**
      * Create an instance of this class with the provided parameters.
      *
-     * @param partition the partition id
+     * @param partition the partition id 分区ID
      * @param leader the leader of the partition or {@link Node#noNode()} if there is none.
      * @param replicas the replicas of the partition in the same order as the replica assignment (the preferred replica
      *                 is the head of the list)

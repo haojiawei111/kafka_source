@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An interface for enforcing a policy on create topics requests.
+ * An interface for enforcing a policy on create topics requests.一种用于执行关于创建主题请求的策略的接口。
  *
  * Common use cases are requiring that the replication factor, min.insync.replicas and/or retention settings for a
  * topic are within an allowable range.
@@ -55,6 +55,10 @@ public interface CreateTopicPolicy extends Configurable, AutoCloseable {
          * @param replicationFactor the replication factor for the topic or null if replicaAssignments is set.
          * @param replicasAssignments replica assignments or null if numPartitions and replicationFactor is set. The
          *                            assignment is a map from partition id to replica (broker) ids.
+         *                            如果设置了数字分区和复制因子，则复制分配或NULL。分配是从分区ID到副本（代理）ID的映射
+         * 。/kafka-topics.sh --zookeeper ZooKeeperHost:ZooKeeperPort --create --topic TopicName
+         *                            --replica-assignment id0:id1:id2,id3:id4:id5,id6:id7:id8
+         * 其中，“id0:id1:id2,id3:id4:id5,id6:id7:id8”表示Topic TopicName一共有3个Partition（以“,”分隔），每个Partition均有3个Replica（以“:”分隔）
          * @param configs topic configs for the topic to be created, not including broker defaults. Broker configs are
          *                passed via the {@code configure()} method of the policy implementation.
          */

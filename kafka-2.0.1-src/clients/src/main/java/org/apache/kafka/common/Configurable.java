@@ -20,11 +20,12 @@ import java.util.Map;
 
 /**
  * A Mix-in style interface for classes that are instantiated by reflection and need to take configuration parameters
+ * 一种混合类型的接口，用于由反射实例化并需要配置参数的类。
  */
 public interface Configurable {
 
     /**
-     * Configure this class with the given key-value pairs
+     * Configure this class with the given key-value pairs 使用给定的键值对配置该类
      */
     void configure(Map<String, ?> configs);
 

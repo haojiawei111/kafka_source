@@ -52,6 +52,9 @@ import scala.util.control.ControlThrowable
  *   1 Acceptor thread that handles new connections
  *   Acceptor has N Processor threads that each have their own selector and read requests from sockets
  *   M Handler threads that handle requests and produce responses back to the processor threads for writing.
+  *   处理新连接的1接受器线程
+  *   接收器有N个处理器线程，每个线程都有自己的选择器和来自套接字的读取请求。
+  *   M Handler线程处理请求并生成响应到处理器线程进行写入。
  */
 class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time, val credentialProvider: CredentialProvider) extends Logging with KafkaMetricsGroup {
 

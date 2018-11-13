@@ -21,6 +21,9 @@ import java.util.Locale
 
 import kafka.common.UnknownCodecException
 
+/**
+  * 压缩编译码器
+  */
 object CompressionCodec {
   def getCompressionCodec(codec: Int): CompressionCodec = {
     codec match {

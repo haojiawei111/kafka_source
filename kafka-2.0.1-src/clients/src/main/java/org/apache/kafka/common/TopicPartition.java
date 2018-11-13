@@ -19,7 +19,7 @@ package org.apache.kafka.common;
 import java.io.Serializable;
 
 /**
- * A topic name and partition number
+ * A topic name and partition number   javabean
  */
 public final class TopicPartition implements Serializable {
 

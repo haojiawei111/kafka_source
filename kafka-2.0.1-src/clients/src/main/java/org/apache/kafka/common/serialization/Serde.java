@@ -29,6 +29,7 @@ import java.util.Map;
 public interface Serde<T> extends Closeable {
 
     /**
+     * 配置这个类，它将配置serializer和deserializer。
      * Configure this class, which will configure the underlying serializer and deserializer.
      *
      * @param configs configs in key/value pairs

@@ -21,6 +21,7 @@ import java.io.Serializable;
 
 /**
  * The topic name, partition number and the brokerId of the replica
+ * 副本的主题名称、分区号和brokerId
  */
 public final class TopicPartitionReplica implements Serializable {
 

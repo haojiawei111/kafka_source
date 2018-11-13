@@ -84,6 +84,11 @@ public class RecordHeaders implements Headers {
         return this;
     }
 
+    /**
+     * 从后往前搜索key
+     * @param key to get the last header for.
+     * @return
+     */
     @Override
     public Header lastHeader(String key) {
         checkKey(key);
@@ -96,6 +101,11 @@ public class RecordHeaders implements Headers {
         return null;
     }
 
+    /**
+     * 返回一个迭代器，这个迭代器有个makeNext方法
+     * @param key to return the headers for.
+     * @return
+     */
     @Override
     public Iterable<Header> headers(final String key) {
         checkKey(key);
@@ -125,13 +135,21 @@ public class RecordHeaders implements Headers {
             throw new IllegalArgumentException("key cannot be null.");
         }
     }
-    
+
+    /**
+     * 判断是否是只读
+     */
     private void canWrite() {
         if (isReadOnly) {
             throw new IllegalStateException("RecordHeaders has been closed.");
         }
     }
 
+    /**
+     *  这里如果做移除操作，先判断是否是只读
+     * @param original 迭代器
+     * @return   迭代器
+     */
     private Iterator<Header> closeAware(final Iterator<Header> original) {
         return new Iterator<Header>() {
             @Override

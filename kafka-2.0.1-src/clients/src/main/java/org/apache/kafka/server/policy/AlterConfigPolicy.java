@@ -23,7 +23,7 @@ import org.apache.kafka.common.errors.PolicyViolationException;
 import java.util.Map;
 
 /**
- * An interface for enforcing a policy on alter configs requests.
+ * An interface for enforcing a policy on alter configs requests.一个接口，用于执行ALTION CONTROS请求的策略。
  *
  * Common use cases are requiring that the replication factor, min.insync.replicas and/or retention settings for a
  * topic remain within an allowable range.
@@ -35,7 +35,7 @@ import java.util.Map;
 public interface AlterConfigPolicy extends Configurable, AutoCloseable {
 
     /**
-     * Class containing the create request parameters.
+     * Class containing the create request parameters. 封装请求参数
      */
     class RequestMetadata {
 

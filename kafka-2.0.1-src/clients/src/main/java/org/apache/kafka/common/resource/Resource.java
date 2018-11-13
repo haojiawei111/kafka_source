@@ -32,12 +32,12 @@ public class Resource {
     private final String name;
 
     /**
-     * The name of the CLUSTER resource.
+     * The name of the CLUSTER resource.群集资源的名称。
      */
     public final static String CLUSTER_NAME = "kafka-cluster";
 
     /**
-     * A resource representing the whole cluster.
+     * A resource representing the whole cluster.表示整个集群的资源。
      */
     public final static Resource CLUSTER = new Resource(ResourceType.CLUSTER, CLUSTER_NAME);
 

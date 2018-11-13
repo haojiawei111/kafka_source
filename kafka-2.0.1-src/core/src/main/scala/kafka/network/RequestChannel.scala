@@ -36,6 +36,9 @@ import scala.collection.mutable
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
+/**
+  * 请求处理队列
+  */
 object RequestChannel extends Logging {
   private val requestLogger = Logger("kafka.request.logger")
 

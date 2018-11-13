@@ -40,6 +40,9 @@ import org.apache.zookeeper.KeeperException.{Code, NodeExistsException}
 import scala.collection._
 import scala.util.Try
 
+/**
+  * 负责kafak集群管理，分区Leader选举、管理等
+  */
 object KafkaController extends Logging {
   val InitialControllerEpoch = 1
   val InitialControllerEpochZkVersion = 1

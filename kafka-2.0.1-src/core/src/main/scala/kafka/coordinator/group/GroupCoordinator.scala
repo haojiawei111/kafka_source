@@ -36,6 +36,7 @@ import scala.collection.{Map, Seq, immutable}
 import scala.math.max
 
 /**
+  * 主要是消费者的连接建立,offset的更新操作。管理所有的consumer与对应的group的信息。Group的metadata的信息，consumer对应的offset的更新操作。
  * GroupCoordinator handles general group membership and offset management.
  *
  * Each Kafka server instantiates a coordinator which is responsible for a set of

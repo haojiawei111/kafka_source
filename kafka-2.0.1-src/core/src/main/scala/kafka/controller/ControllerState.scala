@@ -29,6 +29,9 @@ sealed abstract class ControllerState {
   protected def hasRateAndTimeMetric: Boolean = true
 }
 
+/**
+  * 14个状态的样例类
+  */
 object ControllerState {
 
   // Note: `rateAndTimeMetricName` is based on the case object name by default. Changing a name is a breaking change

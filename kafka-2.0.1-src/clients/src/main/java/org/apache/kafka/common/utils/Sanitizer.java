@@ -47,7 +47,7 @@ public class Sanitizer {
 
     /**
      * Sanitize `name` for safe use as JMX metric name as well as ZooKeeper node name
-     * using URL-encoding.
+     * using URL-encoding.使用URL编码将“名称”安全地用作JMX度量名以及动物园管理员节点名称。 改变编码格式
      */
     public static String sanitize(String name) {
         String encoded = "";
