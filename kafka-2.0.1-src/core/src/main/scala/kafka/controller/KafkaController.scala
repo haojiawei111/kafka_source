@@ -68,7 +68,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
   val controllerContext = new ControllerContext
 
   // have a separate scheduler for the controller to be able to start and stop independently of the kafka server
-  // visible for testing
+  // visible for testing 有一个单独的调度器，使控制器能够独立于卡夫卡服务器进行启动和停止测试。
   private[controller] val kafkaScheduler = new KafkaScheduler(1)
 
   // visible for testing
@@ -143,7 +143,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
   )
 
   /**
-   * Returns true if this broker is the current controller.
+   * Returns true if this broker is the current controller.如果此broker是当前控制器，则返回true。
    */
   def isActive: Boolean = activeControllerId == config.brokerId
 
@@ -169,6 +169,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
         expireEvent.waitUntilProcessingStarted()
       }
     })
+    //Startu是个样例类
     eventManager.put(Startup)
     eventManager.start()
   }
@@ -1540,6 +1541,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
 }
 
 class BrokerChangeHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChildChangeHandler {
+  //   /brokers/ids
   override val path: String = BrokerIdsZNode.path
 
   override def handleChildChange(): Unit = {
@@ -1548,6 +1550,7 @@ class BrokerChangeHandler(controller: KafkaController, eventManager: ControllerE
 }
 
 class BrokerModificationsHandler(controller: KafkaController, eventManager: ControllerEventManager, brokerId: Int) extends ZNodeChangeHandler {
+  //   /brokers/ids/$brokerId
   override val path: String = BrokerIdZNode.path(brokerId)
 
   override def handleDataChange(): Unit = {
@@ -1556,12 +1559,14 @@ class BrokerModificationsHandler(controller: KafkaController, eventManager: Cont
 }
 
 class TopicChangeHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChildChangeHandler {
+  //  /brokers/topics
   override val path: String = TopicsZNode.path
 
   override def handleChildChange(): Unit = eventManager.put(controller.TopicChange)
 }
 
 class LogDirEventNotificationHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChildChangeHandler {
+  //  /log_dir_event_notification
   override val path: String = LogDirEventNotificationZNode.path
 
   override def handleChildChange(): Unit = eventManager.put(controller.LogDirEventNotification)
@@ -1572,18 +1577,21 @@ object LogDirEventNotificationHandler {
 }
 
 class PartitionModificationsHandler(controller: KafkaController, eventManager: ControllerEventManager, topic: String) extends ZNodeChangeHandler {
+  //  /brokers/topics/$topic
   override val path: String = TopicZNode.path(topic)
 
   override def handleDataChange(): Unit = eventManager.put(controller.PartitionModifications(topic))
 }
 
 class TopicDeletionHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChildChangeHandler {
+  //         /admin/delete_topics
   override val path: String = DeleteTopicsZNode.path
 
   override def handleChildChange(): Unit = eventManager.put(controller.TopicDeletion)
 }
 
 class PartitionReassignmentHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChangeHandler {
+  //      /admin/reassign_partitions
   override val path: String = ReassignPartitionsZNode.path
 
   // Note that the event is also enqueued when the znode is deleted, but we do it explicitly instead of relying on
@@ -1593,12 +1601,14 @@ class PartitionReassignmentHandler(controller: KafkaController, eventManager: Co
 }
 
 class PartitionReassignmentIsrChangeHandler(controller: KafkaController, eventManager: ControllerEventManager, partition: TopicPartition) extends ZNodeChangeHandler {
+  //          /brokers/topics/${topic}/partitions/${partition}(这里是分区号)/state
   override val path: String = TopicPartitionStateZNode.path(partition)
 
   override def handleDataChange(): Unit = eventManager.put(controller.PartitionReassignmentIsrChange(partition))
 }
 
 class IsrChangeNotificationHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChildChangeHandler {
+  //    /isr_change_notification
   override val path: String = IsrChangeNotificationZNode.path
 
   override def handleChildChange(): Unit = eventManager.put(controller.IsrChangeNotification)
@@ -1609,12 +1619,14 @@ object IsrChangeNotificationHandler {
 }
 
 class PreferredReplicaElectionHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChangeHandler {
+  //      /admin/preferred_replica_election
   override val path: String = PreferredReplicaElectionZNode.path
 
   override def handleCreation(): Unit = eventManager.put(controller.PreferredReplicaLeaderElection)
 }
 
 class ControllerChangeHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChangeHandler {
+  //          /controller
   override val path: String = ControllerZNode.path
 
   override def handleCreation(): Unit = eventManager.put(controller.ControllerChange)

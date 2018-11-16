@@ -40,7 +40,7 @@ public class KeyValueStoreBuilder<K, V> extends AbstractStoreBuilder<K, V, KeyVa
     @Override
     public KeyValueStore<K, V> build() {
         return new MeteredKeyValueBytesStore<>(maybeWrapCaching(maybeWrapLogging(storeSupplier.get())),
-                                               storeSupplier.metricsScope(),
+                                               storeSupplier.metricsScope(), //                return "in-memory-state";
                                                time,
                                                keySerde,
                                                valueSerde);
