@@ -196,16 +196,17 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
       //compareAndSet 如果当前值 == 预期值，则以原子方式将该值设置为给定的更新值
       val canStartup = isStartingUp.compareAndSet(false, true)
       if (canStartup) {
+        //设置brokerState的状态为Starting的状态.
         brokerState.newState(Starting)
 
         /* setup zookeeper 初始化zookeeper 这里的time是系统时间，不是连接超时时间 */
         initZkClient(time)
 
-        /* Get or create cluster_id 创建集群ID，并注册到zookeeper中 */
+        /* Get or create cluster_id 从zk中得到集群ID或者创建集群ID，并注册到zookeeper中 */
         _clusterId = getOrGenerateClusterId(zkClient)
         info(s"Cluster ID = $clusterId")
 
-        /* generate brokerId 生成broker ID*/
+        /* generate brokerId 从配置文件中得到broker ID*/
         val (brokerId, initialOfflineDirs) = getBrokerIdAndOfflineDirs
         config.brokerId = brokerId
         logContext = new LogContext(s"[KafkaServer id=${config.brokerId}] ")
@@ -216,16 +217,18 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         config.dynamicConfig.initialize(zkClient)
 
         /* start scheduler 开启调度线程 backgroundThreads为后台线程数background.threads*/
+        //启动kafka的调度器,这个KafkaScheduler的实例生成时需要得到background.threads配置的值,默认是10个,用于配置后台线程池的个数
         kafkaScheduler = new KafkaScheduler(config.backgroundThreads)
         kafkaScheduler.startup()
 
-        /* create and configure metrics */
+        /* create and configure metrics 创建和配置监控*/
         val reporters = new util.ArrayList[MetricsReporter]
+        //private val jmxPrefix: String = "kafka.server" 组装监控请求
         reporters.add(new JmxReporter(jmxPrefix))
         val metricConfig = KafkaServer.metricConfig(config)
         metrics = new Metrics(metricConfig, reporters, time, true)
 
-        /* register broker metrics */
+        /* register broker metrics 向监控注册topic信息 */
         _brokerTopicStats = new BrokerTopicStats
 
         quotaManagers = QuotaFactory.instantiate(config, metrics, time, threadNamePrefix.getOrElse(""))
@@ -233,10 +236,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
 
         logDirFailureChannel = new LogDirFailureChannel(config.logDirs.size)
 
-        /* start log manager */
+        /* start log manager 初始化创建并启动LogManager的实例 */
         logManager = LogManager(config, initialOfflineDirs, zkClient, brokerState, kafkaScheduler, time, brokerTopicStats, logDirFailureChannel)
         logManager.startup()
 
+        //元数据缓存
         metadataCache = new MetadataCache(config.brokerId)
         // Enable delegation token cache for all SCRAM mechanisms to simplify dynamic update.
         // This keeps the cache up-to-date if new SCRAM mechanisms are enabled dynamically.
@@ -281,6 +285,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         transactionCoordinator.startup()
 
         /* Get the authorizer and initialize it if one is specified.*/
+        //根据authorizer.class.name配置项配置的Authorizer的实现类,生成一个用于认证的实例,用于对用户的操作进行认证.这个默认为不认证.
         authorizer = Option(config.authorizerClassName).filter(_.nonEmpty).map { authorizerClassName =>
           val authZ = CoreUtils.createObject[Authorizer](authorizerClassName)
           authZ.configure(config.originals())
@@ -292,6 +297,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
             KafkaServer.MIN_INCREMENTAL_FETCH_SESSION_EVICTION_MS))
 
         /* start processing requests */
+        //生成用于对外对外提供服务的KafkaApis实例,并设置当前的broker的状态为运行状态.
         apis = new KafkaApis(socketServer.requestChannel, replicaManager, adminManager, groupCoordinator, transactionCoordinator,
           kafkaController, zkClient, config.brokerId, config, metadataCache, metrics, authorizer, quotaManagers,
           fetchManager, brokerTopicStats, clusterId, time, tokenManager)
@@ -305,6 +311,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         config.dynamicConfig.addReconfigurables(this)
 
         /* start dynamic config manager */
+        //生成动态配置修改的处理管理,主要是topic修改与client端配置的修改,并把已经存在的clientid对应的配置进行修改.
         dynamicConfigHandlers = Map[String, ConfigHandler](ConfigType.Topic -> new TopicConfigHandler(logManager, config, quotaManagers),
                                                            ConfigType.Client -> new ClientIdConfigHandler(quotaManagers),
                                                            ConfigType.User -> new UserConfigHandler(quotaManagers, credentialProvider),

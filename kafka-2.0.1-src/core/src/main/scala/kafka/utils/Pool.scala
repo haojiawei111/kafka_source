@@ -24,6 +24,16 @@ import org.apache.kafka.common.KafkaException
 import collection.mutable
 import collection.JavaConverters._
 
+/**
+  * 功能：简单的并发对象池
+  * 实现对ConcurrentHashMap的封裝
+  * getAndMaybePut实现小技巧, 使用了double check技术, 在有值的情况下降低锁的开销;
+  *
+  * @param valueFactory
+  * @tparam K
+  * @tparam V
+  */
+
 class Pool[K,V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
 
   private val pool: ConcurrentMap[K, V] = new ConcurrentHashMap[K, V]

@@ -94,6 +94,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
   def startup(startupProcessors: Boolean = true) {
     this.synchronized {
       connectionQuotas = new ConnectionQuotas(maxConnectionsPerIp, maxConnectionsPerIpOverrides)
+      //根据配置的若干endpoint创建相应的Acceptor及相关联的一组Processor线程
       createAcceptorAndProcessors(config.numNetworkThreads, config.listeners)
       if (startupProcessors) {
         startProcessors()
@@ -144,13 +145,14 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
     val sendBufferSize = config.socketSendBufferBytes
     val recvBufferSize = config.socketReceiveBufferBytes
     val brokerId = config.brokerId
-
+    //根据配置的若干endpoint创建相应的Acceptor及相关联的一组Processor线程
     endpoints.foreach { endpoint =>
       val listenerName = endpoint.listenerName
       val securityProtocol = endpoint.securityProtocol
 
       val acceptor = new Acceptor(endpoint, sendBufferSize, recvBufferSize, brokerId, connectionQuotas)
       addProcessors(acceptor, endpoint, processorsPerListener)
+      //启动Acceptor线程
       KafkaThread.nonDaemon(s"kafka-socket-acceptor-$listenerName-$securityProtocol-${endpoint.port}", acceptor).start()
       acceptor.awaitStartup()
       acceptors.put(endpoint, acceptor)
@@ -323,6 +325,8 @@ private[kafka] abstract class AbstractServerThread(connectionQuotas: ConnectionQ
 }
 
 /**
+  * Kafka网络层头号马仔:Acceptor类
+  * Acceptor 作两件事: 创建一堆worker线程；接受新连接, 将新的socket指派给某个 worker线程;
  * Thread that accepts and configures new connections. There is one of these per endpoint.
  */
 private[kafka] class Acceptor(val endPoint: EndPoint,
@@ -332,6 +336,7 @@ private[kafka] class Acceptor(val endPoint: EndPoint,
                               connectionQuotas: ConnectionQuotas) extends AbstractServerThread(connectionQuotas) with KafkaMetricsGroup {
 
   private val nioSelector = NSelector.open()
+  //创建监听ServerSocket:
   val serverChannel = openServerSocket(endPoint.host, endPoint.port)
   private val processors = new ArrayBuffer[Processor]()
   private val processorsStarted = new AtomicBoolean

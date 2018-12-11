@@ -59,6 +59,9 @@ trait Scheduler {
  * A scheduler based on java.util.concurrent.ScheduledThreadPoolExecutor
  * 
  * It has a pool of kafka-scheduler- threads that do the actual work.
+  *
+  * 接收需周期性执行的任务和延迟作务的添加
+  * 使用一组thread
  * 
  * @param threads The number of threads in the thread pool
  * @param threadNamePrefix The name to use for scheduler threads. This prefix will have a number appended to it.
