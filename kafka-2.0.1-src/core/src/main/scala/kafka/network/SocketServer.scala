@@ -133,7 +133,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
    * was invoked with `startupProcessors=false`.
    */
   def startProcessors(): Unit = synchronized {
-    acceptors.values.asScala.foreach { _.startProcessors() }
+    acceptors.values.asScala.foreach { _.star  tProcessors() }
     info(s"Started processors for ${acceptors.size} acceptors")
   }
 
