@@ -68,6 +68,7 @@ import java.util.Map;
 import static org.apache.kafka.common.record.RecordBatch.NO_TIMESTAMP;
 
 /**
+ * kafka发送线程
  * The background thread that handles the sending of produce requests to the Kafka cluster. This thread makes metadata
  * requests to renew its view of the cluster and then sends produce requests to the appropriate nodes.
  */
@@ -158,6 +159,13 @@ public class Sender implements Runnable {
         log.debug("Starting Kafka producer I/O thread.");
 
         // main loop, runs until close is called
+
+
+//        用 running 作标志，在其为 true 的情况下，执行线程工作；
+//        当被置为 false 时，结束循环，进行线程关闭工作；
+//        若不是强制关闭，则先将缓存器中未发送的消息发出再关闭；
+//        若为强制关闭，则直接放弃发送未发送的数据。
+
         while (running) {
             try {
                 run(time.milliseconds());
@@ -171,6 +179,7 @@ public class Sender implements Runnable {
         // okay we stopped accepting requests but there may still be
         // requests in the accumulator or waiting for acknowledgment,
         // wait until these are completed.
+        //如果不是强制关闭，且消息累加器accumulator尚有消息未发送，或者客户端client尚有正在处理（in-flight）的请求
         while (!forceClose && (this.accumulator.hasUndrained() || this.client.inFlightRequestCount() > 0)) {
             try {
                 run(time.milliseconds());
@@ -178,12 +187,14 @@ public class Sender implements Runnable {
                 log.error("Uncaught error in kafka producer I/O thread: ", e);
             }
         }
+        // 如果是强制关闭，调用消息累加器accumulator的abortIncompleteBatches()，放弃未处理完的请求
         if (forceClose) {
             // We need to fail all the incomplete batches and wake up the threads waiting on
             // the futures.
             log.debug("Aborting incomplete batches due to forced shutdown");
             this.accumulator.abortIncompleteBatches();
         }
+        // 关闭客户端
         try {
             this.client.close();
         } catch (Exception e) {
@@ -400,6 +411,7 @@ public class Sender implements Runnable {
 
     /**
      * Closes the sender without sending out any pending messages.
+     * 关闭而不发送任何待处理的消息。
      */
     public void forceClose() {
         this.forceClose = true;
