@@ -347,7 +347,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 logContext = new LogContext(String.format("[Producer clientId=%s, transactionalId=%s] ", clientId, transactionalId));
             log = logContext.logger(KafkaProducer.class);
             log.trace("Starting the Kafka producer");
-
+            //得到一个不变的映射
             Map<String, String> metricTags = Collections.singletonMap("client-id", clientId);
             MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ProducerConfig.METRICS_NUM_SAMPLES_CONFIG))
                     .timeWindow(config.getLong(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS)
@@ -356,6 +356,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             List<MetricsReporter> reporters = config.getConfiguredInstances(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG,
                     MetricsReporter.class);
             reporters.add(new JmxReporter(JMX_PREFIX));
+            //获取更新元数据
             this.metrics = new Metrics(metricConfig, reporters, time);
             ProducerMetrics metricsRegistry = new ProducerMetrics(this.metrics);
             this.partitioner = config.getConfiguredInstance(ProducerConfig.PARTITIONER_CLASS_CONFIG, Partitioner.class);
@@ -378,11 +379,14 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             }
 
             // load interceptors and make sure they get clientId
+            //加载拦截器并确保它们获得clientId
+            //interceptor.classes 拦截器
             userProvidedConfigs.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
             List<ProducerInterceptor<K, V>> interceptorList = (List) (new ProducerConfig(userProvidedConfigs, false)).getConfiguredInstances(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
                     ProducerInterceptor.class);
             this.interceptors = new ProducerInterceptors<>(interceptorList);
             ClusterResourceListeners clusterResourceListeners = configureClusterResourceListeners(keySerializer, valueSerializer, interceptorList, reporters);
+
             this.maxRequestSize = config.getInt(ProducerConfig.MAX_REQUEST_SIZE_CONFIG);
             this.totalMemorySize = config.getLong(ProducerConfig.BUFFER_MEMORY_CONFIG);
             this.compressionType = CompressionType.forName(config.getString(ProducerConfig.COMPRESSION_TYPE_CONFIG));
@@ -415,6 +419,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             }
             ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(config);
             Sensor throttleTimeSensor = Sender.throttleTimeSensor(metricsRegistry.senderMetrics);
+            // 创建客户端
             KafkaClient client = kafkaClient != null ? kafkaClient : new NetworkClient(
                     new Selector(config.getLong(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG),
                             this.metrics, time, "producer", channelBuilder, logContext),
@@ -431,6 +436,8 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     apiVersions,
                     throttleTimeSensor,
                     logContext);
+            //创建发送线程
+            // MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION = 1时，即 guaranteeMessageOrder
             this.sender = new Sender(logContext,
                     client,
                     this.metadata,
@@ -801,6 +808,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback) {
         // intercept the record, which can be potentially modified; this method does not throw exceptions
+        //拦截可能被修改的记录;此方法不会抛出异常
         ProducerRecord<K, V> interceptedRecord = this.interceptors.onSend(record);
         return doSend(interceptedRecord, callback);
     }
@@ -820,6 +828,15 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         try {
             throwIfProducerClosed();
             // first make sure the metadata for the topic is available
+            //首先确保该主题的元数据可用 waitOnMetadata函数，这个函数的作用是确定要发送的topic的元数据是可用的
+            // kafka上一个topic可以有多个分区，这些分区的leader副本分配在服务端不同的Broker上，而且这个分布是动态变化的
+            // （比如down机重新选leader或者水平扩展分区等），而生产者在发送消息的时候只指定了topic，并未确定分区编号，
+            // 所以KafkaProducer要将此消息追加到指定的Topic的某个分区的Leader副本中，首先需要知道Topic的分区数量，进过路由后确定目标分区，
+            // 之后KafkaProducer需要知道目标分区的leader副本所在的服务器地址、端口等信息，才能建立连接，发送到服务端。
+            //
+            //在KafkaProducer中维护了kafka集群的元数据，
+            // 这些元数据记录了：某个topic中有哪几个分区，每个分区的leader副本分配哪个节点上，follower副本分配哪些节点上，
+            // 哪些副本在ISR集合中以及这些节点的ip，port
             ClusterAndWaitTime clusterAndWaitTime;
             try {
                 clusterAndWaitTime = waitOnMetadata(record.topic(), record.partition(), maxBlockTimeMs);
