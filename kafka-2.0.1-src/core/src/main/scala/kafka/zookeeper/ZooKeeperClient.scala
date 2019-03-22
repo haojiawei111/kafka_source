@@ -37,12 +37,14 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.Set
 
 /**
+  * 继承自KafkaMetricsGroup
+  *
  * A ZooKeeper client that encourages pipelined requests.
  *
- * @param connectString comma separated host:port pairs, each corresponding to a zk server
- * @param sessionTimeoutMs session timeout in milliseconds
+ * @param connectString comma separated host:port pairs, each corresponding to a zk server  逗号分隔的主机：端口对，每个对应一个zk服务器
+ * @param sessionTimeoutMs session timeout in milliseconds 会话超时（以毫秒为单位）
  * @param connectionTimeoutMs connection timeout in milliseconds
- * @param maxInFlightRequests maximum number of unacknowledged requests the client will send before blocking.
+ * @param maxInFlightRequests maximum number of unacknowledged requests the client will send before blocking. 客户端在阻止之前发送的最大未确认请求数。
  */
 class ZooKeeperClient(connectString: String,
                       sessionTimeoutMs: Int,
@@ -52,6 +54,7 @@ class ZooKeeperClient(connectString: String,
                       metricGroup: String,
                       metricType: String) extends Logging with KafkaMetricsGroup {
   this.logIdent = "[ZooKeeperClient] "
+
   private val initializationLock = new ReentrantReadWriteLock()
   private val isConnectedOrExpiredLock = new ReentrantLock()
   private val isConnectedOrExpiredCondition = isConnectedOrExpiredLock.newCondition()
@@ -64,6 +67,7 @@ class ZooKeeperClient(connectString: String,
   private val metricNames = Set[String]()
 
   // The state map has to be created before creating ZooKeeper since it's needed in the ZooKeeper callback.
+  //必须在创建ZooKeeper之前创建状态映射，因为ZooKeeper回调需要它。
   private val stateToMeterMap = {
     import KeeperState._
     val stateToEventTypeMap = Map(
@@ -74,6 +78,8 @@ class ZooKeeperClient(connectString: String,
       SaslAuthenticated -> "SaslAuthentications",
       Expired -> "Expires"
     )
+
+    //遍历stateToEventTypeMap
     stateToEventTypeMap.map { case (state, eventType) =>
       val name = s"ZooKeeper${eventType}PerSec"
       metricNames += name
@@ -83,6 +89,7 @@ class ZooKeeperClient(connectString: String,
 
   info(s"Initializing a new session to $connectString.")
   // Fail-fast if there's an error during construction (so don't call initialize, which retries forever)
+  // 如果在构造期间出现错误，则快速失败（因此不要调用initialize，永远重试）
   @volatile private var zooKeeper = new ZooKeeper(connectString, sessionTimeoutMs, ZooKeeperClientWatcher)
 
   newGauge("SessionState", new Gauge[String] {
@@ -92,6 +99,7 @@ class ZooKeeperClient(connectString: String,
   metricNames += "SessionState"
 
   expiryScheduler.startup()
+
   try waitUntilConnected(connectionTimeoutMs, TimeUnit.MILLISECONDS)
   catch {
     case e: Throwable =>
@@ -99,12 +107,13 @@ class ZooKeeperClient(connectString: String,
       throw e
   }
 
+
   override def metricName(name: String, metricTags: scala.collection.Map[String, String]): MetricName = {
     explicitMetricName(metricGroup, metricType, name, metricTags)
   }
 
   /**
-   * Return the state of the ZooKeeper connection.
+    * 返回zookeeper连接状态
    */
   def connectionState: States = zooKeeper.getState
 
@@ -112,17 +121,17 @@ class ZooKeeperClient(connectString: String,
    * Send a request and wait for its response. See handle(Seq[AsyncRequest]) for details.
    *
    * @param request a single request to send and wait on.
-   * @return an instance of the response with the specific type (e.g. CreateRequest -> CreateResponse).
+   * @return an instance of the response with the specific type (e.g. CreateRequest -> CreateResponse).具有特定类型的响应的实例
    */
   def handleRequest[Req <: AsyncRequest](request: Req): Req#Response = {
     handleRequests(Seq(request)).head
   }
 
   /**
-   * Send a pipelined sequence of requests and wait for all of their responses.
+   * 发送一系列流水线请求并等待所有响应。
    *
    * The watch flag on each outgoing request will be set if we've already registered a handler for the
-   * path associated with the request.
+   * path associated with the request.  如果我们已经为与请求关联的路径注册了处理程序，则将设置每个传出请求上的监视标志。
    *
    * @param requests a sequence of requests to send and wait on.
    * @return the responses for the requests. If all requests have the same type, the responses will have the respective
@@ -131,8 +140,10 @@ class ZooKeeperClient(connectString: String,
    */
   def handleRequests[Req <: AsyncRequest](requests: Seq[Req]): Seq[Req#Response] = {
     if (requests.isEmpty)
+      //返回空集合
       Seq.empty
     else {
+      //同步工具类,它允许一个或多个线程一直等待,直到其他线程的操作执行完后再执行
       val countDownLatch = new CountDownLatch(requests.size)
       val responseQueue = new ArrayBlockingQueue[Req#Response](requests.size)
 
@@ -141,8 +152,10 @@ class ZooKeeperClient(connectString: String,
         try {
           inReadLock(initializationLock) {
             send(request) { response =>
+              //把response添加到responseQueue队列中
               responseQueue.add(response)
               inFlightRequests.release()
+              //CountDownLatch减一
               countDownLatch.countDown()
             }
           }
@@ -157,13 +170,14 @@ class ZooKeeperClient(connectString: String,
     }
   }
 
-  // Visibility to override for testing
+  // Visibility to override for testing 覆盖测试的可见性
   private[zookeeper] def send[Req <: AsyncRequest](request: Req)(processResponse: Req#Response => Unit): Unit = {
     // Safe to cast as we always create a response of the right type
     def callback(response: AsyncResponse): Unit = processResponse(response.asInstanceOf[Req#Response])
 
     def responseMetadata(sendTimeMs: Long) = new ResponseMetadata(sendTimeMs, receivedTimeMs = time.hiResClockMs())
 
+    //zookeeper发送request
     val sendTimeMs = time.hiResClockMs()
     request match {
       case ExistsRequest(path, ctx) =>
@@ -213,6 +227,7 @@ class ZooKeeperClient(connectString: String,
 
   /**
    * Wait indefinitely until the underlying zookeeper client to reaches the CONNECTED state.
+    *  无限期等待，直到基础zookeeper客户端达到CONNECTED状态。
    * @throws ZooKeeperClientAuthFailedException if the authentication failed either before or while waiting for connection.
    * @throws ZooKeeperClientExpiredException if the session expired either before or while waiting for connection.
    */
@@ -243,6 +258,7 @@ class ZooKeeperClient(connectString: String,
 
   // If this method is changed, the documentation for registerZNodeChangeHandler and/or registerZNodeChildChangeHandler
   // may need to be updated.
+  // 如果更改此方法，则可能需要更新registerZNodeChangeHandler和/或registerZNodeChildChangeHandler的文档。  注册今天
   private def shouldWatch(request: AsyncRequest): Boolean = request match {
     case _: GetChildrenRequest => zNodeChildChangeHandlers.contains(request.path)
     case _: ExistsRequest | _: GetDataRequest => zNodeChangeHandlers.contains(request.path)
@@ -251,7 +267,7 @@ class ZooKeeperClient(connectString: String,
 
   /**
    * Register the handler to ZooKeeperClient. This is just a local operation. This does not actually register a watcher.
-   *
+   *将处理程序注册到ZooKeeperClient。这只是一个本地操作。这实际上并没有注册观察者。
    * The watcher is only registered once the user calls handle(AsyncRequest) or handle(Seq[AsyncRequest])
    * with either a GetDataRequest or ExistsRequest.
    *
@@ -315,6 +331,7 @@ class ZooKeeperClient(connectString: String,
       zooKeeper.close()
       metricNames.foreach(removeMetric(_))
     }
+    // 如果调度程序正在等待锁定以处理会话到期，则在锁定之外关闭调度程序以避免死锁
     // Shutdown scheduler outside of lock to avoid deadlock if scheduler
     // is waiting for lock to process session expiry
     expiryScheduler.shutdown()
@@ -329,7 +346,10 @@ class ZooKeeperClient(connectString: String,
   private[kafka] def currentZooKeeper: ZooKeeper = inReadLock(initializationLock) {
     zooKeeper
   }
-  
+
+  /**
+    * zookeeperClient 调度函数
+    */
   private def reinitialize(): Unit = {
     // Initialization callbacks are invoked outside of the lock to avoid deadlock potential since their completion
     // may require additional Zookeeper requests, which will block to acquire the initialization lock
@@ -359,6 +379,7 @@ class ZooKeeperClient(connectString: String,
 
   /**
    * Close the zookeeper client to force session reinitialization. This is visible for testing only.
+    * 关闭zookeeper客户端以强制重新初始化会话。这仅用于测试。
    */
   private[zookeeper] def forceReinitialize(): Unit = {
     zooKeeper.close()
@@ -420,12 +441,16 @@ class ZooKeeperClient(connectString: String,
   }
 }
 
+
+//zookeeper 处理类接口
+
 trait StateChangeHandler {
   val name: String
   def beforeInitializingSession(): Unit = {}
   def afterInitializingSession(): Unit = {}
   def onAuthFailure(): Unit = {}
 }
+
 
 trait ZNodeChangeHandler {
   val path: String
@@ -434,65 +459,77 @@ trait ZNodeChangeHandler {
   def handleDataChange(): Unit = {}
 }
 
+
 trait ZNodeChildChangeHandler {
   val path: String
   def handleChildChange(): Unit = {}
 }
 
+
+// 一下是zookeeper的请求和响应，请求和响应一一对应
+
+// zookeeper请求
+
 sealed trait AsyncRequest {
   /**
    * This type member allows us to define methods that take requests and return responses with the correct types.
    * See ``ZooKeeperClient.handleRequests`` for example.
+    * 此类型成员允许我们定义接收请求并返回具有正确类型的响应的方法。 *例如，参见``ZooKeeperClient.handleRequests``。
    */
   type Response <: AsyncResponse
   def path: String
   def ctx: Option[Any]
 }
 
+//创建zk path请求
 case class CreateRequest(path: String, data: Array[Byte], acl: Seq[ACL], createMode: CreateMode,
                          ctx: Option[Any] = None) extends AsyncRequest {
   type Response = CreateResponse
 }
-
+//删除zk path请求
 case class DeleteRequest(path: String, version: Int, ctx: Option[Any] = None) extends AsyncRequest {
   type Response = DeleteResponse
 }
-
+//是否存在zk path请求
 case class ExistsRequest(path: String, ctx: Option[Any] = None) extends AsyncRequest {
   type Response = ExistsResponse
 }
-
+//得到zk path的数据的请求
 case class GetDataRequest(path: String, ctx: Option[Any] = None) extends AsyncRequest {
   type Response = GetDataResponse
 }
 
+//设置数据到zk path的请求
 case class SetDataRequest(path: String, data: Array[Byte], version: Int, ctx: Option[Any] = None) extends AsyncRequest {
   type Response = SetDataResponse
 }
-
+// 拿到Acl请求
 case class GetAclRequest(path: String, ctx: Option[Any] = None) extends AsyncRequest {
   type Response = GetAclResponse
 }
-
+// 设置Acl 请求
 case class SetAclRequest(path: String, acl: Seq[ACL], version: Int, ctx: Option[Any] = None) extends AsyncRequest {
   type Response = SetAclResponse
 }
-
+// 得到zk path子节点
 case class GetChildrenRequest(path: String, ctx: Option[Any] = None) extends AsyncRequest {
   type Response = GetChildrenResponse
 }
+
+
+// zookeeper Response   异步响应
 
 sealed abstract class AsyncResponse {
   def resultCode: Code
   def path: String
   def ctx: Option[Any]
 
-  /** Return None if the result code is OK and KeeperException otherwise. */
+  /** 如果结果代码是OK则返回None，否则返回KeeperException。*/
   def resultException: Option[KeeperException] =
     if (resultCode == Code.OK) None else Some(KeeperException.create(resultCode, path))
 
   /**
-   * Throw KeeperException if the result code is not OK.
+   * 如果结果代码不正确，则抛出KeeperException。
    */
   def maybeThrow(): Unit = {
     if (resultCode != Code.OK)
@@ -518,6 +555,7 @@ case class SetAclResponse(resultCode: Code, path: String, ctx: Option[Any], stat
 case class GetChildrenResponse(resultCode: Code, path: String, ctx: Option[Any], children: Seq[String], stat: Stat,
                                metadata: ResponseMetadata) extends AsyncResponse
 
+// zk 异常类
 class ZooKeeperClientException(message: String) extends RuntimeException(message)
 class ZooKeeperClientExpiredException(message: String) extends ZooKeeperClientException(message)
 class ZooKeeperClientAuthFailedException(message: String) extends ZooKeeperClientException(message)

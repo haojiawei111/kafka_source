@@ -19,6 +19,7 @@ package kafka.common
 
 /**
  * Thrown when a get epoch request is made for partition, but no epoch exists for that partition
+  * 在为分区创建获取纪元请求时抛出，但该分区不存在纪元
  */
 class NoEpochForPartitionException(message: String) extends RuntimeException(message) {
   def this() = this(null)

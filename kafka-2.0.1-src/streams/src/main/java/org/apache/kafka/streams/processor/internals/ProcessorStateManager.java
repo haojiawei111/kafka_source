@@ -58,7 +58,7 @@ public class ProcessorStateManager extends AbstractStateManager {
     /**
      * @throws ProcessorStateException if the task directory does not exist and could not be created
      * @throws IOException if any severe error happens while creating or locking the state directory
-     */
+      */
     public ProcessorStateManager(final TaskId taskId,
                                  final Collection<TopicPartition> sources,
                                  final boolean isStandby,

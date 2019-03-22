@@ -27,3 +27,8 @@ implementation to catch and serialize any application-level errors that should b
 This slightly lower-level interface that models sending and receiving rather than requests and responses
 is necessary in order to allow the send or receive to be overridden with a non-user-space writing of bytes
 using FileChannel.transferTo.
+
+
+kafka的网络服务器。现在应用程序特定的代码，只是一般网络服务器的东西
+Receive和Send类封装了字节的传入和传出传输。Handler是Receive和Send之间的映射，表示用户钩子添加用于将请求映射到实际处理代码的逻辑。在读取或写入传输时，任何未捕获的异常都将导致服务器记录错误并关闭有问题的套接字。因此，Handler实现的任务是捕获并序列化应发送给客户端的任何应用程序级错误。
+为了允许使用FileChannel.transferTo以非用户空间写入字节来覆盖发送或接收，这个稍微低级的接口模拟发送和接收而不是请求和响应。

@@ -24,6 +24,7 @@ import java.util.Map;
 
 /**
  * Quota callback interface for brokers that enables customization of client quota computation.
+ * brokers的配额回调接口，可以自定义客户端配额计算。
  */
 public interface ClientQuotaCallback extends Configurable {
 

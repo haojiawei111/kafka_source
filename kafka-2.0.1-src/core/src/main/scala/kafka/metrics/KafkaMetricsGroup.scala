@@ -1,19 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package kafka.metrics
 
@@ -24,26 +8,26 @@ import com.yammer.metrics.core.{Gauge, MetricName}
 import kafka.utils.Logging
 import org.apache.kafka.common.utils.Sanitizer
 
+// 监控组
 trait KafkaMetricsGroup extends Logging {
 
   /**
    * Creates a new MetricName object for gauges, meters, etc. created for this
-   * metrics group.
+   * metrics group.  为此度量标准组创建的仪表，仪表等创建新的MetricName对象。
    * @param name Descriptive name of the metric.
    * @param tags Additional attributes which mBean will have.
    * @return Sanitized metric name object.
    */
   def metricName(name: String, tags: scala.collection.Map[String, String]): MetricName = {
-    val klass = this.getClass
-    val pkg = if (klass.getPackage == null) "" else klass.getPackage.getName
-    val simpleName = klass.getSimpleName.replaceAll("\\$$", "")
+    val klass = this.getClass // 类的全类名
+    val pkg = if (klass.getPackage == null) "" else klass.getPackage.getName  //包名
+    val simpleName = klass.getSimpleName.replaceAll("\\$$", "") //类的简写名称
 
     explicitMetricName(pkg, simpleName, name, tags)
   }
 
 
-  protected def explicitMetricName(group: String, typeName: String, name: String,
-                                   tags: scala.collection.Map[String, String]): MetricName = {
+  protected def explicitMetricName(group: String, typeName: String, name: String,tags: scala.collection.Map[String, String]): MetricName = {
 
     val nameBuilder: StringBuilder = new StringBuilder
 
@@ -58,11 +42,16 @@ trait KafkaMetricsGroup extends Logging {
       nameBuilder.append(name)
     }
 
+    // 把tags的key和value拼接起来
     val scope: String = toScope(tags).getOrElse(null)
+    // 把tags的key和value拼接起来
     val tagsName = toMBeanName(tags)
+
+    //添加到nameBuilder中
     tagsName.foreach(nameBuilder.append(",").append(_))
 
     new MetricName(group, typeName, name, scope, nameBuilder.toString)
+
   }
 
   def newGauge[T](name: String, metric: Gauge[T], tags: scala.collection.Map[String, String] = Map.empty) =
@@ -90,6 +79,7 @@ trait KafkaMetricsGroup extends Logging {
   }
 
   private def toScope(tags: collection.Map[String, String]): Option[String] = {
+    // 过滤tagValue == '' 的值
     val filteredTags = tags.filter { case (_, tagValue) => tagValue != ""}
     if (filteredTags.nonEmpty) {
       // convert dot to _ since reporters like Graphite typically use dot to represent hierarchy

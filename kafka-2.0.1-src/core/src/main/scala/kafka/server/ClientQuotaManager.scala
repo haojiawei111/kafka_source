@@ -36,6 +36,7 @@ import scala.collection.JavaConverters._
 
 /**
  * Represents the sensors aggregated per client
+  * 表示每个客户端聚合的传感器
  * @param metricTags Quota metric tags for the client
  * @param quotaSensor @Sensor that tracks the quota
  * @param throttleTimeSensor @Sensor that tracks the throttle time
@@ -43,6 +44,7 @@ import scala.collection.JavaConverters._
 case class ClientSensors(metricTags: Map[String, String], quotaSensor: Sensor, throttleTimeSensor: Sensor)
 
 /**
+  * 配额管理的配置设置
  * Configuration settings for quota management
  * @param quotaBytesPerSecondDefault The default bytes per second quota allocated to any client-id if
  *        dynamic defaults or user quotas are not set

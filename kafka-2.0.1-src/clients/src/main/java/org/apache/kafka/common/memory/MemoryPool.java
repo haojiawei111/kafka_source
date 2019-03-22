@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
  * Every buffer returned from {@link #tryAllocate(int)} must always be {@link #release(ByteBuffer) released}.
  */
 public interface MemoryPool {
+
     MemoryPool NONE = new MemoryPool() {
         @Override
         public ByteBuffer tryAllocate(int sizeBytes) {
@@ -35,11 +36,13 @@ public interface MemoryPool {
             //nop
         }
         //long MAX_VALUE = 0x7fffffffffffffffL
+        // 内存池大小
         @Override
         public long size() {
             return Long.MAX_VALUE;
         }
 
+        // 可用内存
         @Override
         public long availableMemory() {
             return Long.MAX_VALUE;
@@ -57,7 +60,7 @@ public interface MemoryPool {
     };
 
     /**
-     * Tries to acquire a ByteBuffer of the specified size 试图获取指定大小的ByteBuffer。
+     * 试图获取指定大小的ByteBuffer。
      * @param sizeBytes size required
      * @return a ByteBuffer (which later needs to be release()ed), or null if no memory available.
      *         the buffer will be of the exact size requested, even if backed by a larger chunk of memory
@@ -65,20 +68,20 @@ public interface MemoryPool {
     ByteBuffer tryAllocate(int sizeBytes);
 
     /**
-     * Returns a previously allocated buffer to the pool.
+     * Returns a previously allocated buffer to the pool. 返回先前为池分配的缓冲区。
      * @param previouslyAllocated a buffer previously returned from tryAllocate()
      */
     void release(ByteBuffer previouslyAllocated);
 
     /**
-     * Returns the total size of this pool
+     * 返回此池的总大小
      * @return total size, in bytes
      */
     long size();
 
     /**
-     * Returns the amount of memory available for allocation by this pool.
-     * NOTE: result may be negative (pools may over allocate to avoid starvation issues)
+     * 返回此池可用于分配的内存量。
+     * NOTE: result may be negative (pools may over allocate to avoid starvation issues) 结果可能是负数（池可能过度分配以避免饥饿问题）
      * @return bytes available
      */
     long availableMemory();
@@ -87,8 +90,9 @@ public interface MemoryPool {
      * Returns true if the pool cannot currently allocate any more buffers
      * - meaning total outstanding buffers meets or exceeds pool size and
      * some would need to be released before further allocations are possible.
+     * 如果池当前无法分配任何更多缓冲区，则返回true *  - 表示总未完成缓冲区满足或超过池大小*在需要进一步分配之前需要释放一些缓冲区。
      *
-     * This is equivalent to availableMemory() <= 0
+     * 这相当于availableMemory（）<= 0
      * @return true if out of memory
      */
     boolean isOutOfMemory();

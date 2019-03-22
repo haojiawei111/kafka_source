@@ -132,6 +132,9 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
 
 }
 
+
+
+// 这是时间轮的每个格子，包含一个TimerTaskList和前面的TimerTaskEntry和后面的TimerTaskEntry
 private[timer] class TimerTaskEntry(val timerTask: TimerTask, val expirationMs: Long) extends Ordered[TimerTaskEntry] {
 
   @volatile

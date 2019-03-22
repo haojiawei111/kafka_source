@@ -21,22 +21,29 @@ import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import org.apache.kafka.common.internals.FatalExitError
 
-abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean = true)
-        extends Thread(name) with Logging {
+abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean = true)extends Thread(name) with Logging {
+
   this.setDaemon(false)
   this.logIdent = "[" + name + "]: "
   private val shutdownInitiated = new CountDownLatch(1)
   private val shutdownComplete = new CountDownLatch(1)
 
-  def shutdown(): Unit = {
-    initiateShutdown()
-    awaitShutdown()
-  }
 
+
+  //shutdownComplete 等于 0 则都关闭了
   def isShutdownComplete: Boolean = {
     shutdownComplete.getCount == 0
   }
 
+  // 关闭线程
+  def shutdown(): Unit = {
+    // 执行关闭
+    initiateShutdown()
+    //等待关闭
+    awaitShutdown()
+  }
+
+  // 关闭线程
   def initiateShutdown(): Boolean = {
     this.synchronized {
       if (isRunning) {
@@ -51,7 +58,7 @@ abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean
   }
 
   /**
-   * After calling initiateShutdown(), use this API to wait until the shutdown is complete
+    * 在调用initiateShutdown（）之后，使用此API等待关闭完成
    */
   def awaitShutdown(): Unit = {
     shutdownComplete.await()
@@ -59,19 +66,19 @@ abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean
   }
 
   /**
-   *  Causes the current thread to wait until the shutdown is initiated,
-   *  or the specified waiting time elapses.
+    *  导致当前线程等待，直到启动关闭，或指定的等待时间过去
    *
    * @param timeout
    * @param unit
    */
   def pause(timeout: Long, unit: TimeUnit): Unit = {
     if (shutdownInitiated.await(timeout, unit))
-      trace("shutdownInitiated latch count reached zero. Shutdown called.")
+      trace("shutdownInitiated latch count reached zero. Shutdown called.shutdownInitiated锁存计数达到零。关机叫了。")
   }
 
   /**
    * This method is repeatedly invoked until the thread shuts down or this method throws an exception
+    * 重复调用此方法，直到线程关闭或此方法抛出异常
    */
   def doWork(): Unit
 
@@ -79,6 +86,7 @@ abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean
     info("Starting")
     try {
       while (isRunning)
+        // 一直无限循环doWork()方法
         doWork()
     } catch {
       case e: FatalExitError =>
@@ -96,6 +104,7 @@ abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean
   }
 
   def isRunning: Boolean = {
+    // shutdownInitiated不等于0则有线程在运行
     shutdownInitiated.getCount() != 0
   }
 }

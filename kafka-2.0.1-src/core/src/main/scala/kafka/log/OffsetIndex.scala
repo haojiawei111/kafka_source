@@ -47,21 +47,31 @@ import org.apache.kafka.common.errors.InvalidOffsetException
  *
  * All external APIs translate from relative offsets to full offsets, so users of this class do not interact with the internal
  * storage format.
+  * 将偏移量映射到特定日志段的物理文件位置的索引。这个索引可能很稀疏：
+  * 也就是说它可能没有为日志中的所有消息保留条目。索引存储在预先分配的文件中，以保存固定的最大数量的8字节条目。
+  * 索引支持针对此文件的内存映射进行查找。这些查找使用简单的二进制搜索变体完成
+  * 找到偏移/位置对的最大偏移量小于或等于目标偏移量。
+  * 索引文件可以通过两种方式打开：作为允许追加的空的可变索引或
+  * 一个先前已填充的不可变只读索引文件。 makeReadOnly方法将可变文件转换为不可变文件并截断​​任何额外字节。这是在转换索引文件时完成的。
+  * 在重建崩溃的情况下，不会尝试校验此文件的内容。
+  * 文件格式是一系列条目。物理格式是4字节“相对”偏移量和4字节文件位置
+  * 带有该偏移量的消息。存储的偏移量相对于索引文件的基本偏移量。所以，例如，
+  * 如果基本偏移量为50，那么偏移量55将被存储为5.以这种方式使用相对偏移量，让我们仅使用4个字节作为偏移量。
+  * 条目的频率取决于该类的用户。所有外部API都从相对偏移转换为完全偏移，因此此类的用户不与内部存储格式交互。
  */
-// Avoid shadowing mutable `file` in AbstractIndex
-class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable: Boolean = true)
-    extends AbstractIndex[Long, Int](_file, baseOffset, maxIndexSize, writable) {
+// Avoid shadowing mutable `file` in AbstractIndex 避免在AbstractIndex中隐藏可变的`file`
+class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable: Boolean = true) extends AbstractIndex[Long, Int](_file, baseOffset, maxIndexSize, writable) {
 
   override def entrySize = 8
 
-  /* the last offset in the index */
+  /* the last offset in the index 索引中的最后一个偏移量 */
   private[this] var _lastOffset = lastEntry.offset
 
   debug("Loaded index file %s with maxEntries = %d, maxIndexSize = %d, entries = %d, lastOffset = %d, file position = %d"
     .format(file.getAbsolutePath, maxEntries, maxIndexSize, _entries, _lastOffset, mmap.position()))
 
   /**
-   * The last entry in the index
+   * The last entry in the index 索引中的最后一个条目
    */
   private def lastEntry: OffsetPosition = {
     inLock(lock) {

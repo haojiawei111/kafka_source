@@ -47,7 +47,7 @@ import static org.apache.kafka.common.config.SslConfigs.SSL_KEYSTORE_PASSWORD_CO
 import static org.apache.kafka.common.config.SaslConfigs.SASL_KERBEROS_SERVICE_NAME;
 
 /**
- * A log4j appender that produces log messages to Kafka
+ * A log4j appender that produces log messages to Kafka 一个log4j appender，它向Kafka生成日志消息
  */
 public class KafkaLog4jAppender extends AppenderSkeleton {
 

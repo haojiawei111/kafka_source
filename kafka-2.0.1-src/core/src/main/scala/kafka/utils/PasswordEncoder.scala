@@ -29,6 +29,7 @@ import org.apache.kafka.common.config.types.Password
 
 import scala.collection.Map
 
+// 主要是做密码的加密解密
 object PasswordEncoder {
   val KeyFactoryAlgorithmProp = "keyFactoryAlgorithm"
   val CipherAlgorithmProp = "cipherAlgorithm"
@@ -43,6 +44,7 @@ object PasswordEncoder {
 /**
   * Password encoder and decoder implementation. Encoded passwords are persisted as a CSV map
   * containing the encoded password in base64 and along with the properties used for encryption.
+  * 密码编码器和解码器实现。编码密码将作为CSV映射保存，其中包含base64中的编码密码以及用于加密的属性。
   *
   * @param secret The secret used for encoding and decoding
   * @param keyFactoryAlgorithm  Key factory algorithm if configured. By default, PBKDF2WithHmacSHA512 is
@@ -55,18 +57,16 @@ object PasswordEncoder {
   * The values used for encoding are stored along with the encoded password and the stored values are used for decoding.
   *
   */
-class PasswordEncoder(secret: Password,
-                      keyFactoryAlgorithm: Option[String],
-                      cipherAlgorithm: String,
-                      keyLength: Int,
-                      iterations: Int) extends Logging {
-
+class PasswordEncoder(secret: Password,keyFactoryAlgorithm: Option[String],cipherAlgorithm: String,keyLength: Int,iterations: Int) extends Logging {
+  // 随机器
   private val secureRandom = new SecureRandom
   private val cipherParamsEncoder = cipherParamsInstance(cipherAlgorithm)
 
+  // 密码加密
   def encode(password: Password): String = {
     val salt = new Array[Byte](256)
     secureRandom.nextBytes(salt)
+
     val cipher = Cipher.getInstance(cipherAlgorithm)
     val keyFactory = secretKeyFactory(keyFactoryAlgorithm)
     val keySpec = secretKeySpec(keyFactory, cipherAlgorithm, keyLength, salt, iterations)
@@ -81,9 +81,11 @@ class PasswordEncoder(secret: Password,
       EncyrptedPasswordProp -> base64Encode(encryptedPassword),
       PasswordLengthProp -> password.value.length
     ) ++ cipherParamsEncoder.toMap(cipher.getParameters)
+
     encryptedMap.map { case (k, v) => s"$k:$v" }.mkString(",")
   }
 
+  // 密码解密
   def decode(encodedPassword: String): Password = {
     val params = CoreUtils.parseCsvMap(encodedPassword)
     val keyFactoryAlg = params(KeyFactoryAlgorithmProp)
@@ -108,6 +110,7 @@ class PasswordEncoder(secret: Password,
     new Password(password)
   }
 
+
   private def secretKeyFactory(keyFactoryAlg: Option[String]): SecretKeyFactory = {
     keyFactoryAlg match {
       case Some(algorithm) => SecretKeyFactory.getInstance(algorithm)
@@ -120,10 +123,9 @@ class PasswordEncoder(secret: Password,
     }
   }
 
-  private def secretKeySpec(keyFactory: SecretKeyFactory,
-                            cipherAlg: String,
-                            keyLength: Int,
-                            salt: Array[Byte], iterations: Int): SecretKeySpec = {
+
+
+  private def secretKeySpec(keyFactory: SecretKeyFactory,cipherAlg: String,keyLength: Int,salt: Array[Byte], iterations: Int): SecretKeySpec = {
     val keySpec = new PBEKeySpec(secret.value.toCharArray, salt, iterations, keyLength)
     val algorithm = if (cipherAlg.indexOf('/') > 0) cipherAlg.substring(0, cipherAlg.indexOf('/')) else cipherAlg
     new SecretKeySpec(keyFactory.generateSecret(keySpec).getEncoded, algorithm)
@@ -133,6 +135,7 @@ class PasswordEncoder(secret: Password,
 
   private[utils] def base64Decode(encoded: String): Array[Byte] = Base64.getDecoder.decode(encoded)
 
+
   private def cipherParamsInstance(cipherAlgorithm: String): CipherParamsEncoder = {
     val aesPattern = "AES/(.*)/.*".r
     cipherAlgorithm match {
@@ -141,12 +144,15 @@ class PasswordEncoder(secret: Password,
     }
   }
 
+
+  // 密码参数编码器接口
   private trait CipherParamsEncoder {
     def toMap(cipher: AlgorithmParameters): Map[String, String]
     def toParameterSpec(paramMap: Map[String, String]): AlgorithmParameterSpec
   }
-
+  //Iv Params编码器
   private class IvParamsEncoder extends CipherParamsEncoder {
+
     def toMap(cipherParams: AlgorithmParameters): Map[String, String] = {
       if (cipherParams != null) {
         val ivSpec = cipherParams.getParameterSpec(classOf[IvParameterSpec])
@@ -154,12 +160,15 @@ class PasswordEncoder(secret: Password,
       } else
         throw new IllegalStateException("Could not determine initialization vector for cipher")
     }
+
     def toParameterSpec(paramMap: Map[String, String]): AlgorithmParameterSpec = {
       new IvParameterSpec(base64Decode(paramMap(InitializationVectorProp)))
     }
-  }
 
+  }
+  //Gcm Params编码器
   private class GcmParamsEncoder extends CipherParamsEncoder {
+
     def toMap(cipherParams: AlgorithmParameters): Map[String, String] = {
       if (cipherParams != null) {
         val spec = cipherParams.getParameterSpec(classOf[GCMParameterSpec])
@@ -168,8 +177,11 @@ class PasswordEncoder(secret: Password,
       } else
         throw new IllegalStateException("Could not determine initialization vector for cipher")
     }
+
     def toParameterSpec(paramMap: Map[String, String]): AlgorithmParameterSpec = {
       new GCMParameterSpec(paramMap("authenticationTagLength").toInt, base64Decode(paramMap(InitializationVectorProp)))
     }
+
   }
+
 }

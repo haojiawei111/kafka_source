@@ -36,6 +36,7 @@ import collection.JavaConverters._
 
 class Pool[K,V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
 
+  // 线程安全的map
   private val pool: ConcurrentMap[K, V] = new ConcurrentHashMap[K, V]
   
   def put(k: K, v: V): V = pool.put(k, v)
@@ -43,24 +44,19 @@ class Pool[K,V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
   def putIfNotExists(k: K, v: V): V = pool.putIfAbsent(k, v)
 
   /**
-   * Gets the value associated with the given key. If there is no associated
-   * value, then create the value using the pool's value factory and return the
-   * value associated with the key. The user should declare the factory method
-   * as lazy if its side-effects need to be avoided.
+    * 获取与给定键关联的值。如果没有关联的值，则使用池的值factory创建值，并返回与该键关联的值。如果需要避免副作用，则用户应将工厂方法声明为惰性。
    *
    * @param key The key to lookup.
    * @return The final value associated with the key.
    */
   def getAndMaybePut(key: K): V = {
     if (valueFactory.isEmpty)
-      throw new KafkaException("Empty value factory in pool.")
+      throw new KafkaException("Empty value factory in pool 池中的空值工厂.")
     getAndMaybePut(key, valueFactory.get(key))
   }
 
   /**
-    * Gets the value associated with the given key. If there is no associated
-    * value, then create the value using the provided by `createValue` and return the
-    * value associated with the key.
+    * 获取与给定key关联的值。如果没有关联的值，则使用`createValue`提供的值创建值，并返回与该key关联的值。
     *
     * @param key The key to lookup.
     * @param createValue Factory function.

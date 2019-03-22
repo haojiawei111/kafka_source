@@ -22,6 +22,7 @@ import org.apache.kafka.streams.processor.StateStore;
 
 /**
  * A storage engine wrapper for utilities like logging, caching, and metering.
+ * 用于日志记录，缓存和计量等实用程序的存储引擎包装器。
  */
 public interface WrappedStateStore extends StateStore {
 

@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ *
+ * 生产者和消费者共享的一些配置
+ *
  * Some configurations shared by both producer and consumer
  */
 public class CommonClientConfigs {

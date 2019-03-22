@@ -21,6 +21,7 @@ import org.apache.kafka.streams.processor.StateStore;
 
 /**
  * Interface for storing the aggregated values of sessions
+ * 用于存储会话聚合值的接口
  * @param <K>   type of the record keys
  * @param <AGG> type of the aggregated values
  */

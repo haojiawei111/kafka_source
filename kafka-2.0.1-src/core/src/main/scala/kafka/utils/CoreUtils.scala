@@ -35,10 +35,10 @@ import org.apache.kafka.common.utils.{KafkaThread, Utils}
 import org.slf4j.event.Level
 
 /**
- * General helper functions!
+  * 一些辅助功能
  *
- * This is for general helper functions that aren't specific to Kafka logic. Things that should have been included in
- * the standard library etc.
+
+  * 这适用于非Kafka逻辑特定的一般辅助函数。应该包含在标准库等中的东西
  *
  * If you are making a new helper function and want to add it to this class please ensure the following:
  * 1. It has documentation
@@ -49,6 +49,7 @@ object CoreUtils extends Logging {
 
   /**
    * Return the smallest element in `traversable` if it is not empty. Otherwise return `ifEmpty`.
+    * 如果它不为空，则返回`traversable`中的最小元素。否则返回`ifEmpty`。
    */
   def min[A, B >: A](traversable: TraversableOnce[A], ifEmpty: A)(implicit cmp: Ordering[B]): A =
     if (traversable.isEmpty) ifEmpty else traversable.min(cmp)
@@ -75,8 +76,7 @@ object CoreUtils extends Logging {
     new KafkaThread(name, runnable(fun), daemon)
 
   /**
-    * Do the given action and log any exceptions thrown without rethrowing them.
-    *
+    * 执行给定的操作并记录抛出的任何异常，而无需重新抛出它们。
     * @param action The action to execute.
     * @param logging The logging instance to use for logging the thrown exception.
     * @param logLevel The log level to use for logging.
@@ -97,6 +97,7 @@ object CoreUtils extends Logging {
 
   /**
    * Recursively delete the list of files/directories and any subfiles (if any exist)
+    * 递归删除文件/目录列表和任何子文件（如果存在）
    * @param files sequence of files to be deleted
    */
   def delete(files: Seq[String]): Unit = files.foreach(f => Utils.delete(new File(f)))
@@ -155,6 +156,7 @@ object CoreUtils extends Logging {
 
   /**
    * Unregister the mbean with the given name, if there is one registered
+    * 如果已注册，则取消注册具有给定名称的mbean
    * @param name The mbean name to unregister
    */
   def unregisterMBean(name: String) {
@@ -234,6 +236,7 @@ object CoreUtils extends Logging {
 
   /**
    * Read a big-endian integer from a byte array
+    * 从字节数组中读取一个大端整数
    */
   def readInt(bytes: Array[Byte], offset: Int): Int = {
     ((bytes(offset) & 0xFF) << 24) |
@@ -244,6 +247,7 @@ object CoreUtils extends Logging {
 
   /**
    * Execute the given function inside the lock
+    * 在锁内执行给定的函数
    */
   def inLock[T](lock: Lock)(fun: => T): T = {
     lock.lock()
@@ -292,7 +296,7 @@ object CoreUtils extends Logging {
       .filter { case (_, l) => l > 1 }
       .keys
   }
-
+  // 生成EndPoint
   def listenerListToEndPoints(listeners: String, securityProtocolMap: Map[ListenerName, SecurityProtocol]): Seq[EndPoint] = {
     def validate(endPoints: Seq[EndPoint]): Unit = {
       // filter port 0 for unit tests

@@ -21,6 +21,8 @@ import scala.collection._
 
 /**
  * The set of active brokers in the cluster
+  * 集群中的活动brokers集
+  * 这里维护的一个HashMap[Int,Broker],维护着集群的Broker信息
  */
 private[kafka] class Cluster {
   

@@ -18,6 +18,7 @@ package org.apache.kafka.common.metrics;
 
 /**
  * An upper or lower bound for metrics
+ * 指标的上限或下限
  */
 public final class Quota {
 

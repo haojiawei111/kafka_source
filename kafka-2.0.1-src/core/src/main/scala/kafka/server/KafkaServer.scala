@@ -85,9 +85,9 @@ object KafkaServer {
 
   private[server] def metricConfig(kafkaConfig: KafkaConfig): MetricConfig = {
     new MetricConfig()
-      .samples(kafkaConfig.metricNumSamples)
-      .recordLevel(Sensor.RecordingLevel.forName(kafkaConfig.metricRecordingLevel))
-      .timeWindow(kafkaConfig.metricSampleWindowMs, TimeUnit.MILLISECONDS)
+      .samples(kafkaConfig.metricNumSamples) //metrics.num.samples
+      .recordLevel(Sensor.RecordingLevel.forName(kafkaConfig.metricRecordingLevel)) //metrics.recording.level
+      .timeWindow(kafkaConfig.metricSampleWindowMs, TimeUnit.MILLISECONDS) //metrics.sample.window.ms
   }
 
   val MIN_INCREMENTAL_FETCH_SESSION_EVICTION_MS: Long = 120000
@@ -152,7 +152,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
   def clusterId: String = _clusterId
 
-  // Visible for testing
+  // Visible for testing可见测试
   private[kafka] def zkClient = _zkClient
 
   private[kafka] def brokerTopicStats = _brokerTopicStats
@@ -193,6 +193,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
       if (startupComplete.get)
         return
+
       //compareAndSet 如果当前值 == 预期值，则以原子方式将该值设置为给定的更新值
       val canStartup = isStartingUp.compareAndSet(false, true)
       if (canStartup) {
@@ -208,12 +209,14 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
         /* generate brokerId 从配置文件中得到broker ID*/
         val (brokerId, initialOfflineDirs) = getBrokerIdAndOfflineDirs
+
         config.brokerId = brokerId
+
         logContext = new LogContext(s"[KafkaServer id=${config.brokerId}] ")
         this.logIdent = logContext.logPrefix
 
         // initialize dynamic broker configs from ZooKeeper. Any updates made after this will be
-        // applied after DynamicConfigManager starts. 从kafka初始化broker动态配置，在DynamicConfigManager启动之后进行的任何更新都将被应用
+        // applied after DynamicConfigManager starts.  从kafka初始化broker动态配置，在DynamicConfigManager启动之后进行的任何更新都将被应用
         config.dynamicConfig.initialize(zkClient)
 
         /* start scheduler 开启调度线程 backgroundThreads为后台线程数background.threads*/
@@ -223,14 +226,17 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
         /* create and configure metrics 创建和配置监控*/
         val reporters = new util.ArrayList[MetricsReporter]
+
         //private val jmxPrefix: String = "kafka.server" 组装监控请求
         reporters.add(new JmxReporter(jmxPrefix))
+
         val metricConfig = KafkaServer.metricConfig(config)
         metrics = new Metrics(metricConfig, reporters, time, true)
 
         /* register broker metrics 向监控注册topic信息 */
         _brokerTopicStats = new BrokerTopicStats
 
+        // 配额管理
         quotaManagers = QuotaFactory.instantiate(config, metrics, time, threadNamePrefix.getOrElse(""))
         notifyClusterListeners(kafkaMetricsReporters ++ metrics.reporters.asScala)
 
@@ -363,6 +369,8 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
         config.zkMaxInFlightRequests, time)
 
     val chrootIndex = config.zkConnect.indexOf("/")
+    // hostname1:port1,hostname2:port2,hostname3:port3/chroot/path
+    // chrootOption拿到了路径
     val chrootOption = {
       if (chrootIndex > 0) Some(config.zkConnect.substring(chrootIndex))
       else None
@@ -374,7 +382,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
     if (secureAclsEnabled && !isZkSecurityEnabled)
       throw new java.lang.SecurityException(s"${KafkaConfig.ZkEnableSecureAclsProp} is true, but the verification of the JAAS login file failed.")
 
-    // make sure chroot path exists
+    // 连接zk注册chroot路径
     chrootOption.foreach { chroot =>
       val zkConnForChrootCreation = config.zkConnect.substring(0, chrootIndex)
       val zkClient = createZkClient(zkConnForChrootCreation, secureAclsEnabled)
@@ -667,23 +675,28 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
   /**
     * Generates new brokerId if enabled or reads from meta.properties based on following conditions
+    * 如果启用则生成新的brokerId，或者根据以下条件从meta.properties读取
     * <ol>
     * <li> config has no broker.id provided and broker id generation is enabled, generates a broker.id based on Zookeeper's sequence
     * <li> stored broker.id in meta.properties doesn't match in all the log.dirs throws InconsistentBrokerIdException
     * <li> config has broker.id and meta.properties contains broker.id if they don't match throws InconsistentBrokerIdException
     * <li> config has broker.id and there is no meta.properties file, creates new meta.properties and stores broker.id
+    * <li> config没有提供broker.id并且启用了代理ID生成，基于Zookeeper的序列生成broker.id
+    * <li> meta.properties中存储的broker.id在所有log.dirs抛出中都不匹配InconsistentBrokerIdException
+    * <li> config包含broker.id，meta.properties包含broker.id如果它们与throws不匹配InconsistentBrokerIdException
+    * <li> config具有broker.id并且没有meta.properties文件，则创建新的meta.properties和store broker.id
     * <ol>
     *
-    * The log directories whose meta.properties can not be accessed due to IOException will be returned to the caller
+    * 由于IOException而无法访问其meta.properties的日志目录将返回给调用者
     *
-    * @return A 2-tuple containing the brokerId and a sequence of offline log directories.
+    * @return A 2-tuple containing the brokerId and a sequence of offline log directories.包含brokerId和一系列脱机日志目录的2元组。
     */
   private def getBrokerIdAndOfflineDirs: (Int, Seq[String]) = {
     var brokerId = config.brokerId
     val brokerIdSet = mutable.HashSet[Int]()
     val offlineDirs = mutable.ArrayBuffer.empty[String]
 
-    //这里log文件可以设置多个
+    //这里log文件可以设置多个 配置log路径log.dirs
     for (logDir <- config.logDirs) {
       try {
         val brokerMetadataOpt = brokerMetadataCheckpoints(logDir).read()
@@ -708,9 +721,9 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
         s"If you moved your data, make sure your configured broker.id matches. " +
         s"If you intend to create a new broker, you should remove all data in your data directories (log.dirs).")
       //config.brokerIdGenerationEnable  brokerId自动生成
-    else if (brokerIdSet.isEmpty && brokerId < 0 && config.brokerIdGenerationEnable) // generate a new brokerId from Zookeeper
+    else if (brokerIdSet.isEmpty && brokerId < 0 && config.brokerIdGenerationEnable) // 从Zookeeper生成一个新的brokerId
       brokerId = generateBrokerId
-    else if (brokerIdSet.size == 1) // pick broker.id from meta.properties
+    else if (brokerIdSet.size == 1) // 从meta.properties中选择broker.id
       brokerId = brokerIdSet.last
 
 
@@ -736,6 +749,9 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
     * Return a sequence id generated by updating the broker sequence id path in ZK.
     * Users can provide brokerId in the config. To avoid conflicts between ZK generated
     * sequence id and configured brokerId, we increment the generated sequence id by KafkaConfig.MaxReservedBrokerId.
+    * 返回通过更新ZK中的代理序列id路径生成的序列ID。
+    * 用户可以在配置中提供brokerId。为了避免ZK生成的
+    * sequence id和配置的brokerId之间的冲突，我们通过KafkaConfig.MaxReservedBrokerId递增生成的序列id。
     */
   private def generateBrokerId: Int = {
     try {

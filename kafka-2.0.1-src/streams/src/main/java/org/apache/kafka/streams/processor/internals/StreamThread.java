@@ -754,6 +754,7 @@ public class StreamThread extends Thread {
 
     /**
      * Main event loop for polling, and processing records through topologies.
+     * 用于轮询和通过拓扑处理记录的主事件循环。
      *
      * @throws IllegalStateException If store gets registered after initialized is already finished
      * @throws StreamsException      if the store's change log does not contain the partition
@@ -923,7 +924,6 @@ public class StreamThread extends Thread {
      * @param records Records, can be null
      */
     private void addRecordsToTasks(final ConsumerRecords<byte[], byte[]> records) {
-
         for (final TopicPartition partition : records.partitions()) {
             final StreamTask task = taskManager.activeTask(partition);
 

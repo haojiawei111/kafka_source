@@ -28,6 +28,10 @@ import java.util.Map;
  * a given KafkaConsumer reuses the same decompression buffer when iterating over fetched records. For small record
  * batches, allocating a potentially large buffer (64 KB for LZ4) will dominate the cost of decompressing and
  * iterating over the records in the batch.
+ * 用于缓存字节缓冲区的简单非线程安全接口。这适用于简单的情况，例如确保给定的KafkaConsumer在迭代读取的记录时重用相同的解压缩缓冲区。
+ * 对于小型记录批次，分配可能较大的缓冲区（LZ4为64 KB）将主导解压缩和迭代批处理中的记录的成本。
+ *
+ *
  */
 public abstract class BufferSupplier implements AutoCloseable {
 

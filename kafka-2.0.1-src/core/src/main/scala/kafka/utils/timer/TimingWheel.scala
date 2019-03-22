@@ -96,32 +96,46 @@ import java.util.concurrent.atomic.AtomicInteger
  * This class is not thread-safe. There should not be any add calls while advanceClock is executing.
  * It is caller's responsibility to enforce it. Simultaneous add calls are thread-safe.
  */
+
+// wheelSize: Int 当前时间轮的大小也就是总的时间格数量
+// startMs：Long 当期时间轮的创建时间
+// tickMs：Long 当前时间轮中一个时间格表示的时间跨度
+// queue:DelayQueue[TimerTaskList] 整个层级的时间轮公用一个任务队列，其元素类型是TimerTaskList
+// taskCounter：AtomicInteger 各层级时间轮中任务的总数
+
 @nonthreadsafe
 private[timer] class TimingWheel(tickMs: Long, wheelSize: Int, startMs: Long, taskCounter: AtomicInteger, queue: DelayQueue[TimerTaskList]) {
 
+  // interval：Long 当前时间轮的时间跨度即tickMs * wheelSize,当前时间轮只能处理时间范围在currentTime~currentTime+tickMs*WheelSize之间的定时任务，超过这个范围则需要添加任务到上层时间轮
   private[this] val interval = tickMs * wheelSize
-  private[this] val buckets = Array.tabulate[TimerTaskList](wheelSize) { _ => new TimerTaskList(taskCounter) }
 
   private[this] var currentTime = startMs - (startMs % tickMs) // rounding down to multiple of tickMs
 
+  //buckets : Array.tabulate[TimerTaskList] 类型，其每一个项都对应时间轮中一个时间格，用于保存TimerTaskList的数组
+  private[this] val buckets = Array.tabulate[TimerTaskList](wheelSize) { _ => new TimerTaskList(taskCounter) }
+
+
   // overflowWheel can potentially be updated and read by two concurrent threads through add().
   // Therefore, it needs to be volatile due to the issue of Double-Checked Locking pattern with JVM
+  // overflowWheel: TimingWheel 上层时间轮的引用
   @volatile private[this] var overflowWheel: TimingWheel = null
 
+
+  // 添加一层时间轮 主要用于创建上层时间轮
   private[this] def addOverflowWheel(): Unit = {
     synchronized {
       if (overflowWheel == null) {
-        overflowWheel = new TimingWheel(
-          tickMs = interval,
-          wheelSize = wheelSize,
-          startMs = currentTime,
-          taskCounter = taskCounter,
-          queue
-        )
+        // tickMs = interval 上层时间轮的时间格跨度等于下一层时间轮的跨度
+        // wheelSize = wheelSize 大小不变
+        // startMs = currentTime 初始化当前时间轮的创建时间
+        // taskCounter = taskCounter 时间轮中任务的总数
+        // queue
+        overflowWheel = new TimingWheel(tickMs = interval, wheelSize = wheelSize, startMs = currentTime, taskCounter = taskCounter, queue)
       }
     }
   }
 
+  // 向时间轮中添加定时任务，同时也会检测添加的任务是否已经到期
   def add(timerTaskEntry: TimerTaskEntry): Boolean = {
     val expiration = timerTaskEntry.expirationMs
 
@@ -154,13 +168,15 @@ private[timer] class TimingWheel(tickMs: Long, wheelSize: Int, startMs: Long, ta
     }
   }
 
-  // Try to advance the clock
+  // 尝试推进时钟
   def advanceClock(timeMs: Long): Unit = {
     if (timeMs >= currentTime + tickMs) {
       currentTime = timeMs - (timeMs % tickMs)
 
       // Try to advance the clock of the overflow wheel if present
+      // 如果存在，尝试提前溢流轮的时钟
       if (overflowWheel != null) overflowWheel.advanceClock(currentTime)
     }
   }
+
 }

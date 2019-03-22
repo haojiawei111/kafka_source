@@ -291,6 +291,7 @@ class LogCleaner(initialConfig: CleanerConfig,
 
     /**
      * Clean a log if there is a dirty log available, otherwise sleep for a bit
+      * 如果有可用的脏日志，请清理日志，否则请稍微休眠一下
      */
     private def cleanOrSleep() {
       val cleaned = cleanerManager.grabFilthiestCompactedLog(time) match {
@@ -305,7 +306,7 @@ class LogCleaner(initialConfig: CleanerConfig,
             endOffset = nextDirtyOffset
           } catch {
             case _: LogCleaningAbortedException => // task can be aborted, let it go.
-            case _: KafkaStorageException => // partition is already offline. let it go.
+            case _: KafkaStorageException => //   partition is already offline. let it go.
             case e: IOException =>
               val msg = s"Failed to clean up log for ${cleanable.topicPartition} in dir ${cleanable.log.dir.getParent} due to IOException"
               logDirFailureChannel.maybeAddOfflineLogDir(cleanable.log.dir.getParent, msg, e)

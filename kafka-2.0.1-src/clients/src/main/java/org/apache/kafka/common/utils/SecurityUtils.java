@@ -18,17 +18,18 @@ package org.apache.kafka.common.utils;
 
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 
+// 把string转换为KafkaPrincipal   string以 ： 分割
 public class SecurityUtils {
 
     public static KafkaPrincipal parseKafkaPrincipal(String str) {
         if (str == null || str.isEmpty()) {
-            throw new IllegalArgumentException("expected a string in format principalType:principalName but got " + str);
+            throw new IllegalArgumentException("expected a string in format principalType:principalName but got期望一个格式为principalType：principalName但得到的字符串 " + str);
         }
 
         String[] split = str.split(":", 2);
 
         if (split.length != 2) {
-            throw new IllegalArgumentException("expected a string in format principalType:principalName but got " + str);
+            throw new IllegalArgumentException("expected a string in format principalType:principalName but got期望一个格式为principalType：principalName但得到的字符串 " + str);
         }
 
         return new KafkaPrincipal(split[0], split[1]);

@@ -30,6 +30,10 @@ class ZooKeeperMainWrapper(args: Array[String]) extends ZooKeeperMain(args) {
 /**
  * ZooKeeper 3.4.6 broke being able to pass commands on command line.
  * See ZOOKEEPER-1897.  This class is a hack to restore this facility.
+  * ZooKeeper 3.4.6破坏了能够在命令行上传递命令。
+  * 见ZOOKEEPER-1897。这个类是恢复这个设施的黑客。
+  *
+  *
  */
 object ZooKeeperMainWrapper {
 
@@ -38,3 +42,4 @@ object ZooKeeperMainWrapper {
     main.runCmd()
   }
 }
+

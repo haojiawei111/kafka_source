@@ -22,6 +22,9 @@ package kafka.common
   * passing and returning `Long` values), but this class can be useful in some scenarios.
   *
   * Unlike `AtomicLong`, this class is not thread-safe and there are no atomicity guarantees.
+  *
+  * 一个可变单元格，其值为“Long”类型。通常应该更喜欢使用基于值的编程（即*传递和返回`Long`值），但是这个类在某些场景中很有用。
+  * 与`AtomicLong`不同，此类不是线程安全的，并且没有原子性保证
   */
 class LongRef(var value: Long) {
 

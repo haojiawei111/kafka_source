@@ -25,6 +25,7 @@ import kafka.common.UnknownCodecException
   * 压缩编译码器
   */
 object CompressionCodec {
+
   def getCompressionCodec(codec: Int): CompressionCodec = {
     codec match {
       case NoCompressionCodec.codec => NoCompressionCodec
@@ -34,8 +35,7 @@ object CompressionCodec {
       case _ => throw new UnknownCodecException("%d is an unknown compression codec".format(codec))
     }
   }
-  def getCompressionCodec(name: String): CompressionCodec = {
-    name.toLowerCase(Locale.ROOT) match {
+  def getCompressionCodec(name: String): CompressionCodec = {name.toLowerCase(Locale.ROOT) match {
       case NoCompressionCodec.name => NoCompressionCodec
       case GZIPCompressionCodec.name => GZIPCompressionCodec
       case SnappyCompressionCodec.name => SnappyCompressionCodec
@@ -43,6 +43,7 @@ object CompressionCodec {
       case _ => throw new kafka.common.UnknownCodecException("%s is an unknown compression codec".format(name))
     }
   }
+
 }
 
 object BrokerCompressionCodec {
@@ -67,12 +68,19 @@ object BrokerCompressionCodec {
   }
 }
 
+
 sealed trait CompressionCodec { def codec: Int; def name: String }
 sealed trait BrokerCompressionCodec { def name: String }
+
 
 case object DefaultCompressionCodec extends CompressionCodec with BrokerCompressionCodec {
   val codec = GZIPCompressionCodec.codec
   val name = GZIPCompressionCodec.name
+}
+
+case object NoCompressionCodec extends CompressionCodec with BrokerCompressionCodec {
+  val codec = 0
+  val name = "none"
 }
 
 case object GZIPCompressionCodec extends CompressionCodec with BrokerCompressionCodec {
@@ -88,11 +96,6 @@ case object SnappyCompressionCodec extends CompressionCodec with BrokerCompressi
 case object LZ4CompressionCodec extends CompressionCodec with BrokerCompressionCodec {
   val codec = 3
   val name = "lz4"
-}
-
-case object NoCompressionCodec extends CompressionCodec with BrokerCompressionCodec {
-  val codec = 0
-  val name = "none"
 }
 
 case object UncompressedCodec extends BrokerCompressionCodec {

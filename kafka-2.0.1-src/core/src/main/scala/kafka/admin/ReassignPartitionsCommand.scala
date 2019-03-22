@@ -48,19 +48,22 @@ object ReassignPartitionsCommand extends Logging {
 
   private[admin] val EarliestVersion = 1
 
-  def main(args: Array[String]): Unit = {
-    val opts = validateAndParseArgs(args)
-    val zkConnect = opts.options.valueOf(opts.zkConnectOpt)
-    val time = Time.SYSTEM
-    val zkClient = KafkaZkClient(zkConnect, JaasUtils.isZkSecurityEnabled, 30000, 30000, Int.MaxValue, time)
+    def main(args: Array[String]): Unit = {
+      val opts = validateAndParseArgs(args)
+      val zkConnect = opts.options.valueOf(opts.zkConnectOpt)
+      val time = Time.SYSTEM
+      val zkClient = KafkaZkClient(zkConnect, JaasUtils.isZkSecurityEnabled, 30000, 30000, Int.MaxValue, time)
 
-    val adminClientOpt = createAdminClient(opts)
+      val adminClientOpt = createAdminClient(opts)
 
     try {
+      //带--verify参数：查看--exceute操作的结果。
       if(opts.options.has(opts.verifyOpt))
         verifyAssignment(zkClient, adminClientOpt, opts)
+        //带--generate参数：生成建议的分区重分布方案
       else if(opts.options.has(opts.generateOpt))
         generateAssignment(zkClient, opts)
+        //带--execute参数：根据指定的分区重分布方案执行分区调整动作
       else if (opts.options.has(opts.executeOpt))
         executeAssignment(zkClient, adminClientOpt, opts)
     } catch {
@@ -208,6 +211,7 @@ object ReassignPartitionsCommand extends Logging {
     val reassignPartitionsCommand = new ReassignPartitionsCommand(zkClient, adminClientOpt, partitionAssignment.toMap, replicaAssignment, adminZkClient)
 
     // If there is an existing rebalance running, attempt to change its throttle
+    //如果现有重新平衡正在运行，请尝试更改其限制
     if (zkClient.reassignPartitionsInProgress()) {
       println("There is an existing assignment running.")
       reassignPartitionsCommand.maybeLimit(throttle)
@@ -274,6 +278,8 @@ object ReassignPartitionsCommand extends Logging {
           case Some(jsonValue) => jsonValue.to[Int]
           case None => EarliestVersion
         }
+
+
         parsePartitionReassignmentData(version, js)
       case None => throw new AdminOperationException("The input string is not a valid JSON")
     }

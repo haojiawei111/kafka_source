@@ -57,6 +57,8 @@ public class Topology {
      * Sets the {@code auto.offset.reset} configuration when
      * {@link #addSource(AutoOffsetReset, String, String...) adding a source processor} or when creating {@link KStream}
      * or {@link KTable} via {@link StreamsBuilder}.
+     * 在添加源处理器的* {@link #addSource（AutoOffsetReset，String，String ...）时或在创建{@link KStream}
+     * 或{@link KTable}时设置{@code auto.offset.reset}配置{@link StreamsBuilder}。
      */
     public enum AutoOffsetReset {
         EARLIEST, LATEST
@@ -745,7 +747,7 @@ public class Topology {
     }
 
     /**
-     * Connects the processor and the state stores.
+     * Connects the processor and the state stores. 连接处理器和状态存储
      *
      * @param processorName the name of the processor
      * @param stateStoreNames the names of state stores that the processor uses

@@ -21,6 +21,7 @@ import java.util.regex.{Pattern, PatternSyntaxException}
 
 import org.apache.kafka.common.internals.Topic
 
+// 抽象类 输入正则过滤topic
 sealed abstract class TopicFilter(rawRegex: String) extends Logging {
 
   val regex = rawRegex
@@ -39,10 +40,11 @@ sealed abstract class TopicFilter(rawRegex: String) extends Logging {
   }
 
   override def toString = regex
-
+  // 主题是否匹配    excludeInternalTopics排除内部主题  __consumer_offsets和__transaction_state是内部主题
   def isTopicAllowed(topic: String, excludeInternalTopics: Boolean): Boolean
 }
 
+// 检测topic是否符合rawRegex匹配条件
 case class Whitelist(rawRegex: String) extends TopicFilter(rawRegex) {
   override def isTopicAllowed(topic: String, excludeInternalTopics: Boolean) = {
     val allowed = topic.matches(regex) && !(Topic.isInternal(topic) && excludeInternalTopics)

@@ -36,8 +36,8 @@ public interface KeyValueIterator<K, V> extends Iterator<KeyValue<K, V>>, Closea
     void close();
 
     /**
-     * Peek at the next key without advancing the iterator
-     * @return the key of the next value that would be returned from the next call to next
+     * Peek at the next key without advancing the iterator 在没有推进迭代器的情况下查看下一个键
+     * @return the key of the next value that would be returned from the next call to next 从下一次调用返回的下一个值的键
      */
     K peekNextKey();
 }

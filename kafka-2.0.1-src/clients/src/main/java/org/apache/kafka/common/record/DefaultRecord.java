@@ -35,6 +35,7 @@ import static org.apache.kafka.common.record.RecordBatch.MAGIC_VALUE_V2;
 
 /**
  * This class implements the inner record format for magic 2 and above. The schema is as follows:
+ * 此类实现magic 2及更高版本的内部记录格式。架构如下：
  *
  *
  * Record =>
@@ -51,8 +52,9 @@ import static org.apache.kafka.common.record.RecordBatch.MAGIC_VALUE_V2;
  * Note that in this schema, the Bytes and String types use a variable length integer to represent
  * the length of the field. The array type used for the headers also uses a Varint for the number of
  * headers.
+ * 请注意，在此模式中，Bytes和String类型使用可变长度整数来表示字段的长度。用于标头的数组类型也使用Varint作为标头数。
  *
- * The current record attributes are depicted below:
+ * The current record attributes are depicted below:当前记录属性如下所示：
  *
  *  ----------------
  *  | Unused (0-7) |

@@ -68,7 +68,8 @@ public class RocksDBSessionStore<K, AGG> extends WrappedStateStore.AbstractState
     public KeyValueIterator<Windowed<K>, AGG> findSessions(final K keyFrom, final K keyTo, final long earliestSessionEndTime, final long latestSessionStartTime) {
         final KeyValueIterator<Bytes, byte[]> bytesIterator = bytesStore.fetch(
             Bytes.wrap(serdes.rawKey(keyFrom)), Bytes.wrap(serdes.rawKey(keyTo)),
-            earliestSessionEndTime, latestSessionStartTime
+            earliestSessionEndTime, latestSessionS
+                tartTime
         );
         return new WrappedSessionStoreIterator<>(bytesIterator, serdes);
     }

@@ -23,11 +23,13 @@ import java.util.List;
 /**
  * A compound stat is a stat where a single measurement and associated data structure feeds many metrics. This is the
  * example for a histogram which has many associated percentiles.
+ * 复合统计是一种统计，其中单个度量和关联数据结构提供许多度量。这是具有许多相关百分位数的直方图的*示例。
  */
 public interface CompoundStat extends Stat {
 
     public List<NamedMeasurable> stats();
 
+    // 静态内部类
     public static class NamedMeasurable {
 
         private final MetricName name;

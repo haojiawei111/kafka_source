@@ -27,6 +27,7 @@ case class BrokerMetadata(brokerId: Int)
 
 /**
   * This class saves broker's metadata to a file
+  * 此类将broker的元数据保存到文件中  保存到meta.properties文件，默认在log.dirs路径下
   */
 class BrokerMetadataCheckpoint(val file: File) extends Logging {
   private val lock = new Object()
@@ -55,6 +56,7 @@ class BrokerMetadataCheckpoint(val file: File) extends Logging {
     }
   }
 
+  // 读取meta.properties文件
   def read(): Option[BrokerMetadata] = {
     Files.deleteIfExists(new File(file + ".tmp").toPath()) // try to delete any existing temp files for cleanliness
 

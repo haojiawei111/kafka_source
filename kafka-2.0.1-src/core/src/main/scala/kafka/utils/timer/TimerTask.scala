@@ -18,7 +18,7 @@ package kafka.utils.timer
 
 trait TimerTask extends Runnable {
 
-  val delayMs: Long // timestamp in millisecond
+  val delayMs: Long // 时间戳以毫秒为单位
 
   private[this] var timerTaskEntry: TimerTaskEntry = null
 
@@ -33,6 +33,8 @@ trait TimerTask extends Runnable {
     synchronized {
       // if this timerTask is already held by an existing timer task entry,
       // we will remove such an entry first.
+      // 如果此timerTask已由现有计时器任务条目保留，
+      // 我们将首先删除此类条目。
       if (timerTaskEntry != null && timerTaskEntry != entry)
         timerTaskEntry.remove()
 

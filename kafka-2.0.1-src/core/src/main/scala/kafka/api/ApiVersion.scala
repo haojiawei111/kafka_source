@@ -76,7 +76,7 @@ object ApiVersion {
     KAFKA_2_0_IV1
   )
 
-  // Map keys are the union of the short and full versions
+  // Map keys are the union of the short and full versions 映射键是short和full版的组合
   private val versionMap: Map[String, ApiVersion] =
     allVersions.map(v => v.version -> v).toMap ++ allVersions.groupBy(_.shortVersion).map { case (k, v) => k -> v.last }
 

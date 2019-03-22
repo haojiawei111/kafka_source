@@ -22,6 +22,7 @@ import org.apache.kafka.common.TopicPartition
 
 import scala.collection.{Seq, Set, mutable}
 
+// Controller上下文
 class ControllerContext {
   val stats = new ControllerStats
 

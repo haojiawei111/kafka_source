@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Configuration values for metrics
+ * 指标的配置值
  */
 public class MetricConfig {
 

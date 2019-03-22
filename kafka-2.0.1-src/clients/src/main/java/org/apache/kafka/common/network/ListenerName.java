@@ -27,6 +27,7 @@ public final class ListenerName {
 
     /**
      * Create an instance with the security protocol name as the value.
+     * 使用安全协议名称作为值创建实例。
      */
     public static ListenerName forSecurityProtocol(SecurityProtocol securityProtocol) {
         return new ListenerName(securityProtocol.name);

@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * A key-value store that supports put/get/delete and range queries.
- *
+ * 一个键值存储，支持put / get / delete和范围查询。
  * @param <K> The key type
  * @param <V> The value type
  */

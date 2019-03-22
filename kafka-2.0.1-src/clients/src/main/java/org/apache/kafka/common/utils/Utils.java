@@ -426,7 +426,7 @@ public final class Utils {
     }
 
     /**
-     * Extracts the port number from a "host:port" address string.
+     * 从“host：port”地址字符串中提取端口号。
      * @param address address string to parse
      * @return port number or null if the given address is incorrect
      */
@@ -714,6 +714,7 @@ public final class Utils {
 
     /**
      * Recursively delete the given file/directory and any subfiles (if any exist)
+     * 递归删除给定的文件/目录和任何子文件（如果存在）
      *
      * @param file The root file at which to begin deleting
      */

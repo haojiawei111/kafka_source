@@ -17,5 +17,6 @@
 
 package kafka.common
 
+// topic已经标记删除异常
 class TopicAlreadyMarkedForDeletionException(message: String) extends RuntimeException(message) {
 }

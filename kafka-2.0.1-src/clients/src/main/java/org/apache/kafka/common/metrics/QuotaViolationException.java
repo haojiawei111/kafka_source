@@ -20,7 +20,8 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.MetricName;
 
 /**
- * Thrown when a sensor records a value that causes a metric to go outside the bounds configured as its quota
+ * 配额操作
+ * 当传感器记录的值导致度量标准超出配置为其配额的边界时抛出
  */
 public class QuotaViolationException extends KafkaException {
 

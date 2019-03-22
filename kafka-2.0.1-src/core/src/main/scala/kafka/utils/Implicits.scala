@@ -24,10 +24,10 @@ import scala.collection.JavaConverters._
 
 /**
   * In order to have these implicits in scope, add the following import:
+  * 要在范围内包含这些含义，请添加以下导入：
   *
   * `import kafka.utils.Implicits._`
   */
-object Implicits {
 
   /**
    * The java.util.Properties.putAll override introduced in Java 9 is seen as an overload by the
@@ -44,6 +44,5 @@ object Implicits {
     def ++=(map: collection.Map[String, AnyRef]): Unit =
       (properties: util.Hashtable[AnyRef, AnyRef]).putAll(map.asJava)
 
-  }
 
 }

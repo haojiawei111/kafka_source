@@ -25,6 +25,7 @@ import scala.reflect.ClassTag
 
 /**
  * Provides methods for parsing JSON with Jackson and encoding to JSON with a simple and naive custom implementation.
+  * 提供了使用Jackson解析JSON并使用简单而天真的自定义实现编码为JSON的方法。
  */
 object Json {
 
@@ -41,6 +42,9 @@ object Json {
         // stored in ACLs may contain backslash as an escape char, making the JSON generated in earlier versions invalid.
         // Escape backslash and retry to handle these strings which may have been persisted in ZK.
         // Note that this does not handle all special characters (e.g. non-escaped double quotes are not supported)
+        //在1.0.1之前，Json #coding没有转义反斜杠或任何其他特殊字符。存储在ACL中的SSL主体可能包含反斜杠作为转义字符，使早期版本中生成的JSON无效。
+        // 转义反斜杠并重试处理这些可能在ZK中保留的字符串。
+        // 请注意，这不会处理所有特殊字符（例如，不支持非转义双引号）
         val escapedInput = input.replaceAll("\\\\", "\\\\\\\\")
         try Option(mapper.readTree(escapedInput)).map(JsonValue(_))
         catch { case _: JsonProcessingException => None }
@@ -101,16 +105,12 @@ object Json {
   }
 
   /**
-   * Encode an object into a JSON string. This method accepts any type supported by Jackson's ObjectMapper in
-   * the default configuration. That is, Java collections are supported, but Scala collections are not (to avoid
-   * a jackson-scala dependency).
+    * 将对象编码为JSON字符串。此方法接受默认配置中Jackson的ObjectMapper支持的任何类型。也就是说，支持Java集合，但Scala集合不支持（以避免* jackson-scala依赖）。
    */
   def encodeAsString(obj: Any): String = mapper.writeValueAsString(obj)
 
   /**
-   * Encode an object into a JSON value in bytes. This method accepts any type supported by Jackson's ObjectMapper in
-   * the default configuration. That is, Java collections are supported, but Scala collections are not (to avoid
-   * a jackson-scala dependency).
+    * 将对象编码为以字节为单位的JSON值。此方法接受默认配置中Jackson的ObjectMapper支持的任何类型。也就是说，支持Java集合，但Scala集合不支持（以避免* jackson-scala依赖）。
    */
   def encodeAsBytes(obj: Any): Array[Byte] = mapper.writeValueAsBytes(obj)
 }

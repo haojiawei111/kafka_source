@@ -31,6 +31,7 @@ object QuotaType  {
   case object FollowerReplication extends QuotaType
   case object AlterLogDirsReplication extends QuotaType
 }
+
 sealed trait QuotaType
 
 object QuotaFactory extends Logging {
@@ -41,21 +42,19 @@ object QuotaFactory extends Logging {
     def record(value: Long): Unit = ()
   }
 
-  case class QuotaManagers(fetch: ClientQuotaManager,
-                           produce: ClientQuotaManager,
-                           request: ClientRequestQuotaManager,
-                           leader: ReplicationQuotaManager,
-                           follower: ReplicationQuotaManager,
-                           alterLogDirs: ReplicationQuotaManager,
-                           clientQuotaCallback: Option[ClientQuotaCallback]) {
+  case class QuotaManagers(fetch: ClientQuotaManager,produce: ClientQuotaManager,request: ClientRequestQuotaManager,leader: ReplicationQuotaManager,follower: ReplicationQuotaManager,
+                           alterLogDirs: ReplicationQuotaManager,clientQuotaCallback: Option[ClientQuotaCallback]) {
+
     def shutdown() {
       fetch.shutdown
       produce.shutdown
       request.shutdown
       clientQuotaCallback.foreach(_.close())
     }
+
   }
 
+  // 拿到QuotaManagers实例
   def instantiate(cfg: KafkaConfig, metrics: Metrics, time: Time, threadNamePrefix: String): QuotaManagers = {
 
     val clientQuotaCallback = Option(cfg.getConfiguredInstance(KafkaConfig.ClientQuotaCallbackClassProp,
@@ -71,6 +70,7 @@ object QuotaFactory extends Logging {
     )
   }
 
+  // 解析配置文件 配置producer配额管理
   def clientProduceConfig(cfg: KafkaConfig): ClientQuotaManagerConfig = {
     if (cfg.producerQuotaBytesPerSecondDefault != Long.MaxValue)
       warn(s"${KafkaConfig.ProducerQuotaBytesPerSecondDefaultProp} has been deprecated in 0.11.0.0 and will be removed in a future release. Use dynamic quota defaults instead.")
@@ -81,6 +81,7 @@ object QuotaFactory extends Logging {
     )
   }
 
+  // 解析配置文件 配置consumer配额管理
   def clientFetchConfig(cfg: KafkaConfig): ClientQuotaManagerConfig = {
     if (cfg.consumerQuotaBytesPerSecondDefault != Long.MaxValue)
       warn(s"${KafkaConfig.ConsumerQuotaBytesPerSecondDefaultProp} has been deprecated in 0.11.0.0 and will be removed in a future release. Use dynamic quota defaults instead.")
@@ -91,6 +92,7 @@ object QuotaFactory extends Logging {
     )
   }
 
+  // 解析配置文件 配置Request配额管理
   def clientRequestConfig(cfg: KafkaConfig): ClientQuotaManagerConfig = {
     ClientQuotaManagerConfig(
       numQuotaSamples = cfg.numQuotaSamples,
@@ -98,6 +100,7 @@ object QuotaFactory extends Logging {
     )
   }
 
+  // 解析配置文件 配置replica配额管理
   def replicationConfig(cfg: KafkaConfig): ReplicationQuotaManagerConfig = {
     ReplicationQuotaManagerConfig(
       numQuotaSamples = cfg.numReplicationQuotaSamples,
@@ -105,6 +108,7 @@ object QuotaFactory extends Logging {
     )
   }
 
+  // 解析配置文件 配置alterLogDirsReplication配额管理
   def alterLogDirsReplicationConfig(cfg: KafkaConfig): ReplicationQuotaManagerConfig = {
     ReplicationQuotaManagerConfig(
       numQuotaSamples = cfg.numAlterLogDirsReplicationQuotaSamples,

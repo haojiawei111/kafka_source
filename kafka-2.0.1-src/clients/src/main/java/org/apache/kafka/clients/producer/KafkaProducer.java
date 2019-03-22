@@ -109,6 +109,8 @@ import static org.apache.kafka.common.serialization.ExtendedSerializer.Wrapper.e
  * producer.close();
  * }</pre>
  * <p>
+ *     生产者由一个缓冲空间池组成，该缓冲空间池保存尚未发送到服务器的记录，以及一个后台I/O线程，
+ *     该后台I/O线程负责将这些记录转换为请求并将其传输到集群。使用后关闭生产者失败将泄漏这些资源。
  * The producer consists of a pool of buffer space that holds records that haven't yet been transmitted to the server
  * as well as a background I/O thread that is responsible for turning these records into requests and transmitting them
  * to the cluster. Failure to close the producer after use will leak these resources.

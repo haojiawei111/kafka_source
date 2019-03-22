@@ -32,6 +32,7 @@ import scala.collection._
 
 /**
  * Represents all the entities that can be configured via ZK
+  * 表示可以通过ZK配置的所有实体
  */
 object ConfigType {
   val Topic = "topics"

@@ -52,6 +52,7 @@ public interface StreamPartitioner<K, V> {
 
     /**
      * Determine the partition number for a record with the given key and value and the current number of partitions.
+     * 确定具有给定键和值以及当前分区数的记录的分区号。
      *
      * @param topic the topic name this record is sent to
      * @param key the key of the record

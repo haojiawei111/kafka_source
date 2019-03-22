@@ -25,8 +25,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 /**
   * Typical implementations of this interface convert a `ConsumerRecord` into a type that can then be passed to
   * a `PrintStream`.
+  * 该接口的典型实现将`ConsumerRecord`转换为可以传递给* a PrintStream的类型。
   *
-  * This is used by the `ConsoleConsumer`.
+  * This is used by the `ConsoleConsumer`. 这由`ConsoleConsumer`使用。
   */
 trait MessageFormatter {
 

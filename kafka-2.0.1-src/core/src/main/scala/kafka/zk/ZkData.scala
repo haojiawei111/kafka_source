@@ -48,6 +48,8 @@ import scala.util.{Failure, Success, Try}
 
 // This file contains objects for encoding/decoding data stored in ZooKeeper nodes (znodes).
 
+//该文件包含用于编码/解码存储在ZooKeeper节点（znodes）中的数据的对象。
+
 object ControllerZNode {
   def path = "/controller"
   def encode(brokerId: Int, timestamp: Long): Array[Byte] = {
@@ -114,7 +116,7 @@ object BrokerIdZNode {
   def path(id: Int) = s"${BrokerIdsZNode.path}/$id"
 
   /**
-   * Encode to JSON bytes.
+   * Encode to JSON bytes. 编码为JSON字节
    *
    * The JSON format includes a top level host and port for compatibility with older clients.
    */
@@ -134,6 +136,7 @@ object BrokerIdZNode {
         endPoint.listenerName.value -> endPoint.securityProtocol.name
       }.toMap.asJava)
     }
+    //转换为bytes
     Json.encodeAsBytes(jsonMap.asJava)
   }
 
@@ -150,6 +153,7 @@ object BrokerIdZNode {
 
   /**
     * Create a BrokerInfo object from id and JSON bytes.
+    * 从id和JSON字节创建BrokerInfo对象。
     *
     * @param id
     * @param jsonBytes
@@ -267,12 +271,15 @@ object TopicPartitionZNode {
 
 object TopicPartitionStateZNode {
   def path(partition: TopicPartition) = s"${TopicPartitionZNode.path(partition)}/state"
+
+  // {"controller_epoch":179,"leader":0,"version":1,"leader_epoch":0,"isr":[0,2]}
   def encode(leaderIsrAndControllerEpoch: LeaderIsrAndControllerEpoch): Array[Byte] = {
     val leaderAndIsr = leaderIsrAndControllerEpoch.leaderAndIsr
     val controllerEpoch = leaderIsrAndControllerEpoch.controllerEpoch
     Json.encodeAsBytes(Map("version" -> 1, "leader" -> leaderAndIsr.leader, "leader_epoch" -> leaderAndIsr.leaderEpoch,
       "controller_epoch" -> controllerEpoch, "isr" -> leaderAndIsr.isr.asJava).asJava)
   }
+
   def decode(bytes: Array[Byte], stat: Stat): Option[LeaderIsrAndControllerEpoch] = {
     Json.parseBytes(bytes).map { js =>
       val leaderIsrAndEpochInfo = js.asJsonObject
@@ -429,7 +436,7 @@ object PreferredReplicaElectionZNode {
   }.map(_.toSet).getOrElse(Set.empty)
 }
 
-//old consumer path znode
+//old consumer path znode 旧的消费者路径znode
 object ConsumerPathZNode {
   def path = "/consumers"
 }
@@ -526,7 +533,6 @@ object ZkAclStore {
 object LiteralAclStore extends ZkAclStore {
   val patternType: PatternType = PatternType.LITERAL
   val aclPath: String = "/kafka-acl"
-
   def changeStore: ZkAclChangeStore = LiteralAclChangeStore
 }
 
@@ -713,6 +719,7 @@ object DelegationTokenInfoZNode {
 object ZkData {
 
   // Important: it is necessary to add any new top level Zookeeper path to the Seq
+  // 重要提示：必须向Seq添加任何新的顶级Zookeeper路径
   val SecureRootPaths = Seq(AdminZNode.path,
     BrokersZNode.path,
     ClusterZNode.path,
@@ -725,6 +732,7 @@ object ZkData {
     DelegationTokenAuthZNode.path) ++ ZkAclStore.securePaths
 
   // These are persistent ZK paths that should exist on kafka broker startup.
+  // 这些是kafka代理启动时应该存在的持久性ZK路径。
   val PersistentZkPaths = Seq(
     ConsumerPathZNode.path, // old consumer path
     BrokerIdsZNode.path,

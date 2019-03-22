@@ -22,6 +22,8 @@ import com.yammer.metrics.core.Timer
  * A wrapper around metrics timer object that provides a convenient mechanism
  * to time code blocks. This pattern was borrowed from the metrics-scala_2.9.1
  * package.
+  * 包含指标计时器对象的包装器，它为时间码块提供了便利的机制。这种模式来自metrics-scala_2.9.1包。
+  *
  * @param metric The underlying timer object.
  */
 class KafkaTimer(metric: Timer) {

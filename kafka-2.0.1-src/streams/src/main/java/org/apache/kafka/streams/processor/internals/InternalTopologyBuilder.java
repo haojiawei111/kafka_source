@@ -21,6 +21,7 @@ import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.TopologyDescription;
 import org.apache.kafka.streams.errors.TopologyException;
 import org.apache.kafka.streams.processor.ProcessorSupplier;
 import org.apache.kafka.streams.processor.StateStore;
@@ -59,49 +60,54 @@ public class InternalTopologyBuilder {
 
     private static final String[] NO_PREDECESSORS = {};
 
-    // node factories in a topological order
+    // node factories in a topological order 节点工厂按拓扑顺序排列
     private final Map<String, NodeFactory> nodeFactories = new LinkedHashMap<>();
 
-    // state factories
+    // state factories 状态工厂
     private final Map<String, StateStoreFactory> stateFactories = new HashMap<>();
 
-    // global state factories
+    // global state factories 全局状态工厂
     private final Map<String, StateStore> globalStateStores = new LinkedHashMap<>();
 
-    // all topics subscribed from source processors (without application-id prefix for internal topics)
+    // all topics subscribed from source processors (without application-id prefix for internal topics) 从源处理器订阅的所有主题（没有内部主题的application-id前缀）
     private final Set<String> sourceTopicNames = new HashSet<>();
 
-    // all internal topics auto-created by the topology builder and used in source / sink processors
+    // all internal topics auto-created by the topology builder and used in source / sink processors 由拓扑构建器自动创建并在源/接收器处理器中使用的所有内部主题
     private final Set<String> internalTopicNames = new HashSet<>();
 
-    // groups of source processors that need to be copartitioned
+    // groups of source processors that need to be copartitioned 需要共同分配的源处理器组
     private final List<Set<String>> copartitionSourceGroups = new ArrayList<>();
 
-    // map from source processor names to subscribed topics (without application-id prefix for internal topics)
+    // map from source processor names to subscribed topics (without application-id prefix for internal topics) 从源处理器名称映射到订阅主题（没有内部主题的application-id前缀）
     private final Map<String, List<String>> nodeToSourceTopics = new HashMap<>();
 
-    // map from source processor names to regex subscription patterns
+    // map from source processor names to regex subscription patterns 从源处理器名称映射到正则表达式订阅模式
     private final Map<String, Pattern> nodeToSourcePatterns = new LinkedHashMap<>();
 
-    // map from sink processor names to subscribed topic (without application-id prefix for internal topics)
+    // map from sink processor names to subscribed topic (without application-id prefix for internal topics) 从接收器处理器名称映射到订阅主题（没有内部主题的application-id前缀）
     private final Map<String, String> nodeToSinkTopic = new HashMap<>();
 
     // map from topics to their matched regex patterns, this is to ensure one topic is passed through on source node
     // even if it can be matched by multiple regex patterns
+    // 从主题映射到匹配的正则表达式模式，这是为了确保在源节点上传递一个主题
+    // 即使它可以由多个正则表达式模式匹配
     private final Map<String, Pattern> topicToPatterns = new HashMap<>();
 
     // map from state store names to all the topics subscribed from source processors that
     // are connected to these state stores
+    // 从状态存储名称映射到源连接到这些状态存储的源处理器订阅的所有主题
     private final Map<String, Set<String>> stateStoreNameToSourceTopics = new HashMap<>();
 
     // map from state store names to all the regex subscribed topics from source processors that
     // are connected to these state stores
+    // 映射从状态存储名称到源处理器的所有正则表达式订阅主题
+    // 连接到这些状态存储
     private final Map<String, Set<Pattern>> stateStoreNameToSourceRegex = new HashMap<>();
 
-    // map from state store names to this state store's corresponding changelog topic if possible
+    // map from state store names to this state store's corresponding changelog topic if possible 如果可能，从状态存储名称映射到此状态存储的相应更改日志主题
     private final Map<String, String> storeToChangelogTopic = new HashMap<>();
 
-    // all global topics
+    // all global topics 所有全局主题
     private final Set<String> globalTopics = new HashSet<>();
 
     private final Set<String> earliestResetTopics = new HashSet<>();
@@ -122,7 +128,7 @@ public class InternalTopologyBuilder {
 
     private Map<Integer, Set<String>> nodeGroups = null;
 
-    // TODO: this is only temporary for 2.0 and should be removed
+    // TODO: this is only temporary for 2.0 and should be removed 这只是2.0的临时性，应该删除
     public final Map<StoreBuilder, String> storeToSourceChangelogTopic = new HashMap<>();
 
     public interface StateStoreFactory {
@@ -197,7 +203,7 @@ public class InternalTopologyBuilder {
         @Override
         public long retentionPeriod() {
             if (!isWindowStore()) {
-                throw new IllegalStateException("retentionPeriod is not supported when not a window store");
+                throw new IllegalStateException("retentionPeriod is not supported when not a window store 不是窗口存储时不支持retentionPeriod");
             }
             return ((WindowStoreBuilder) builder).retentionPeriod();
         }
@@ -246,6 +252,7 @@ public class InternalTopologyBuilder {
 
     private class SourceNodeFactory extends NodeFactory {
         private final List<String> topics;
+        // 正则表达式
         private final Pattern pattern;
         private final Deserializer<?> keyDeserializer;
         private final Deserializer<?> valDeserializer;
@@ -266,9 +273,7 @@ public class InternalTopologyBuilder {
         }
 
         List<String> getTopics(final Collection<String> subscribedTopics) {
-            // if it is subscribed via patterns, it is possible that the topic metadata has not been updated
-            // yet and hence the map from source node to topics is stale, in this case we put the pattern as a place holder;
-            // this should only happen for debugging since during runtime this function should always be called after the metadata has updated.
+            //
             if (subscribedTopics.isEmpty()) {
                 return Collections.singletonList(String.valueOf(pattern));
             }
@@ -298,6 +303,9 @@ public class InternalTopologyBuilder {
             // if it is subscribed via patterns, it is possible that the topic metadata has not been updated
             // yet and hence the map from source node to topics is stale, in this case we put the pattern as a place holder;
             // this should only happen for debugging since during runtime this function should always be called after the metadata has updated.
+            // 如果它是通过模式订阅的，那么主题元数据可能尚未更新
+            // 因此从源节点到主题的地图是陈旧的，在这种情况下我们将模式作为占位符;
+            // 这应该仅用于调试，因为在运行时期间应始终在元数据更新后调用此函数。
             if (sourceTopics == null) {
                 return new SourceNode<>(name, Collections.singletonList(String.valueOf(pattern)), timestampExtractor, keyDeserializer, valDeserializer);
             } else {
@@ -334,6 +342,7 @@ public class InternalTopologyBuilder {
                                 final TopicNameExtractor<K, V> topicExtractor,
                                 final Serializer<K> keySerializer,
                                 final Serializer<V> valSerializer,
+                                // 分区器
                                 final StreamPartitioner<? super K, ? super V> partitioner) {
             super(name, predecessors.clone());
             this.topicExtractor = topicExtractor;
@@ -347,7 +356,7 @@ public class InternalTopologyBuilder {
             if (topicExtractor instanceof StaticTopicNameExtractor) {
                 final String topic = ((StaticTopicNameExtractor) topicExtractor).topicName;
                 if (internalTopicNames.contains(topic)) {
-                    // prefix the internal topic name with the application id
+                    // prefix the internal topic name with the application id 使用应用程序ID为内部主题名称添加前缀
                     return new SinkNode<>(name, new StaticTopicNameExtractor<K, V>(decorateTopic(topic)), keySerializer, valSerializer, partitioner);
                 } else {
                     return new SinkNode<>(name, topicExtractor, keySerializer, valSerializer, partitioner);
@@ -386,6 +395,7 @@ public class InternalTopologyBuilder {
 
         for (final String topic : topics) {
             Objects.requireNonNull(topic, "topic names cannot be null");
+            // 验证主题尚未注册
             validateTopicNotAlreadyRegistered(topic);
             maybeAddToResetList(earliestResetTopics, latestResetTopics, offsetReset, topic);
             sourceTopicNames.add(topic);
@@ -522,6 +532,7 @@ public class InternalTopologyBuilder {
                                     final boolean allowOverride,
                                     final String... processorNames) {
         Objects.requireNonNull(storeBuilder, "storeBuilder can't be null");
+
         if (!allowOverride && stateFactories.containsKey(storeBuilder.name())) {
             throw new TopologyException("StateStore " + storeBuilder.name() + " is already added.");
         }
@@ -531,6 +542,7 @@ public class InternalTopologyBuilder {
         if (processorNames != null) {
             for (final String processorName : processorNames) {
                 Objects.requireNonNull(processorName, "processor name must not be null");
+                // 连接Processor 和 StateStore
                 connectProcessorAndStateStore(processorName, storeBuilder.name());
             }
         }
@@ -564,6 +576,10 @@ public class InternalTopologyBuilder {
                        storeBuilder.build());
     }
 
+    /**
+     * 验证主题尚未注册
+     * @param topic
+     */
     private void validateTopicNotAlreadyRegistered(final String topic) {
         if (sourceTopicNames.contains(topic) || globalTopics.contains(topic)) {
             throw new TopologyException("Topic " + topic + " has already been registered by another source.");
@@ -999,6 +1015,7 @@ public class InternalTopologyBuilder {
     /**
      * Returns the map of topic groups keyed by the group id.
      * A topic group is a group of topics in the same task.
+     * 返回由组ID键控的主题组的映射。 主题组是同一任务中的一组主题。
      *
      * @return groups of topic names
      */
@@ -1356,6 +1373,9 @@ public class InternalTopologyBuilder {
                 new HashSet<>(nodesByName.values())));
     }
 
+    /**
+     * 返回GlobalStore的描述
+     */
     public final static class GlobalStore implements TopologyDescription.GlobalStore {
         private final Source source;
         private final Processor processor;
@@ -1415,6 +1435,9 @@ public class InternalTopologyBuilder {
         }
     }
 
+    /**
+     * 返回节点描述的类
+     */
     public abstract static class AbstractNode implements TopologyDescription.Node {
         final String name;
         final Set<TopologyDescription.Node> predecessors = new TreeSet<>(NODE_COMPARATOR);

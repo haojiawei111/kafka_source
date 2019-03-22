@@ -49,6 +49,7 @@ object KafkaController extends Logging {
 
   /**
    * ControllerEventThread will shutdown once it sees this event
+    * 一旦看到这个事件ControllerEventThread就会关闭  关闭事件
    */
   private[controller] case object ShutdownEventThread extends ControllerEvent {
     def state = ControllerState.ControllerShutdown
@@ -143,7 +144,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
   )
 
   /**
-   * Returns true if this broker is the current controller.如果此broker是当前控制器，则返回true。
+   * 如果此broker是当前控制器，则返回true。
    */
   def isActive: Boolean = activeControllerId == config.brokerId
 
@@ -153,8 +154,10 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
    * Invoked when the controller module of a Kafka server is started up. This does not assume that the current broker
    * is the controller. It merely registers the session expiration listener and starts the controller leader
    * elector
+    * 在启动Kafka服务器的控制器模块时调用。这并不假设当前代理*是控制器。它只是注册会话过期监听器并启动控制器领导者* elector
    */
   def startup() = {
+
     zkClient.registerStateChangeHandler(new StateChangeHandler {
       override val name: String = StateChangeHandlers.ControllerHandler
       override def afterInitializingSession(): Unit = {
@@ -166,9 +169,13 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
 
         // Block initialization of the new session until the expiration event is being handled,
         // which ensures that all pending events have been processed before creating the new session
+        // 阻止新会话的初始化，直到处理到期事件，
+        // 确保在创建新会话之前已处理所有待处理事件
         expireEvent.waitUntilProcessingStarted()
       }
+
     })
+
     //Startu是个样例类
     eventManager.put(Startup)
     eventManager.start()
@@ -1655,6 +1662,7 @@ case class PartitionAndReplica(topicPartition: TopicPartition, replica: Int) {
 }
 
 case class LeaderIsrAndControllerEpoch(leaderAndIsr: LeaderAndIsr, controllerEpoch: Int) {
+  // {"controller_epoch":179,"leader":0,"version":1,"leader_epoch":0,"isr":[0,2]}
   override def toString: String = {
     val leaderAndIsrInfo = new StringBuilder
     leaderAndIsrInfo.append("(Leader:" + leaderAndIsr.leader)

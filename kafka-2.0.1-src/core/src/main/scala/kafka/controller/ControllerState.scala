@@ -26,6 +26,7 @@ sealed abstract class ControllerState {
   def rateAndTimeMetricName: Option[String] =
     if (hasRateAndTimeMetric) Some(s"${toString}RateAndTimeMs") else None
 
+  // 有速率和时间度量
   protected def hasRateAndTimeMetric: Boolean = true
 }
 
@@ -50,6 +51,8 @@ object ControllerState {
     def value = 2
     // The LeaderElectionRateAndTimeMs metric existed before `ControllerState` was introduced and we keep the name
     // for backwards compatibility. The alternative would be to have the same metric under two different names.
+    //LeaderElectionRateAndTimeMs指标在引入`ControllerState`之前存在，我们保留名称
+    // 以向后兼容。另一种方法是在两个不同的名称下使用相同的度量标准。
     override def rateAndTimeMetricName = Some("LeaderElectionRateAndTimeMs")
   }
 
@@ -97,7 +100,5 @@ object ControllerState {
     def value = 13
   }
 
-  val values: Seq[ControllerState] = Seq(Idle, ControllerChange, BrokerChange, TopicChange, TopicDeletion,
-    PartitionReassignment, AutoLeaderBalance, ManualLeaderBalance, ControlledShutdown, IsrChange, LeaderAndIsrResponseReceived,
-    LogDirChange, ControllerShutdown, UncleanLeaderElectionEnable)
+  val values: Seq[ControllerState] = Seq(Idle, ControllerChange, BrokerChange, TopicChange, TopicDeletion,PartitionReassignment, AutoLeaderBalance, ManualLeaderBalance, ControlledShutdown, IsrChange, LeaderAndIsrResponseReceived, LogDirChange, ControllerShutdown, UncleanLeaderElectionEnable)
 }

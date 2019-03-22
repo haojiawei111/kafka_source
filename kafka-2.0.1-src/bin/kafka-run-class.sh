@@ -1,18 +1,4 @@
 #!/bin/bash
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 if [ $# -lt 1 ];
 then
@@ -20,18 +6,19 @@ then
   exit 1
 fi
 
-# CYGINW == 1 if Cygwin is detected, else 0.
+# CYGINW == 1 if Cygwin is detected, else 0. Cygwin是一个在windows平台上运行的类UNIX模拟环境Cygwin是一个在windows平台上运行的类UNIX模拟环境
 if [[ $(uname -a) =~ "CYGWIN" ]]; then
   CYGWIN=1
 else
   CYGWIN=0
 fi
 
+# -z 字符串    字符串的长度为零则为真
 if [ -z "$INCLUDE_TEST_JARS" ]; then
   INCLUDE_TEST_JARS=false
 fi
 
-# Exclude jars not necessary for running commands.
+# Exclude jars not necessary for running commands. 排除运行命令不必要的jar
 regex="(-(test|test-sources|src|scaladoc|javadoc)\.jar|jar.asc)$"
 should_include_file() {
   if [ "$INCLUDE_TEST_JARS" = true ]; then
@@ -44,7 +31,7 @@ should_include_file() {
     return 1
   fi
 }
-
+# 运行脚本的目录
 base_dir=$(dirname $0)/..
 
 if [ -z "$SCALA_VERSION" ]; then
@@ -57,6 +44,7 @@ fi
 
 # run ./gradlew copyDependantLibs to get all dependant jars in a local dir
 shopt -s nullglob
+
 for dir in "$base_dir"/core/build/dependant-libs-${SCALA_VERSION}*;
 do
   CLASSPATH="$CLASSPATH:$dir/*"
@@ -158,10 +146,13 @@ do
 done
 shopt -u nullglob
 
+
+# 设置 CLASSPATH 完成
 if [ -z "$CLASSPATH" ] ; then
   echo "Classpath is empty. Please build the project first e.g. by running './gradlew jar -PscalaVersion=$SCALA_VERSION'"
   exit 1
 fi
+
 
 # JMX settings
 if [ -z "$KAFKA_JMX_OPTS" ]; then
@@ -186,17 +177,17 @@ if [ -z "$KAFKA_LOG4J_OPTS" ]; then
   (( CYGWIN )) && LOG4J_DIR=$(cygpath --path --mixed "${LOG4J_DIR}")
   KAFKA_LOG4J_OPTS="-Dlog4j.configuration=file:${LOG4J_DIR}"
 else
-  # create logs directory
+  # 创建log文件夹
   if [ ! -d "$LOG_DIR" ]; then
     mkdir -p "$LOG_DIR"
   fi
 fi
 
-# If Cygwin is detected, LOG_DIR is converted to Windows format.
+# If Cygwin is detected, LOG_DIR is converted to Windows format. 日志目录转换为Windows格式。
 (( CYGWIN )) && LOG_DIR=$(cygpath --path --mixed "${LOG_DIR}")
 KAFKA_LOG4J_OPTS="-Dkafka.logs.dir=$LOG_DIR $KAFKA_LOG4J_OPTS"
 
-# Generic jvm settings you want to add
+# Generic jvm settings you want to add要添加的通用JVM设置
 if [ -z "$KAFKA_OPTS" ]; then
   KAFKA_OPTS=""
 fi
@@ -211,7 +202,7 @@ if [ "x$KAFKA_DEBUG" != "x" ]; then
         JAVA_DEBUG_PORT="$DEFAULT_JAVA_DEBUG_PORT"
     fi
 
-    # Use the defaults if JAVA_DEBUG_OPTS was not set
+    # Use the defaults if JAVA_DEBUG_OPTS was not set 如果未设置java_debug_opts，则使用默认值
     DEFAULT_JAVA_DEBUG_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND_FLAG:-n},address=$JAVA_DEBUG_PORT"
     if [ -z "$JAVA_DEBUG_OPTS" ]; then
         JAVA_DEBUG_OPTS="$DEFAULT_JAVA_DEBUG_OPTS"
@@ -244,6 +235,12 @@ for args in "$@" ; do
     exec $JAVA $KAFKA_HEAP_OPTS $KAFKA_JVM_PERFORMANCE_OPTS $KAFKA_GC_LOG_OPTS $KAFKA_JMX_OPTS $KAFKA_LOG4J_OPTS -cp $CLASSPATH $KAFKA_OPTS "kafka.utils.VersionInfo"
   fi
 done
+
+
+
+
+# 正真 启动 程序
+# $#    传递到脚本的参数个数
 
 while [ $# -gt 0 ]; do
   COMMAND=$1

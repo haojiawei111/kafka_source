@@ -31,7 +31,7 @@ import static org.apache.kafka.common.protocol.ApiKeys.API_VERSIONS;
 
 public class RequestContext {
     public final RequestHeader header;
-    public final String connectionId;
+    public final String connectionId; //连接ID
     public final InetAddress clientAddress;
     public final KafkaPrincipal principal;
     public final ListenerName listenerName;
@@ -52,6 +52,7 @@ public class RequestContext {
     }
 
     public RequestAndSize parseRequest(ByteBuffer buffer) {
+
         if (isUnsupportedApiVersionsRequest()) {
             // Unsupported ApiVersion requests are treated as v0 requests and are not parsed
             ApiVersionsRequest apiVersionsRequest = new ApiVersionsRequest((short) 0, header.apiVersion());
@@ -71,6 +72,7 @@ public class RequestContext {
                         ", principal: " + principal, ex);
             }
         }
+
     }
 
     public Send buildResponse(AbstractResponse body) {

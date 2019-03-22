@@ -74,8 +74,7 @@ public class QueryableStoreTypes {
         }
     }
 
-    private static class KeyValueStoreType<K, V> extends
-                                                 QueryableStoreTypeMatcher<ReadOnlyKeyValueStore<K, V>> {
+    private static class KeyValueStoreType<K, V> extends QueryableStoreTypeMatcher<ReadOnlyKeyValueStore<K, V>> {
         KeyValueStoreType() {
             super(ReadOnlyKeyValueStore.class);
         }

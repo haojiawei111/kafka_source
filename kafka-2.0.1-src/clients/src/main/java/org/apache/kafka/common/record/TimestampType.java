@@ -19,7 +19,7 @@ package org.apache.kafka.common.record;
 import java.util.NoSuchElementException;
 
 /**
- * The timestamp type of the records.
+ * The timestamp type of the records.记录的时间戳类型。
  */
 public enum TimestampType {
     NO_TIMESTAMP_TYPE(-1, "NoTimestampType"), CREATE_TIME(0, "CreateTime"), LOG_APPEND_TIME(1, "LogAppendTime");
@@ -36,7 +36,7 @@ public enum TimestampType {
         for (TimestampType t : values())
             if (t.name.equals(name))
                 return t;
-        throw new NoSuchElementException("Invalid timestamp type " + name);
+        throw new NoSuchElementException("Invalid timestamp type " + name); //时间戳类型无效
     }
 
     @Override

@@ -19,6 +19,7 @@ package kafka.common
 
 /**
  * Indicates the follower received records with non-monotonically increasing offsets
+  * 表示跟随者接收到具有非单调递增偏移的记录
  */
 class OffsetsOutOfOrderException(message: String) extends RuntimeException(message) {
 }

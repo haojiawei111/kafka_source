@@ -30,6 +30,7 @@ import org.apache.kafka.common.utils.Utils;
 
 /**
  * The default partitioning strategy:
+ * 他默认的分区策略：
  * <ul>
  * <li>If a partition is specified in the record, use it
  * <li>If no partition is specified but a key is present choose a partition based on a hash of the key
@@ -61,11 +62,11 @@ public class DefaultPartitioner implements Partitioner {
                 int part = Utils.toPositive(nextValue) % availablePartitions.size();
                 return availablePartitions.get(part).partition();
             } else {
-                // no partitions are available, give a non-available partition
+                // no partitions are available, give a non-available partition没有可用的分区，请提供不可用的分区
                 return Utils.toPositive(nextValue) % numPartitions;
             }
         } else {
-            // hash the keyBytes to choose a partition
+            // hash the keyBytes to choose a partition 散列keyBytes以选择分区
             return Utils.toPositive(Utils.murmur2(keyBytes)) % numPartitions;
         }
     }

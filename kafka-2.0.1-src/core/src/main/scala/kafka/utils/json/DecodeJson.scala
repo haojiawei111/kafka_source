@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.{JsonMappingException, JsonNode}
 
 /**
  * A type class for parsing JSON. This should typically be used via `JsonValue.apply`.
+  * 用于解析JSON的类型类。这通常应该通过`JsonValue.apply`使用。
  */
 trait DecodeJson[T] {
 

@@ -17,7 +17,7 @@
 package org.apache.kafka.common;
 
 /**
- * Information about a Kafka node kafka节点信息
+ *  kafka节点信息 javabean
  */
 public class Node {
 

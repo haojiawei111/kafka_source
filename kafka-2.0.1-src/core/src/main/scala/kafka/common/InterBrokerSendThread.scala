@@ -32,11 +32,7 @@ import scala.collection.JavaConverters._
 /**
  *  Class for inter-broker send thread that utilize a non-blocking network client.
  */
-abstract class InterBrokerSendThread(name: String,
-                                     networkClient: NetworkClient,
-                                     time: Time,
-                                     isInterruptible: Boolean = true)
-  extends ShutdownableThread(name, isInterruptible) {
+abstract class InterBrokerSendThread(name: String,networkClient: NetworkClient,time: Time,isInterruptible: Boolean = true)extends ShutdownableThread(name, isInterruptible) {
 
   def generateRequests(): Iterable[RequestAndCompletionHandler]
   def requestTimeoutMs: Int

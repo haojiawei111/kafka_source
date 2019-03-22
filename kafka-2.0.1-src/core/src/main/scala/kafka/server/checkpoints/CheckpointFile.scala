@@ -1,19 +1,3 @@
-/**
-  * Licensed to the Apache Software Foundation (ASF) under one or more
-  * contributor license agreements.  See the NOTICE file distributed with
-  * this work for additional information regarding copyright ownership.
-  * The ASF licenses this file to You under the Apache License, Version 2.0
-  * (the "License"); you may not use this file except in compliance with
-  * the License.  You may obtain a copy of the License at
-  *
-  * http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
 package kafka.server.checkpoints
 
 import java.io._
@@ -33,22 +17,20 @@ trait CheckpointFileFormatter[T]{
   def fromLine(line: String): Option[T]
 }
 
-class CheckpointFile[T](val file: File,
-                        version: Int,
-                        formatter: CheckpointFileFormatter[T],
-                        logDirFailureChannel: LogDirFailureChannel,
-                        logDir: String) extends Logging {
+class CheckpointFile[T](val file: File,version: Int,formatter: CheckpointFileFormatter[T],logDirFailureChannel: LogDirFailureChannel,logDir: String) extends Logging {
+
   private val path = file.toPath.toAbsolutePath
   private val tempPath = Paths.get(path.toString + ".tmp")
   private val lock = new Object()
 
-  try Files.createFile(file.toPath) // create the file if it doesn't exist
+  try Files.createFile(file.toPath) // 如果文件不存在，请创建该文件
   catch { case _: FileAlreadyExistsException => }
 
   def write(entries: Seq[T]) {
     lock synchronized {
       try {
         // write to temp file and then swap with the existing file
+        // 写入临时文件，然后与现有文件交换
         val fileOutputStream = new FileOutputStream(tempPath.toFile)
         val writer = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8))
         try {

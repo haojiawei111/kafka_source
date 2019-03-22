@@ -33,15 +33,15 @@ import scala.math.ceil
 
 /**
  * The abstract index class which holds entry format agnostic methods.
+  * 包含入口格式不可知方法的抽象索引类。
  *
  * @param file The index file
- * @param baseOffset the base offset of the segment that this index is corresponding to.
+ * @param baseOffset the base offset of the segment that this index is corresponding to. 此索引所对应的segment的基本偏移量。
  * @param maxIndexSize The maximum index size in bytes.
  */
-abstract class AbstractIndex[K, V](@volatile var file: File, val baseOffset: Long,
-                                   val maxIndexSize: Int = -1, val writable: Boolean) extends Logging {
+abstract class AbstractIndex[K, V](@volatile var file: File, val baseOffset: Long,val maxIndexSize: Int = -1, val writable: Boolean) extends Logging {
 
-  // Length of the index file
+  // Length of the index file索引文件的长度
   @volatile
   private var _length: Long = _
 
@@ -54,7 +54,7 @@ abstract class AbstractIndex[K, V](@volatile var file: File, val baseOffset: Lon
     val newlyCreated = file.createNewFile()
     val raf = if (writable) new RandomAccessFile(file, "rw") else new RandomAccessFile(file, "r")
     try {
-      /* pre-allocate the file if necessary */
+      /* pre-allocate the file if necessary必要时预先分配文件 */
       if(newlyCreated) {
         if(maxIndexSize < entrySize)
           throw new IllegalArgumentException("Invalid max index size: " + maxIndexSize)
@@ -82,7 +82,7 @@ abstract class AbstractIndex[K, V](@volatile var file: File, val baseOffset: Lon
   }
 
   /**
-   * The maximum number of entries this index can hold
+   * The maximum number of entries this index can hold此索引可以容纳的最大条目数
    */
   @volatile
   private[this] var _maxEntries = mmap.limit() / entrySize

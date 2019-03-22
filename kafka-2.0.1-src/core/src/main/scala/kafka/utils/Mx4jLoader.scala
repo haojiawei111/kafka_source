@@ -23,7 +23,7 @@ import javax.management.ObjectName
 
 /**
  * If mx4j-tools is in the classpath call maybeLoad to load the HTTP interface of mx4j.
- *
+ *如果mx4j-tools在类路径中调用maybeLoad来加载mx4j的HTTP接口。
  * The default port is 8082. To override that provide e.g. -Dmx4jport=8083
  * The default listen address is 0.0.0.0. To override that provide -Dmx4jaddress=127.0.0.1
  * This feature must be enabled with -Dmx4jenable=true

@@ -118,7 +118,7 @@ public abstract class SampledStat implements MeasurableStat {
             this.lastWindowMs = now;
             this.value = initialValue;
         }
-
+        //重启
         public void reset(long now) {
             this.eventCount = 0;
             this.lastWindowMs = now;

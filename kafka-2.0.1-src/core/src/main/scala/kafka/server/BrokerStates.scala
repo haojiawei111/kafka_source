@@ -77,7 +77,7 @@ case class BrokerState() {
     this.newState(newState.state)
   }
 
-  // Allowing undefined custom state
+  // Allowing undefined custom state 允许未定义的自定义状态
   def newState(newState: Byte) {
     currentState = newState
   }

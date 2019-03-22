@@ -140,7 +140,7 @@ public final class StateSerdes<K, V> {
     }
 
     /**
-     * Deserialize the key from raw bytes.
+     * Deserialize the key from raw bytes.从原始字节反序列化key。
      *
      * @param rawKey  the key as raw bytes
      * @return        the key as typed object
@@ -150,7 +150,7 @@ public final class StateSerdes<K, V> {
     }
 
     /**
-     * Deserialize the value from raw bytes.
+     * Deserialize the value from raw bytes.从原始字节反序列化value。
      *
      * @param rawValue  the value as raw bytes
      * @return          the value as typed object
@@ -160,7 +160,7 @@ public final class StateSerdes<K, V> {
     }
 
     /**
-     * Serialize the given key.
+     * Serialize the given key.序列化给定的key。
      *
      * @param key  the key to be serialized
      * @return     the serialized key
@@ -181,7 +181,7 @@ public final class StateSerdes<K, V> {
     }
 
     /**
-     * Serialize the given value.
+     * Serialize the given value.序列化给定的value。
      *
      * @param value  the value to be serialized
      * @return       the serialized value

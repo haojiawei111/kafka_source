@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * A cache entry
+ * A cache entry 缓存条目
  */
 class LRUCacheEntry extends ProcessorRecordContext {
 

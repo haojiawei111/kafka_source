@@ -1,19 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package kafka.server.checkpoints
 
 import java.io._
@@ -38,6 +22,7 @@ object LeaderEpochCheckpointFile {
   private val WhiteSpacesPattern = Pattern.compile("\\s+")
   private val CurrentVersion = 0
 
+  // 写入文件的格式
   object Formatter extends CheckpointFileFormatter[EpochEntry] {
 
     override def toLine(entry: EpochEntry): String = s"${entry.epoch} ${entry.startOffset}"
@@ -49,12 +34,13 @@ object LeaderEpochCheckpointFile {
         case _ => None
       }
     }
-
   }
+
 }
 
 /**
   * This class persists a map of (LeaderEpoch => Offsets) to a file (for a certain replica)
+  * 此类将（LeaderEpoch => Offsets）的映射保存到文件（对于某个副本）
   */
 class LeaderEpochCheckpointFile(val file: File, logDirFailureChannel: LogDirFailureChannel = null) extends LeaderEpochCheckpoint {
   import LeaderEpochCheckpointFile._

@@ -20,6 +20,9 @@ import java.io.Serializable;
 
 /**
  * A topic name and partition number   javabean
+ *
+ * 主题名称和分区号
+ *
  */
 public final class TopicPartition implements Serializable {
 

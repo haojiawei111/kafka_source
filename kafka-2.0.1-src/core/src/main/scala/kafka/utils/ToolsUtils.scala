@@ -22,22 +22,25 @@ import org.apache.kafka.common.{Metric, MetricName}
 import scala.collection.mutable
 
 object ToolsUtils {
-
+  // 检查输入的hostPorts是否满足要求
   def validatePortOrDie(parser: OptionParser, hostPort: String) = {
+
     val hostPorts: Array[String] = if(hostPort.contains(','))
       hostPort.split(",")
     else
       Array(hostPort)
+
     val validHostPort = hostPorts.filter { hostPortData =>
+      //过滤无端口号的hostPortData
       org.apache.kafka.common.utils.Utils.getPort(hostPortData) != null
     }
     val isValid = !validHostPort.isEmpty && validHostPort.size == hostPorts.length
     if(!isValid)
-      CommandLineUtils.printUsageAndDie(parser, "Please provide valid host:port like host1:9091,host2:9092\n ")
+      CommandLineUtils.printUsageAndDie(parser, "Please provide valid host:port like host1:9091,host2:9092请提供有效的主机：端口，如host1：9091，host2：9092\n ")
   }
 
   /**
-    * print out the metrics in alphabetical order
+    * 按字母顺序打印metrics指标
     * @param metrics  the metrics to be printed out
     */
   def printMetrics(metrics: mutable.Map[MetricName, _ <: Metric]): Unit = {

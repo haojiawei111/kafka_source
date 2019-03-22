@@ -31,11 +31,12 @@ import scala.collection._
 object ControllerEventManager {
   val ControllerEventThreadName = "controller-event-thread"
 }
-class ControllerEventManager(controllerId: Int, rateAndTimeMetrics: Map[ControllerState, KafkaTimer],
-                             eventProcessedListener: ControllerEvent => Unit) extends KafkaMetricsGroup {
+
+class ControllerEventManager(controllerId: Int, rateAndTimeMetrics: Map[ControllerState, KafkaTimer],eventProcessedListener: ControllerEvent => Unit) extends KafkaMetricsGroup {
 
   @volatile private var _state: ControllerState = ControllerState.Idle
   private val putLock = new ReentrantLock()
+  // 阻塞队列
   private val queue = new LinkedBlockingQueue[ControllerEvent]
   private val thread = new ControllerEventThread(ControllerEventManager.ControllerEventThreadName)
   private val time = Time.SYSTEM
@@ -61,19 +62,22 @@ class ControllerEventManager(controllerId: Int, rateAndTimeMetrics: Map[Controll
     thread.awaitShutdown()
   }
 
-  def put(event: ControllerEvent): Unit = inLock(putLock) {
-    queue.put(event)
-  }
-
   def clearAndPut(event: ControllerEvent): Unit = inLock(putLock) {
     queue.clear()
     put(event)
   }
 
+
+  def put(event: ControllerEvent): Unit = inLock(putLock) {
+    queue.put(event)
+  }
+
   class ControllerEventThread(name: String) extends ShutdownableThread(name = name, isInterruptible = false) {
+
     logIdent = s"[ControllerEventThread controllerId=$controllerId] "
 
     override def doWork(): Unit = {
+      // 从队列中拿值
       queue.take() match {
         case KafkaController.ShutdownEventThread => initiateShutdown()
         case controllerEvent =>

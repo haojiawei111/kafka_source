@@ -56,11 +56,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A nioSelector interface for doing non-blocking multi-connection network I/O.
+ * 用于执行非阻塞多连接网络I / O的nioSelector接口。
  * <p>
  * This class works with {@link NetworkSend} and {@link NetworkReceive} to transmit size-delimited network requests and
  * responses.
  * <p>
  * A connection can be added to the nioSelector associated with an integer id by doing
+ * 通过执行，可以将连接添加到与整数id关联的nioSelector
  *
  * <pre>
  * nioSelector.connect(&quot;42&quot;, new InetSocketAddress(&quot;google.com&quot;, server.port), 64000, 64000);
@@ -88,9 +90,9 @@ public class Selector implements Selectable, AutoCloseable {
     public static final long NO_IDLE_TIMEOUT_MS = -1;
 
     private enum CloseMode {
-        GRACEFUL(true),            // process outstanding staged receives, notify disconnect
-        NOTIFY_ONLY(true),         // discard any outstanding receives, notify disconnect
-        DISCARD_NO_NOTIFY(false);  // discard any outstanding receives, no disconnect notification
+        GRACEFUL(true),            // process outstanding staged receives, notify disconnect流程突出阶段收到，通知断开
+        NOTIFY_ONLY(true),         // discard any outstanding receives, notify disconnect丢弃任何未完成的收据，通知断开连接
+        DISCARD_NO_NOTIFY(false);  // discard any outstanding receives, no disconnect notification丢弃任何未完成的接收，没有断开连接通知
 
         boolean notifyDisconnect;
 
@@ -355,6 +357,7 @@ public class Selector implements Selectable, AutoCloseable {
     /**
      * Do whatever I/O can be done on each connection without blocking. This includes completing connections, completing
      * disconnections, initiating new sends, or making progress on in-progress sends or receives.
+     * 做任何I / O都可以在每个连接上完成而不会阻塞。这包括完成连接，完成*断开连接，启动新发送或在进行中的发送或接收方面取得进展。
      *
      * When this call is completed the user can check for completed sends, receives, connections or disconnects using
      * {@link #completedSends()}, {@link #completedReceives()}, {@link #connected()}, {@link #disconnected()}. These
@@ -388,6 +391,7 @@ public class Selector implements Selectable, AutoCloseable {
             throw new IllegalArgumentException("timeout should be >= 0");
 
         boolean madeReadProgressLastCall = madeReadProgressLastPoll;
+        //note: Step1 清除相关记录 clear() 方法是在每次 poll() 执行的第一步，它作用的就是清理上一次 poll 过程产生的部分缓存。
         clear();
 
         boolean dataInBuffers = !keysWithBufferedRead.isEmpty();
@@ -653,13 +657,16 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * Clear the results from the prior poll
+     * 每次 poll 调用前都会清除以下缓存
      */
     private void clear() {
         this.completedSends.clear();
         this.completedReceives.clear();
         this.connected.clear();
         this.disconnected.clear();
+
         // Remove closed channels after all their staged receives have been processed or if a send was requested
+        //在处理完所有分阶段接收或请求发送后，删除已关闭的频道
         for (Iterator<Map.Entry<String, KafkaChannel>> it = closingChannels.entrySet().iterator(); it.hasNext(); ) {
             KafkaChannel channel = it.next().getValue();
             Deque<NetworkReceive> deque = this.stagedReceives.get(channel);
@@ -669,6 +676,7 @@ public class Selector implements Selectable, AutoCloseable {
                 it.remove();
             }
         }
+        // 失败的channel
         for (String channel : this.failedSends)
             this.disconnected.put(channel, ChannelState.FAILED_SEND);
         this.failedSends.clear();

@@ -28,6 +28,7 @@ import org.apache.kafka.common.metrics.stats.Rate.SampledTotal;
 
 /**
  * A compound stat that includes a rate metric and a cumulative total metric.
+ * 包含费率指标和累计总指标的复合统计信息。
  */
 public class Meter implements CompoundStat {
 
@@ -62,7 +63,7 @@ public class Meter implements CompoundStat {
      */
     public Meter(TimeUnit unit, SampledStat rateStat, MetricName rateMetricName, MetricName totalMetricName) {
         if (!(rateStat instanceof SampledTotal) && !(rateStat instanceof Count)) {
-            throw new IllegalArgumentException("Meter is supported only for SampledTotal and Count");
+            throw new IllegalArgumentException("Meter is supported only for SampledTotal and Count仅对SampledTotal和Count支持Meter");
         }
         this.total = new Total();
         this.rate = new Rate(unit, rateStat);
@@ -81,6 +82,7 @@ public class Meter implements CompoundStat {
     public void record(MetricConfig config, double value, long timeMs) {
         rate.record(config, value, timeMs);
         // Total metrics with Count stat should record 1.0 (as recorded in the count)
+        // 具有Count stat的总指标应记录1.0（记录在计数中）
         double totalValue = (rate.stat instanceof Count) ? 1.0 : value;
         total.record(config, totalValue, timeMs);
     }

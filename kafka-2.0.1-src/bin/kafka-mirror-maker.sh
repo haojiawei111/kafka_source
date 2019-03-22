@@ -13,5 +13,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#不同数据中心kafka集群复制工具
 exec $(dirname $0)/kafka-run-class.sh kafka.tools.MirrorMaker "$@"

@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 
 public abstract class AbstractRequestResponse {
     /**
-     * Visible for testing.
+     * Visible for testing.  可见测试
      */
     public static ByteBuffer serialize(Struct headerStruct, Struct bodyStruct) {
         ByteBuffer buffer = ByteBuffer.allocate(headerStruct.sizeOf() + bodyStruct.sizeOf());

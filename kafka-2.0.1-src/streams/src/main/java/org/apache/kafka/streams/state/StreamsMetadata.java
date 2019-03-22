@@ -35,6 +35,7 @@ public class StreamsMetadata {
     /**
      * Sentinel to indicate that the StreamsMetadata is currently unavailable. This can occur during rebalance
      * operations.
+     * Sentinel表示StreamsMetadata当前不可用。这可以在重新平衡操作期间发生。
      */
     public final static StreamsMetadata NOT_AVAILABLE = new StreamsMetadata(new HostInfo("unavailable", -1),
                                                                             Collections.<String>emptySet(),

@@ -20,7 +20,6 @@ import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
@@ -34,7 +33,6 @@ import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
-
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.utils.Sanitizer;
@@ -43,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Register metrics in JMX as dynamic mbeans based on the metric names
+ * 根据度量标准名称将JMX中的度量标准注册为动态mbeans
  */
 public class JmxReporter implements MetricsReporter {
 

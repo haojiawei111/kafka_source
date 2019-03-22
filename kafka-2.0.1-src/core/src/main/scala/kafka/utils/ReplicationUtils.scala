@@ -24,21 +24,26 @@ import org.apache.kafka.common.TopicPartition
 
 object ReplicationUtils extends Logging {
 
-  def updateLeaderAndIsr(zkClient: KafkaZkClient, partition: TopicPartition, newLeaderAndIsr: LeaderAndIsr,
-                         controllerEpoch: Int): (Boolean, Int) = {
+  // 更新Leader的Isr列表
+  def updateLeaderAndIsr(zkClient: KafkaZkClient, partition: TopicPartition, newLeaderAndIsr: LeaderAndIsr,controllerEpoch: Int): (Boolean, Int) = {
     debug(s"Updated ISR for $partition to ${newLeaderAndIsr.isr.mkString(",")}")
+    // /brokers/topics/topicName/partitions/partitionsName/state
     val path = TopicPartitionStateZNode.path(partition)
+
     val newLeaderData = TopicPartitionStateZNode.encode(LeaderIsrAndControllerEpoch(newLeaderAndIsr, controllerEpoch))
-    // use the epoch of the controller that made the leadership decision, instead of the current controller epoch
-    val updatePersistentPath: (Boolean, Int) = zkClient.conditionalUpdatePath(path, newLeaderData,
-      newLeaderAndIsr.zkVersion, Some(checkLeaderAndIsrZkData))
+
+    // use the epoch of the controller that made the leadership decision, instead of the current controller epoch使用制定领导决策的控制器的时代，而不是当前的控制器时代
+    val updatePersistentPath: (Boolean, Int) = zkClient.conditionalUpdatePath(path, newLeaderData,newLeaderAndIsr.zkVersion, Some(checkLeaderAndIsrZkData))
     updatePersistentPath
   }
 
+  // 检查Leader的Isr列表和预期的是否一样（expectedLeaderAndIsrInfo）
   private def checkLeaderAndIsrZkData(zkClient: KafkaZkClient, path: String, expectedLeaderAndIsrInfo: Array[Byte]): (Boolean, Int) = {
     try {
       val (writtenLeaderOpt, writtenStat) = zkClient.getDataAndStat(path)
+
       val expectedLeaderOpt = TopicPartitionStateZNode.decode(expectedLeaderAndIsrInfo, writtenStat)
+
       val succeeded = writtenLeaderOpt.map { writtenData =>
         val writtenLeaderOpt = TopicPartitionStateZNode.decode(writtenData, writtenStat)
         (expectedLeaderOpt, writtenLeaderOpt) match {
@@ -46,6 +51,7 @@ object ReplicationUtils extends Logging {
           case _ => false
         }
       }.getOrElse(false)
+
       if (succeeded) (true, writtenStat.getVersion)
       else (false, -1)
     } catch {

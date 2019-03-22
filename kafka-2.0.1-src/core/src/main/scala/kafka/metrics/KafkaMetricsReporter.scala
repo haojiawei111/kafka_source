@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable.ArrayBuffer
 
 
+
 /**
  * Base trait for reporter MBeans. If a client wants to expose these JMX
  * operations on a custom reporter (that implements

@@ -28,13 +28,18 @@ import org.apache.log4j.{Level, LogManager, Logger}
  * The companion object contains the singleton instance of this class and
  * registers the MBean. The [[kafka.utils.Logging]] trait forces initialization
  * of the companion object.
+  * 一个MBean，允许用户在运行时动态更改log4j级别。 *伴侣对象包含此类的单例实例，
+  * *注册MBean。 [[kafka.utils.Logging]]特征强制伴随对象的初始化*。
  */
 private class Log4jController extends Log4jControllerMBean {
 
+
+  // 返回List<String>,  list里面存放着"%s=%s".format(logger.getName, if (level != null) level.toString else "null")
   def getLoggers = {
     val lst = new util.ArrayList[String]()
     lst.add("root=" + existingLogger("root").getLevel.toString)
     val loggers = LogManager.getCurrentLoggers
+
     while (loggers.hasMoreElements) {
       val logger = loggers.nextElement().asInstanceOf[Logger]
       if (logger != null) {

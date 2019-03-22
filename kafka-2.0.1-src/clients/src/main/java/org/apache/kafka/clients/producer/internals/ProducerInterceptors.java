@@ -76,6 +76,9 @@ public class ProducerInterceptors<K, V> implements Closeable {
      * it gets sent to the server. This method calls {@link ProducerInterceptor#onAcknowledgement(RecordMetadata, Exception)}
      * method for each interceptor.
      *
+     * 当发送到服务器的记录得到确认，或者在将记录发送到服务器之前发送记录失败时，将调用此方法。
+     * 此方法为每个拦截器调用{@link ProducerInterceptor＃onAcknowledgement（RecordMetadata，Exception）}方法。
+     *
      * This method does not throw exceptions. Exceptions thrown by any of interceptor methods are caught and ignored.
      *
      * @param metadata The metadata for the record that was sent (i.e. the partition and offset).
@@ -97,6 +100,8 @@ public class ProducerInterceptors<K, V> implements Closeable {
      * This method is called when sending the record fails in {@link ProducerInterceptor#onSend
      * (ProducerRecord)} method. This method calls {@link ProducerInterceptor#onAcknowledgement(RecordMetadata, Exception)}
      * method for each interceptor
+     * 在{@link ProducerInterceptor＃onSend *（ProducerRecord）}方法中发送记录失败时调用此方法。
+     * 此方法为每个拦截器调用{@link ProducerInterceptor＃onAcknowledgement（RecordMetadata，Exception）} *方法
      *
      * @param record The record from client
      * @param interceptTopicPartition  The topic/partition for the record if an error occurred

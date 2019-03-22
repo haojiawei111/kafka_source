@@ -36,9 +36,8 @@ import scala.collection.mutable.ListBuffer
  * @param checkpoint the checkpoint file
  * @param logEndOffset function to fetch the current log end offset
  */
-class LeaderEpochFileCache(topicPartition: TopicPartition,
-                           logEndOffset: () => Long,
-                           checkpoint: LeaderEpochCheckpoint) extends Logging {
+class LeaderEpochFileCache(topicPartition: TopicPartition,logEndOffset: () => Long,checkpoint: LeaderEpochCheckpoint) extends Logging {
+
   this.logIdent = s"[LeaderEpochCache $topicPartition] "
 
   private val lock = new ReentrantReadWriteLock()
@@ -242,6 +241,7 @@ class LeaderEpochFileCache(topicPartition: TopicPartition,
 }
 
 // Mapping of epoch to the first offset of the subsequent epoch
+// 将纪元映射到后续纪元的第一个偏移
 case class EpochEntry(epoch: Int, startOffset: Long) {
   override def toString: String = {
     s"EpochEntry(epoch=$epoch, startOffset=$startOffset)"

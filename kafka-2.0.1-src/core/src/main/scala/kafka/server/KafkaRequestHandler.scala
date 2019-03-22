@@ -31,14 +31,10 @@ import scala.collection.mutable
 
 /**
  * A thread that answers kafka requests.
+  * 一个回答kafka请求的线程。
  */
-class KafkaRequestHandler(id: Int,
-                          brokerId: Int,
-                          val aggregateIdleMeter: Meter,
-                          val totalHandlerThreads: AtomicInteger,
-                          val requestChannel: RequestChannel,
-                          apis: KafkaApis,
-                          time: Time) extends Runnable with Logging {
+class KafkaRequestHandler(id: Int,brokerId: Int,val aggregateIdleMeter: Meter,val totalHandlerThreads: AtomicInteger,val requestChannel: RequestChannel,apis: KafkaApis,time: Time) extends Runnable with Logging {
+
   this.logIdent = "[Kafka Request Handler " + id + " on Broker " + brokerId + "], "
   private val shutdownComplete = new CountDownLatch(1)
   @volatile private var stopped = false
@@ -86,17 +82,16 @@ class KafkaRequestHandler(id: Int,
     stopped = true
   }
 
+  // 往requestChannel中发送关闭请求
   def initiateShutdown(): Unit = requestChannel.sendShutdownRequest()
 
+  // 使当前线程在锁存器倒计数至零之前一直等待，除非线程被中断。
   def awaitShutdown(): Unit = shutdownComplete.await()
 
 }
 
-class KafkaRequestHandlerPool(val brokerId: Int,
-                              val requestChannel: RequestChannel,
-                              val apis: KafkaApis,
-                              time: Time,
-                              numThreads: Int) extends Logging with KafkaMetricsGroup {
+// kafka请求线程的线程池
+class KafkaRequestHandlerPool(val brokerId: Int,val requestChannel: RequestChannel,val apis: KafkaApis,time: Time,numThreads: Int) extends Logging with KafkaMetricsGroup {
 
   private val threadPoolSize: AtomicInteger = new AtomicInteger(numThreads)
   /* a meter to track the average free capacity of the request handlers */

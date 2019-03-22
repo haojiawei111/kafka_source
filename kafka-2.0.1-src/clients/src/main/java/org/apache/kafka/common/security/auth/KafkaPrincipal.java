@@ -43,10 +43,12 @@ import static java.util.Objects.requireNonNull;
  */
 public class KafkaPrincipal implements Principal {
     public static final String USER_TYPE = "User";
+    // 匿名
     public final static KafkaPrincipal ANONYMOUS = new KafkaPrincipal(KafkaPrincipal.USER_TYPE, "ANONYMOUS");
 
     private final String principalType;
     private final String name;
+
     private volatile boolean tokenAuthenticated;
 
     public KafkaPrincipal(String principalType, String name) {

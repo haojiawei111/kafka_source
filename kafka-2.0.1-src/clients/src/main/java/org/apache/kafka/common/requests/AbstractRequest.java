@@ -32,7 +32,7 @@ public abstract class AbstractRequest extends AbstractRequestResponse {
         private final short oldestAllowedVersion;
         private final short latestAllowedVersion;
 
-        /**
+        /**构造一个允许任何受支持版本的新构建器
          * Construct a new builder which allows any supported version
          */
         public Builder(ApiKeys apiKey) {
@@ -81,7 +81,7 @@ public abstract class AbstractRequest extends AbstractRequestResponse {
     }
 
     /**
-     * Get the version of this AbstractRequest object.
+     * Get the version of this AbstractRequest object.获取此AbstractRequest对象的版本。
      */
     public short version() {
         return version;
@@ -110,7 +110,7 @@ public abstract class AbstractRequest extends AbstractRequestResponse {
     }
 
     /**
-     * Get an error response for a request
+     * Get an error response for a request 获取请求的错误响应
      */
     public AbstractResponse getErrorResponse(Throwable e) {
         return getErrorResponse(AbstractResponse.DEFAULT_THROTTLE_TIME, e);
@@ -123,7 +123,7 @@ public abstract class AbstractRequest extends AbstractRequestResponse {
 
     /**
      * Get the error counts corresponding to an error response. This is overridden for requests
-     * where response may be null (e.g produce with acks=0).
+     * where response may be null (e.g produce with acks=0).获取与错误响应相对应的错误计数。 对于响应可能为null的请求，将覆盖此值
      */
     public Map<Errors, Integer> errorCounts(Throwable e) {
         AbstractResponse response = getErrorResponse(0, e);

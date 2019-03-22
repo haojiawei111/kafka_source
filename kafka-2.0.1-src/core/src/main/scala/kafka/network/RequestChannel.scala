@@ -45,16 +45,11 @@ object RequestChannel extends Logging {
   val RequestQueueSizeMetric = "RequestQueueSize"
   val ResponseQueueSizeMetric = "ResponseQueueSize"
   val ProcessorMetricTag = "processor"
-
+  // log级别是否开启的Debug
   def isRequestLoggingEnabled: Boolean = requestLogger.underlying.isDebugEnabled
 
-  sealed trait BaseRequest
-  case object ShutdownRequest extends BaseRequest
 
-  case class Session(principal: KafkaPrincipal, clientAddress: InetAddress) {
-    val sanitizedUser = Sanitizer.sanitize(principal.getName)
-  }
-
+  // 监控
   class Metrics {
 
     private val metricsMap = mutable.Map[String, RequestMetrics]()
@@ -71,14 +66,20 @@ object RequestChannel extends Logging {
     }
   }
 
-  class Request(val processor: Int,
-                val context: RequestContext,
-                val startTimeNanos: Long,
-                memoryPool: MemoryPool,
-                @volatile private var buffer: ByteBuffer,
-                metrics: RequestChannel.Metrics) extends BaseRequest {
+  //请求接口
+  sealed trait BaseRequest
+  // 关闭请求
+  case object ShutdownRequest extends BaseRequest
+  // 编码KafkaPrincipal.getName
+  case class Session(principal: KafkaPrincipal, clientAddress: InetAddress) {
+    val sanitizedUser = Sanitizer.sanitize(principal.getName)
+  }
+
+  class Request(val processor: Int,val context: RequestContext,val startTimeNanos: Long,memoryPool: MemoryPool,@volatile private var buffer: ByteBuffer,metrics: RequestChannel.Metrics) extends BaseRequest {
     // These need to be volatile because the readers are in the network thread and the writers are in the request
     // handler threads or the purgatory threads
+    // 这些需要是易变的，因为读者在网络线程中，而编写者在请求
+    // 处理程序线程或炼狱线程中
     @volatile var requestDequeueTimeNanos = -1L
     @volatile var apiLocalCompleteTimeNanos = -1L
     @volatile var responseCompleteTimeNanos = -1L
@@ -86,14 +87,15 @@ object RequestChannel extends Logging {
     @volatile var apiRemoteCompleteTimeNanos = -1L
     @volatile var messageConversionsTimeNanos = 0L
     @volatile var temporaryMemoryBytes = 0L
+    // 回调
     @volatile var recordNetworkThreadTimeCallback: Option[Long => Unit] = None
 
     val session = Session(context.principal, context.clientAddress)
     private val bodyAndSize: RequestAndSize = context.parseRequest(buffer)
 
-    def header: RequestHeader = context.header
     def sizeOfBodyInBytes: Int = bodyAndSize.size
 
+    def header: RequestHeader = context.header
     //most request types are parsed entirely into objects at this point. for those we can release the underlying buffer.
     //some (like produce, or any time the schema contains fields of types BYTES or NULLABLE_BYTES) retain a reference
     //to the buffer. for those requests we cannot release the buffer early, but only when request processing is done.
@@ -107,7 +109,7 @@ object RequestChannel extends Logging {
       bodyAndSize.request match {
         case r: T => r
         case r =>
-          throw new ClassCastException(s"Expected request with type ${classTag.runtimeClass}, but found ${r.getClass}")
+          throw new ClassCastException(s"Expected request with type 带有类型的预期请求 ${classTag.runtimeClass}, but found ${r.getClass}")
       }
     }
 
@@ -118,29 +120,36 @@ object RequestChannel extends Logging {
       math.max(apiLocalCompleteTimeNanos - requestDequeueTimeNanos, 0L)
     }
 
+
+    // 更新监控
     def updateRequestMetrics(networkThreadTimeNanos: Long, response: Response) {
+
       val endTimeNanos = Time.SYSTEM.nanoseconds
       // In some corner cases, apiLocalCompleteTimeNanos may not be set when the request completes if the remote
       // processing time is really small. This value is set in KafkaApis from a request handling thread.
       // This may be read in a network thread before the actual update happens in KafkaApis which will cause us to
       // see a negative value here. In that case, use responseCompleteTimeNanos as apiLocalCompleteTimeNanos.
+      //api本地完成时间Nanos
       if (apiLocalCompleteTimeNanos < 0)
-        apiLocalCompleteTimeNanos = responseCompleteTimeNanos
+        apiLocalCompleteTimeNanos = responseCompleteTimeNanos //响应完成时间Nanos
       // If the apiRemoteCompleteTimeNanos is not set (i.e., for requests that do not go through a purgatory), then it is
       // the same as responseCompleteTimeNanos.
+      //api远程完成时间Nanos
       if (apiRemoteCompleteTimeNanos < 0)
-        apiRemoteCompleteTimeNanos = responseCompleteTimeNanos
+        apiRemoteCompleteTimeNanos = responseCompleteTimeNanos //响应完成时间Nanos
 
       /**
        * Converts nanos to millis with micros precision as additional decimal places in the request log have low
        * signal to noise ratio. When it comes to metrics, there is little difference either way as we round the value
        * to the nearest long.
+        * 将微米精度的毫微转换为毫秒，因为请求日志中的附加小数位具有低信噪比。当谈到指标时，我们将值舍入到最接近的长度时，两者都没有什么区别。
        */
       def nanosToMs(nanos: Long): Double = {
         val positiveNanos = math.max(nanos, 0)
         TimeUnit.NANOSECONDS.toMicros(positiveNanos).toDouble / TimeUnit.MILLISECONDS.toMicros(1)
       }
 
+      // 监控指标
       val requestQueueTimeMs = nanosToMs(requestDequeueTimeNanos - startTimeNanos)
       val apiLocalTimeMs = nanosToMs(apiLocalCompleteTimeNanos - requestDequeueTimeNanos)
       val apiRemoteTimeMs = nanosToMs(apiRemoteCompleteTimeNanos - apiLocalCompleteTimeNanos)
@@ -180,6 +189,7 @@ object RequestChannel extends Logging {
       // The time recorded here is the time spent on the network thread for receiving this request
       // and sending the response. Note that for the first request on a connection, the time includes
       // the total time spent on authentication, which may be significant for SASL/SSL.
+      //记录网络线程时间回调
       recordNetworkThreadTimeCallback.foreach(record => record(networkThreadTimeNanos))
 
       if (isRequestLoggingEnabled) {
@@ -208,8 +218,10 @@ object RequestChannel extends Logging {
       }
     }
 
+
     def releaseBuffer(): Unit = {
       if (buffer != null) {
+        // 把内存放回内存池
         memoryPool.release(buffer)
         buffer = null
       }
@@ -224,6 +236,9 @@ object RequestChannel extends Logging {
 
   }
 
+
+
+  // 响应接口   内部静态类
   abstract class Response(val request: Request) {
     locally {
       val nowNs = Time.SYSTEM.nanoseconds
@@ -231,7 +246,7 @@ object RequestChannel extends Logging {
       if (request.apiLocalCompleteTimeNanos == -1L)
         request.apiLocalCompleteTimeNanos = nowNs
     }
-
+    // processor的ID
     def processor: Int = request.processor
 
     def responseString: Option[String] = Some("")
@@ -241,11 +256,8 @@ object RequestChannel extends Logging {
     override def toString: String
   }
 
-  /** responseAsString should only be defined if request logging is enabled */
-  class SendResponse(request: Request,
-                     val responseSend: Send,
-                     val responseAsString: Option[String],
-                     val onCompleteCallback: Option[Send => Unit]) extends Response(request) {
+  /** responseAsString should only be defined if request logging is enabled 只有在启用请求记录时才应定义responseAsString*/
+  class SendResponse(request: Request,val responseSend: Send,val responseAsString: Option[String],val onCompleteCallback: Option[Send => Unit]) extends Response(request) {
     override def responseString: Option[String] = responseAsString
 
     override def onComplete: Option[Send => Unit] = onCompleteCallback
@@ -275,10 +287,16 @@ object RequestChannel extends Logging {
   }
 }
 
+
 class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
   import RequestChannel._
+  // 创建RequestChannel的内部静态类Metrics
   val metrics = new RequestChannel.Metrics
+
+  // 请求队列
   private val requestQueue = new ArrayBlockingQueue[BaseRequest](queueSize)
+
+  // 线程安全的map，SockstServer中创建的所有Processor都要交给这里管理
   private val processors = new ConcurrentHashMap[Int, Processor]()
 
   newGauge(RequestQueueSizeMetric, new Gauge[Int] {
@@ -291,9 +309,11 @@ class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
     }
   })
 
+
   def addProcessor(processor: Processor): Unit = {
+    //putIfAbsent   如果传入key对应的value已经存在，就返回存在的value，不进行替换。如果不存在，就添加key和value，返回null
     if (processors.putIfAbsent(processor.id, processor) != null)
-      warn(s"Unexpected processor with processorId ${processor.id}")
+      warn(s"Unexpected processor with processorId带有processorId的意外处理器 ${processor.id}")
 
     newGauge(ResponseQueueSizeMetric,
       new Gauge[Int] {
@@ -305,16 +325,18 @@ class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
 
   def removeProcessor(processorId: Int): Unit = {
     processors.remove(processorId)
+    // 移除监控
     removeMetric(ResponseQueueSizeMetric, Map(ProcessorMetricTag -> processorId.toString))
   }
 
-  /** Send a request to be handled, potentially blocking until there is room in the queue for the request */
+  /** 发送请求处理，可能阻塞，直到请求队列中有空间*/
   def sendRequest(request: RequestChannel.Request) {
     requestQueue.put(request)
   }
 
-  /** Send a response back to the socket server to be sent over the network */
+  /**  将响应发送回要通过网络发送的套接字服务器*/
   def sendResponse(response: RequestChannel.Response) {
+    // 如果日志级别为Trace，这执行这个if
     if (isTraceEnabled) {
       val requestHeader = response.request.header
       val message = response match {
@@ -335,16 +357,17 @@ class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
     val processor = processors.get(response.processor)
     // The processor may be null if it was shutdown. In this case, the connections
     // are closed, so the response is dropped.
+    // 如果处理器关闭，处理器可能为空。在这种情况下，连接被关闭，因此响应被删除。
     if (processor != null) {
       processor.enqueueResponse(response)
     }
   }
 
-  /** Get the next request or block until specified time has elapsed */
+  /** 获取下一个请求或阻止，直到指定的时间过去 */
   def receiveRequest(timeout: Long): RequestChannel.BaseRequest =
     requestQueue.poll(timeout, TimeUnit.MILLISECONDS)
 
-  /** Get the next request or block until there is one */
+  /** 获取下一个请求或阻止，直到有一个请求或阻止 */
   def receiveRequest(): RequestChannel.BaseRequest =
     requestQueue.take()
 
@@ -353,20 +376,27 @@ class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
       metrics(apiKey.name).markErrorMeter(error, count)
     }
   }
-
+  // 清理请求队列
   def clear() {
     requestQueue.clear()
   }
-
+  // 清理请求队列并关闭监控
   def shutdown() {
     clear()
     metrics.close()
   }
-
+  // 往请求队列中添加关闭请求
   def sendShutdownRequest(): Unit = requestQueue.put(ShutdownRequest)
 
 }
 
+
+
+
+
+
+
+// Request监控
 object RequestMetrics {
   val consumerFetchMetricName = ApiKeys.FETCH.name + "Consumer"
   val followFetchMetricName = ApiKeys.FETCH.name + "Follower"

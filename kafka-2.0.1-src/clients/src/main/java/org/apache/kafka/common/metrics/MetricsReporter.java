@@ -22,6 +22,7 @@ import org.apache.kafka.common.Configurable;
 
 /**
  * A plugin interface to allow things to listen as new metrics are created so they can be reported.
+ * 一个插件接口，允许在创建新指标时监听事物，以便报告它们。
  * <p>
  * Implement {@link org.apache.kafka.common.ClusterResourceListener} to receive cluster metadata once it's available. Please see the class documentation for ClusterResourceListener for more information.
  */

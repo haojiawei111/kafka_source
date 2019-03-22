@@ -593,13 +593,15 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   /**
    * Conditional update the persistent path data, return (true, newVersion) if it succeeds, otherwise (the path doesn't
    * exist, the current version is not the expected version, etc.) return (false, ZkVersion.UnknownVersion)
+    * 条件更新持久路径数据，如果成功则返回（true，newVersion），否则（路径不存在，当前版本不是预期版本等）返回（false，ZkVersion.UnknownVersion）
    *
    * When there is a ConnectionLossException during the conditional update, ZookeeperClient will retry the update and may fail
-   * since the previous update may have succeeded (but the stored zkVersion no longer matches the expected one).
-   * In this case, we will run the optionalChecker to further check if the previous write did indeed succeeded.
+    * * since the previous update may have succeeded (but the stored zkVersion no longer matches the expected one).
+    * * In this case, we will run the optionalChecker to further check if the previous write did indeed succeeded.
+    * 当条件更新期间存在ConnectionLossException时，ZookeeperClient将重试更新并可能失败*因为上一次更新可能已成功（但存储的zkVersion不再与预期的更新匹配）。
+    * 在这种情况下，我们将运行optionalChecker以进一步检查先前的写入是否确实成功。
    */
-  def conditionalUpdatePath(path: String, data: Array[Byte], expectVersion: Int,
-                            optionalChecker: Option[(KafkaZkClient, String, Array[Byte]) => (Boolean,Int)] = None): (Boolean, Int) = {
+  def conditionalUpdatePath(path: String, data: Array[Byte], expectVersion: Int,optionalChecker: Option[(KafkaZkClient, String, Array[Byte]) => (Boolean,Int)] = None): (Boolean, Int) = {
 
     val setDataRequest = SetDataRequest(path, data, expectVersion)
     val setDataResponse = retryRequestUntilConnected(setDataRequest)
@@ -1387,10 +1389,11 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    }
 
   /**
-    * Make sure a persistent path exists in ZK. 在zookeeper确保存在持久路径
+    *  在zookeeper确保存在持久路径
     * @param path
     */
   def makeSurePersistentPathExists(path: String): Unit = {
+    // 去zk中注册path，如果存在不抛出异常
     createRecursive(path, data = null, throwIfPathExists = false)
   }
 
@@ -1436,8 +1439,10 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
     }
   }
 
+  // 递归创建路径
   private[zk] def createRecursive(path: String, data: Array[Byte] = null, throwIfPathExists: Boolean = true) = {
 
+    // 截取路径
     def parentPath(path: String): String = {
       val indexOfLastSlash = path.lastIndexOf("/")
       if (indexOfLastSlash == -1) throw new IllegalArgumentException(s"Invalid path ${path}")
@@ -1445,6 +1450,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
     }
 
     def createRecursive0(path: String): Unit = {
+      // 创建持久性的节点
       val createRequest = CreateRequest(path, null, acls(path), CreateMode.PERSISTENT)
       var createResponse = retryRequestUntilConnected(createRequest)
       //Code.NONODE 节点不存在
@@ -1499,6 +1505,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
 
   private def acls(path: String): Seq[ACL] = ZkData.defaultAcls(isSecure, path)
 
+  // 给zk发送request，返回Response
   private def retryRequestUntilConnected[Req <: AsyncRequest](request: Req): Req#Response = {
     retryRequestsUntilConnected(Seq(request)).head
   }

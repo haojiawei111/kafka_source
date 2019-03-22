@@ -29,6 +29,7 @@ import scala.math._
  * A class to measure and throttle the rate of some process. The throttler takes a desired rate-per-second
  * (the units of the process don't matter, it could be bytes or a count of some other thing), and will sleep for 
  * an appropriate amount of time when maybeThrottle() is called to attain the desired rate.
+  * 衡量和限制某些过程速率的类。节流器采用所需的每秒速率*（进程的单位无关紧要，可能是字节数或其他东西的数量），并且当mayThrottle（）是@Tholottle（）时，它将睡眠适当的时间呼吁达到理想的速度。
  * 
  * @param desiredRatePerSec: The rate we want to hit in units/sec
  * @param checkIntervalMs: The interval at which to check our rate
@@ -36,12 +37,7 @@ import scala.math._
  * @param time: The time implementation to use
  */
 @threadsafe
-class Throttler(desiredRatePerSec: Double,
-                checkIntervalMs: Long = 100L,
-                throttleDown: Boolean = true,
-                metricName: String = "throttler",
-                units: String = "entries",
-                time: Time = Time.SYSTEM) extends Logging with KafkaMetricsGroup {
+class Throttler(desiredRatePerSec: Double,checkIntervalMs: Long = 100L,throttleDown: Boolean = true,metricName: String = "throttler",units: String = "entries",time: Time = Time.SYSTEM) extends Logging with KafkaMetricsGroup {
   
   private val lock = new Object
   private val meter = newMeter(metricName, units, TimeUnit.SECONDS)
@@ -54,12 +50,14 @@ class Throttler(desiredRatePerSec: Double,
     val nsPerSec = TimeUnit.SECONDS.toNanos(1)
 
     meter.mark(observed.toLong)
+
     lock synchronized {
       observedSoFar += observed
       val now = time.nanoseconds
       val elapsedNs = now - periodStartNs
       // if we have completed an interval AND we have observed something, maybe
       // we should take a little nap
+      // 如果我们已经完成了一段时间并且我们已经观察到某些事情，那么我们应该小睡一会儿
       if (elapsedNs > checkIntervalNs && observedSoFar > 0) {
         val rateInSecs = (observedSoFar * nsPerSec) / elapsedNs
         val needAdjustment = !(throttleDown ^ (rateInSecs > desiredRatePerSec))
@@ -69,7 +67,7 @@ class Throttler(desiredRatePerSec: Double,
           val elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNs)
           val sleepTime = round(observedSoFar / desiredRateMs - elapsedMs)
           if (sleepTime > 0) {
-            trace("Natural rate is %f per second but desired rate is %f, sleeping for %d ms to compensate.".format(rateInSecs, desiredRatePerSec, sleepTime))
+            trace("Natural rate is %f per second but desired rate is %f, sleeping for %d ms to compensate.自然速率为每秒％f，但所需速率为％f，睡眠时间为％d ms以进行补偿。".format(rateInSecs, desiredRatePerSec, sleepTime))
             time.sleep(sleepTime)
           }
         }
@@ -85,10 +83,13 @@ object Throttler {
   
   def main(args: Array[String]) {
     val rand = new Random()
+
     val throttler = new Throttler(100000, 100, true, time = Time.SYSTEM)
+
     val interval = 30000
     var start = System.currentTimeMillis
     var total = 0
+
     while(true) {
       val value = rand.nextInt(1000)
       Thread.sleep(1)

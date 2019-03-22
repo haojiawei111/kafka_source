@@ -23,7 +23,6 @@ import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.common.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A registry of sensors and metrics.
+ * 传感器和指标的注册表。
  * <p>
  * A metric is a named, numerical measurement. A sensor is a handle to record numerical measurements as they occur. Each
  * Sensor has zero or more associated metrics. For example a Sensor might represent message sizes and we might associate

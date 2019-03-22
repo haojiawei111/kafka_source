@@ -30,7 +30,7 @@ import org.apache.kafka.common.metrics.MetricConfig;
 import org.apache.kafka.common.metrics.Metrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+// 封装kafka版本信息  静态代码块中刚从文件中读取/kafka/kafka-version.properties
 public class AppInfoParser {
     private static final Logger log = LoggerFactory.getLogger(AppInfoParser.class);
     private static final String VERSION;
@@ -59,9 +59,10 @@ public class AppInfoParser {
         try {
             ObjectName name = new ObjectName(prefix + ":type=app-info,id=" + Sanitizer.jmxSanitize(id));
             AppInfo mBean = new AppInfo();
+            // ManagementFactory是一个为我们提供各种获取JVM信息的工厂类 注册到了jvm虚拟机
             ManagementFactory.getPlatformMBeanServer().registerMBean(mBean, name);
 
-            registerMetrics(metrics); // prefix will be added later by JmxReporter
+            registerMetrics(metrics); // prefix will be added later by JmxReporter JmxReporter稍后将添加前缀
         } catch (JMException e) {
             log.warn("Error registering AppInfo mbean", e);
         }
@@ -97,6 +98,14 @@ public class AppInfoParser {
             metrics.removeMetric(metricName(metrics, "commit-id"));
         }
     }
+
+
+
+
+
+
+
+
 
     public interface AppInfoMBean {
         public String getVersion();

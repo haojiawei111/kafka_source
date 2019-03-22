@@ -25,19 +25,21 @@ import org.apache.kafka.common.security.auth.SecurityProtocol
 /**
  * A Kafka broker.
  * A broker has an id, a collection of end-points, an optional rack and a listener to security protocol map.
+  * broker具有id，端点集合，可选机架和安全协议映射监听器。
  * Each end-point is (host, port, listenerName).
  */
 case class Broker(id: Int, endPoints: Seq[EndPoint], rack: Option[String]) {
 
-  private val endPointsMap = endPoints.map { endPoint =>
-    endPoint.listenerName -> endPoint
+  private val endPointsMap = endPoints
+    .map { endPoint =>endPoint.listenerName -> endPoint
   }.toMap
 
   if (endPointsMap.size != endPoints.size)
-    throw new IllegalArgumentException(s"There is more than one end point with the same listener name: ${endPoints.mkString(",")}")
+    throw new IllegalArgumentException(s"There is more than one end point with the same listener name有多个具有相同侦听器名称的端点: ${endPoints.mkString(",")}")
 
-  override def toString: String =
-    s"$id : ${endPointsMap.values.mkString("(",",",")")} : ${rack.orNull}"
+  override def toString: String = s"$id : ${endPointsMap.values.mkString("(",",",")")} : ${rack.orNull}"
+
+
 
   def this(id: Int, host: String, port: Int, listenerName: ListenerName, protocol: SecurityProtocol) = {
     this(id, Seq(EndPoint(host, port, listenerName, protocol)), None)
@@ -48,9 +50,7 @@ case class Broker(id: Int, endPoints: Seq[EndPoint], rack: Option[String]) {
   }
 
   def node(listenerName: ListenerName): Node =
-    getNode(listenerName).getOrElse {
-      throw new BrokerEndPointNotAvailableException(s"End point with listener name ${listenerName.value} not found " +
-        s"for broker $id")
+    getNode(listenerName).getOrElse {throw new BrokerEndPointNotAvailableException(s"End point with listener name ${listenerName.value} not found " +s"for broker $id")
     }
 
   def getNode(listenerName: ListenerName): Option[Node] =

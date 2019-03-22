@@ -43,12 +43,9 @@ import scala.collection.Map
 
 /**
  * Data structure that represents a topic partition. The leader maintains the AR, ISR, CUR, RAR
+  * 表示主题分区的数据结构。领导者保持AR，ISR，CUR，RAR
  */
-class Partition(val topic: String,
-                val partitionId: Int,
-                time: Time,
-                replicaManager: ReplicaManager,
-                val isOffline: Boolean = false) extends Logging with KafkaMetricsGroup {
+class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager: ReplicaManager,val isOffline: Boolean = false) extends Logging with KafkaMetricsGroup {
 
   val topicPartition = new TopicPartition(topic, partitionId)
 

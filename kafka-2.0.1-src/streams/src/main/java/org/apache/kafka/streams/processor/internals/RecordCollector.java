@@ -72,7 +72,7 @@ public interface RecordCollector {
      */
     interface Supplier {
         /**
-         * Get the record collector.
+         * Get the record collector.获取记录收集器。
          * @return the record collector
          */
         RecordCollector recordCollector();

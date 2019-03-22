@@ -57,6 +57,7 @@ object LogAppendInfo {
 
 /**
  * Struct to hold various quantities we compute about each message set before appending to the log
+  * 结构用于保存我们在附加到日志之前计算的关于每个消息集的各种数量
  *
  * @param firstOffset The first offset in the message set unless the message format is less than V2 and we are appending
  *                    to the follower.

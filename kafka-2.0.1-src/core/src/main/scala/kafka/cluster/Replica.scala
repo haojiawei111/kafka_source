@@ -25,12 +25,9 @@ import org.apache.kafka.common.{KafkaException, TopicPartition}
 import org.apache.kafka.common.errors.OffsetOutOfRangeException
 import org.apache.kafka.common.utils.Time
 
-class Replica(val brokerId: Int,
-              val topicPartition: TopicPartition,
-              time: Time = Time.SYSTEM,
-              initialHighWatermarkValue: Long = 0L,
-              @volatile var log: Option[Log] = None) extends Logging {
+class Replica(val brokerId: Int,val topicPartition: TopicPartition,time: Time = Time.SYSTEM,initialHighWatermarkValue: Long = 0L,@volatile var log: Option[Log] = None) extends Logging {
   // the high watermark offset value, in non-leader replicas only its message offsets are kept
+  // 高水印偏移值，在非领导者副本中仅保留其消息偏移
   @volatile private[this] var highWatermarkMetadata = new LogOffsetMetadata(initialHighWatermarkValue)
   // the log end offset value, kept in all replicas;
   // for local replica it is the log's end offset, for remote replicas its value is only updated by follower fetch

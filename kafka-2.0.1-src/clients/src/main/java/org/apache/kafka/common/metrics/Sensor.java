@@ -36,6 +36,8 @@ import java.util.concurrent.TimeUnit;
  * A sensor applies a continuous sequence of numerical values to a set of associated metrics. For example a sensor on
  * message size would record a sequence of message sizes using the {@link #record(double)} api and would maintain a set
  * of metrics about request sizes such as the average or max.
+ * 传感器将连续的数值序列应用于一组相关度量。例如，
+ * 消息大小上的传感器将使用{@link #record（double）} api记录一系列消息大小，并将维护一组关于请求大小的度量标准，例如平均值或最大值。
  */
 public final class Sensor {
 

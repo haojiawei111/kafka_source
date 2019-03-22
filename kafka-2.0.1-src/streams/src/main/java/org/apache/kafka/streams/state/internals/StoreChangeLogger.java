@@ -26,6 +26,9 @@ import org.apache.kafka.streams.state.StateSerdes;
  * Note that the use of array-typed keys is discouraged because they result in incorrect caching behavior.
  * If you intend to work on byte arrays as key, for example, you may want to wrap them with the {@code Bytes} class,
  * i.e. use {@code RocksDBStore<Bytes, ...>} rather than {@code RocksDBStore<byte[], ...>}.
+ * 请注意，不鼓励使用数组类型的键，因为它们会导致不正确的缓存行为。
+ * 例如，如果您打算将字节数组作为键，可能需要使用{@code Bytes}类包装它们，
+ * 即使用{@code RocksDBStore <Bytes，...>}而不是{@code RocksDBStore <byte []，...>}。
  *
  * @param <K>
  * @param <V>

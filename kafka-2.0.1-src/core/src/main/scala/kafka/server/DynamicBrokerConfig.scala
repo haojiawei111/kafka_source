@@ -502,6 +502,9 @@ class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging 
   }
 }
 
+
+
+
 trait BrokerReconfigurable {
 
   def reconfigurableConfigs: Set[String]
@@ -511,6 +514,7 @@ trait BrokerReconfigurable {
   def reconfigure(oldConfig: KafkaConfig, newConfig: KafkaConfig): Unit
 }
 
+
 object DynamicLogConfig {
   // Exclude message.format.version for now since we need to check that the version
   // is supported on all brokers in the cluster.
@@ -519,6 +523,8 @@ object DynamicLogConfig {
   val ReconfigurableConfigs = LogConfig.TopicConfigSynonyms.values.toSet -- ExcludedConfigs
   val KafkaConfigToLogConfigName = LogConfig.TopicConfigSynonyms.map { case (k, v) => (v, k) }
 }
+
+
 class DynamicLogConfig(logManager: LogManager, server: KafkaServer) extends Reconfigurable with Logging {
 
   override def configure(configs: util.Map[String, _]): Unit = {}
@@ -561,6 +567,8 @@ class DynamicLogConfig(logManager: LogManager, server: KafkaServer) extends Reco
   }
 }
 
+
+
 object DynamicThreadPool {
   val ReconfigurableConfigs = Set(
     KafkaConfig.NumIoThreadsProp,
@@ -569,6 +577,8 @@ object DynamicThreadPool {
     KafkaConfig.NumRecoveryThreadsPerDataDirProp,
     KafkaConfig.BackgroundThreadsProp)
 }
+
+
 
 class DynamicThreadPool(server: KafkaServer) extends BrokerReconfigurable {
 
@@ -616,6 +626,7 @@ class DynamicThreadPool(server: KafkaServer) extends BrokerReconfigurable {
     }
   }
 }
+
 
 class DynamicMetricsReporters(brokerId: Int, server: KafkaServer) extends Reconfigurable {
 
@@ -692,6 +703,8 @@ class DynamicMetricsReporters(brokerId: Int, server: KafkaServer) extends Reconf
     configs.get(KafkaConfig.MetricReporterClassesProp).asInstanceOf[util.List[String]].asScala
   }
 }
+
+
 object DynamicListenerConfig {
 
   val ReconfigurableConfigs = Set(
@@ -736,6 +749,7 @@ object DynamicListenerConfig {
   )
 }
 
+
 class DynamicClientQuotaCallback(brokerId: Int, server: KafkaServer) extends Reconfigurable {
 
   override def configure(configs: util.Map[String, _]): Unit = {}
@@ -766,6 +780,7 @@ class DynamicClientQuotaCallback(brokerId: Int, server: KafkaServer) extends Rec
     }
   }
 }
+
 
 class DynamicListenerConfig(server: KafkaServer) extends BrokerReconfigurable with Logging {
 

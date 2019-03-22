@@ -124,12 +124,15 @@ import static org.apache.kafka.common.utils.Utils.getPort;
 public class KafkaStreams {
 
     private static final String JMX_PREFIX = "kafka.streams";
+    // 默认关闭超时
     private static final int DEFAULT_CLOSE_TIMEOUT = 0;
 
     // processId is expected to be unique across JVMs and to be used
     // in userData of the subscription request to allow assignor be aware
     // of the co-location of stream thread's consumers. It is for internal
     // usage only and should not be exposed to users at all.
+    // processId应该在JVM中是唯一的，并且在订阅请求的userData中使用
+    // 以允许赋值者知道流线程的消费者的共同位置。它仅供内部使用，不应向用户公开。
     private final Time time;
     private final Logger log;
     private final UUID processId;
@@ -408,7 +411,7 @@ public class KafkaStreams {
         }
 
         /**
-         * If all threads are dead set to ERROR
+         * 如果所有线程都dead 设置为ERROR
          */
         private void maybeSetError() {
             // check if we have enough threads running
@@ -424,7 +427,7 @@ public class KafkaStreams {
         }
 
         /**
-         * If all threads are up, including the global thread, set to RUNNING
+         * If all threads are up, including the global thread, set to RUNNING 如果所有线程都已启动，包括全局线程，则设置为RUNNING
          */
         private void maybeSetRunning() {
             // one thread is running, check others, including global thread
@@ -450,7 +453,7 @@ public class KafkaStreams {
             // StreamThreads first
             if (thread instanceof StreamThread) {
                 StreamThread.State newState = (StreamThread.State) abstractNewState;
-                threadState.put(thread.getId(), newState);
+                threadState.put(thread.getId(),  );
 
                 if (newState == StreamThread.State.PARTITIONS_REVOKED && state != State.REBALANCING) {
                     setState(State.REBALANCING);

@@ -19,6 +19,7 @@ package kafka.common
 
 /**
  * Indicates the client has requested a range no longer available on the server
+  * 表示客户端已请求服务器上不再可用的范围
  */
 class UnknownCodecException(message: String) extends RuntimeException(message) {
   def this() = this(null)

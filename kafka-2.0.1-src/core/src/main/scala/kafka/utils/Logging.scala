@@ -38,6 +38,7 @@ private object Logging {
   private val FatalMarker: Marker = MarkerFactory.getMarker("FATAL")
 }
 
+// log接口
 trait Logging {
 
   protected lazy val logger = Logger(LoggerFactory.getLogger(loggerName))

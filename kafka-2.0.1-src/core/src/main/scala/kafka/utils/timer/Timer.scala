@@ -27,6 +27,7 @@ trait Timer {
   /**
     * Add a new task to this executor. It will be executed after the task's delay
     * (beginning from the time of submission)
+    * 向此执行程序添加新任务。它将在任务延迟之后执行（从提交时开始）
     * @param timerTask the task to add
     */
   def add(timerTask: TimerTask): Unit
@@ -34,6 +35,7 @@ trait Timer {
   /**
     * Advance the internal clock, executing any tasks whose expiration has been
     * reached within the duration of the passed timeout.
+    * 提前内部时钟，执行在传递的超时持续时间内达到到期的任何任务。
     * @param timeoutMs
     * @return whether or not any tasks were executed
     */
@@ -41,30 +43,36 @@ trait Timer {
 
   /**
     * Get the number of tasks pending execution
+    * 获取待执行的任务数
     * @return the number of tasks
     */
   def size: Int
 
   /**
     * Shutdown the timer service, leaving pending tasks unexecuted
+    * 关闭计时器服务，保留未执行的待处理任务
     */
   def shutdown(): Unit
 }
 
-@threadsafe
-class SystemTimer(executorName: String,
-                  tickMs: Long = 1,
-                  wheelSize: Int = 20,
-                  startMs: Long = Time.SYSTEM.hiResClockMs) extends Timer {
 
-  // timeout timer
+// wheelSize: Int 当前时间轮的大小也就是总的时间格数量
+// startMs：Long 当期时间轮的创建时间
+// tickMs：Long 当前时间轮中一个时间格表示的时间跨度
+@threadsafe
+class SystemTimer(executorName: String, tickMs: Long = 1, wheelSize: Int = 20, startMs: Long = Time.SYSTEM.hiResClockMs) extends Timer {
+
+  // 超时计时器
   private[this] val taskExecutor = Executors.newFixedThreadPool(1, new ThreadFactory() {
     def newThread(runnable: Runnable): Thread =
       KafkaThread.nonDaemon("executor-"+executorName, runnable)
   })
 
+  //delayQueue:DelayQueue[TimerTaskList] 整个层级的时间轮公用一个任务队列，其元素类型是TimerTaskList
   private[this] val delayQueue = new DelayQueue[TimerTaskList]()
+  //taskCounter：AtomicInteger 各层级时间轮中任务的总数
   private[this] val taskCounter = new AtomicInteger(0)
+
   private[this] val timingWheel = new TimingWheel(
     tickMs = tickMs,
     wheelSize = wheelSize,
@@ -73,7 +81,7 @@ class SystemTimer(executorName: String,
     delayQueue
   )
 
-  // Locks used to protect data structures while ticking
+  // Locks used to protect data structures while ticking锁定时用于保护数据结构的锁定
   private[this] val readWriteLock = new ReentrantReadWriteLock()
   private[this] val readLock = readWriteLock.readLock()
   private[this] val writeLock = readWriteLock.writeLock()
@@ -87,9 +95,10 @@ class SystemTimer(executorName: String,
     }
   }
 
+  // 往时间轮中添加任务
   private def addTimerTaskEntry(timerTaskEntry: TimerTaskEntry): Unit = {
     if (!timingWheel.add(timerTaskEntry)) {
-      // Already expired or cancelled
+      // Already expired or cancelled 已经过期或取消
       if (!timerTaskEntry.cancelled)
         taskExecutor.submit(timerTaskEntry.timerTask)
     }
@@ -120,8 +129,10 @@ class SystemTimer(executorName: String,
     }
   }
 
+  //各层级时间轮中任务的总数
   def size: Int = taskCounter.get
 
+  // 关闭定时任务
   override def shutdown() {
     taskExecutor.shutdown()
   }
