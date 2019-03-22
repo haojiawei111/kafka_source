@@ -28,7 +28,7 @@ import scala.collection.JavaConverters._
   * @param props
   */
 class VerifiableProperties(val props: Properties) extends Logging {
-  
+
   //可变hashset，泛型是string
   private val referenceSet = mutable.HashSet[String]()
 
