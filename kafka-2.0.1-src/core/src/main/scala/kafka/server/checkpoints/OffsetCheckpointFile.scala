@@ -36,13 +36,15 @@ trait OffsetCheckpoint {
 
 /**
   * This class persists a map of (Partition => Offsets) to a file (for a certain replica)
+  * 此类将（Partition => Offsets）的映射保留到文件（对于某个副本）
   */
 class OffsetCheckpointFile(val file: File, logDirFailureChannel: LogDirFailureChannel = null) {
-  val checkpoint = new CheckpointFile[(TopicPartition, Long)](file, OffsetCheckpointFile.CurrentVersion,
-    OffsetCheckpointFile.Formatter, logDirFailureChannel, file.getParent)
 
+  val checkpoint = new CheckpointFile[(TopicPartition, Long)](file, OffsetCheckpointFile.CurrentVersion,OffsetCheckpointFile.Formatter, logDirFailureChannel, file.getParent)
+
+  // 写offset
   def write(offsets: Map[TopicPartition, Long]): Unit = checkpoint.write(offsets.toSeq)
-
+  // 读 map<TopicPartition, Long>
   def read(): Map[TopicPartition, Long] = checkpoint.read().toMap
 
 }

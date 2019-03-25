@@ -241,6 +241,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
         // 配额管理
         quotaManagers = QuotaFactory.instantiate(config, metrics, time, threadNamePrefix.getOrElse(""))
         notifyClusterListeners(kafkaMetricsReporters ++ metrics.reporters.asScala)
+
         // 不可用的log Dir
         logDirFailureChannel = new LogDirFailureChannel(config.logDirs.size)
 

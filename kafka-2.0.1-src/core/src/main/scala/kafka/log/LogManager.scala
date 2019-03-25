@@ -132,6 +132,7 @@ class LogManager(logDirs: Seq[File],
   val InitialTaskDelayMs = 30 * 1000
 
   private val logCreationOrDeletionLock = new Object
+
   // 内存池 当前日志
   private val currentLogs = new Pool[TopicPartition, Log]()
 
@@ -143,20 +144,29 @@ class LogManager(logDirs: Seq[File],
   // 以在将来的日志赶上当前日志后替换分区的当前日志
   // 内存池 未来的日志
   private val futureLogs = new Pool[TopicPartition, Log]()
+
+
   // Each element in the queue contains the log object to be deleted and the time it is scheduled for deletion.
   // 队列中的每个元素都包含要删除的日志对象以及计划删除的时间。  要删除的日志
   private val logsToBeDeleted = new LinkedBlockingQueue[(Log, Long)]()
 
+  // 可用日志目录
   private val _liveLogDirs: ConcurrentLinkedQueue[File] = createAndValidateLogDirs(logDirs, initialOfflineDirs)
+  // 默认配置
   @volatile private var _currentDefaultConfig = initialDefaultConfig
+
+  // 每个数据目录的线程数，用于启动时的日志恢复和关闭时的刷新
   @volatile private var numRecoveryThreadsPerDataDir = recoveryThreadsPerDataDir
 
+  //重新配置默认日志
   def reconfigureDefaultLogConfig(logConfig: LogConfig): Unit = {
     this._currentDefaultConfig = logConfig
   }
 
+  //返回当前默认配置
   def currentDefaultConfig: LogConfig = _currentDefaultConfig
 
+  // 返回可用日志目录
   def liveLogDirs: Seq[File] = {
     if (_liveLogDirs.size == logDirs.size)
       logDirs
@@ -164,17 +174,26 @@ class LogManager(logDirs: Seq[File],
       _liveLogDirs.asScala.toBuffer
   }
 
+  // 锁定可用日志目录
   private val dirLocks = lockLogDirs(liveLogDirs)
+
+  // map <dir,OffsetCheckpointFile>   recovery-point-offset-checkpoint  //恢复点检查点文件
   @volatile private var recoveryPointCheckpoints = liveLogDirs.map(dir =>
     (dir, new OffsetCheckpointFile(new File(dir, RecoveryPointCheckpointFile), logDirFailureChannel))).toMap
+
+  // map<dir,OffsetCheckpointFile>    log-start-offset-checkpoint  //记录开始偏移检查点文件
   @volatile private var logStartOffsetCheckpoints = liveLogDirs.map(dir =>
     (dir, new OffsetCheckpointFile(new File(dir, LogStartOffsetCheckpointFile), logDirFailureChannel))).toMap
 
+  // map<TopicPartition,String>
   private val preferredLogDirs = new ConcurrentHashMap[TopicPartition, String]()
 
+  //
   private def offlineLogDirs: Iterable[File] = {
     val logDirsSet = mutable.Set[File](logDirs: _*)
+    // 从logDirsSet中逐个减去_liveLogDirs，剩下就是目前不可用的离线目录
     _liveLogDirs.asScala.foreach(logDirsSet -=)
+
     logDirsSet
   }
 
@@ -206,33 +225,43 @@ class LogManager(logDirs: Seq[File],
 
   /**
    * Create and check validity of the given directories that are not in the given offline directories, specifically:
+    * 创建并检查给定目录中不在给定脱机目录中的有效性，具体如下：
    * <ol>
-   * <li> Ensure that there are no duplicates in the directory list
-   * <li> Create each directory if it doesn't exist
-   * <li> Check that each path is a readable directory
+   * <li> Ensure that there are no duplicates in the directory list 确保目录列表中没有重复项
+   * <li> Create each directory if it doesn't exist 创建每个目录（如果不存在）
+   * <li> Check that each path is a readable directory 检查每个路径是否为可读目录
    * </ol>
    */
   private def createAndValidateLogDirs(dirs: Seq[File], initialOfflineDirs: Seq[File]): ConcurrentLinkedQueue[File] = {
+    // 可用的日志目录
     val liveLogDirs = new ConcurrentLinkedQueue[File]()
+
     val canonicalPaths = mutable.HashSet.empty[String]
 
     for (dir <- dirs) {
       try {
+
+        // 如果initialOfflineDirs里面包含dir，抛异常
         if (initialOfflineDirs.contains(dir))
           throw new IOException(s"Failed to load ${dir.getAbsolutePath} during broker startup")
 
+        // 如果没有目录就创建
         if (!dir.exists) {
           info(s"Log directory ${dir.getAbsolutePath} not found, creating it.")
           val created = dir.mkdirs()
           if (!created)
             throw new IOException(s"Failed to create data directory ${dir.getAbsolutePath}")
         }
+        // 是否是目录  是否可读
         if (!dir.isDirectory || !dir.canRead)
           throw new IOException(s"${dir.getAbsolutePath} is not a readable log directory.")
 
         // getCanonicalPath() throws IOException if a file system query fails or if the path is invalid (e.g. contains
         // the Nul character). Since there's no easy way to distinguish between the two cases, we treat them the same
         // and mark the log directory as offline.
+        // 如果文件系统查询失败或路径无效（例如包含
+        // Nul字符），则getCanonicalPath（）将抛出IOException。由于没有简单的方法来区分这两种情况，我们将它们视为相同
+        // 并将日志目录标记为离线。
         if (!canonicalPaths.add(dir.getCanonicalPath))
           throw new KafkaException(s"Duplicate log directory found: ${dirs.mkString(", ")}")
 
@@ -243,6 +272,8 @@ class LogManager(logDirs: Seq[File],
           logDirFailureChannel.maybeAddOfflineLogDir(dir.getAbsolutePath, s"Failed to create or validate data directory ${dir.getAbsolutePath}", e)
       }
     }
+
+    // 如果没有可用目录，退出
     if (liveLogDirs.isEmpty) {
       fatal(s"Shutdown broker because none of the specified log dirs from ${dirs.mkString(", ")} can be created or validated")
       Exit.halt(1)
@@ -300,16 +331,18 @@ class LogManager(logDirs: Seq[File],
   }
 
   /**
-   * Lock all the given directories
+   * 锁定所有给定的目录
    */
   private def lockLogDirs(dirs: Seq[File]): Seq[FileLock] = {
     dirs.flatMap { dir =>
       try {
+        // 获取文件锁
         val lock = new FileLock(new File(dir, LockFile))
         if (!lock.tryLock())
           throw new KafkaException("Failed to acquire lock on file .lock in " + lock.file.getParent +
             ". A Kafka instance in another process or thread is using this directory.")
         Some(lock)
+
       } catch {
         case e: IOException =>
           logDirFailureChannel.maybeAddOfflineLogDir(dir.getAbsolutePath, s"Disk error while locking directory $dir", e)
@@ -325,11 +358,19 @@ class LogManager(logDirs: Seq[File],
   // Only for testing
   private[log] def hasLogsToBeDeleted: Boolean = !logsToBeDeleted.isEmpty
 
+
+
+  // 加载日志 log恢复主要逻辑
   private def loadLog(logDir: File, recoveryPoints: Map[TopicPartition, Long], logStartOffsets: Map[TopicPartition, Long]): Unit = {
     debug("Loading log '" + logDir.getName + "'")
+    // 解析文件名
     val topicPartition = Log.parseTopicPartitionName(logDir)
+    // 返回topicPartition.topic配置
     val config = topicConfigs.getOrElse(topicPartition.topic, currentDefaultConfig)
+    // 日志恢复点 这个是从recovery-point-offset-checkpoint文件里面读出来的
     val logRecoveryPoint = recoveryPoints.getOrElse(topicPartition, 0L)
+
+    // 记录日志开始偏移检查点文件 这个是从log-start-offset-checkpoint文件里面读出来的
     val logStartOffset = logStartOffsets.getOrElse(topicPartition, 0L)
 
     val log = Log(
@@ -344,18 +385,25 @@ class LogManager(logDirs: Seq[File],
       brokerTopicStats = brokerTopicStats,
       logDirFailureChannel = logDirFailureChannel)
 
+
+    // Log.DeleteDirSuffix  = "-delete"
     if (logDir.getName.endsWith(Log.DeleteDirSuffix)) {
+
       addLogToBeDeleted(log)
+
     } else {
+
       val previous = {
         if (log.isFuture)
+          // 如果logDir结尾是-future
           this.futureLogs.put(topicPartition, log)
         else
           this.currentLogs.put(topicPartition, log)
       }
+
       if (previous != null) {
         if (log.isFuture)
-          throw new IllegalStateException("Duplicate log directories found: %s, %s!".format(log.dir.getAbsolutePath, previous.dir.getAbsolutePath))
+          throw new IllegalStateException("Duplicate log directories found找到重复的日志目录: %s, %s!".format(log.dir.getAbsolutePath, previous.dir.getAbsolutePath))
         else
           throw new IllegalStateException(s"Duplicate log directories for $topicPartition are found in both ${log.dir.getAbsolutePath} " +
             s"and ${previous.dir.getAbsolutePath}. It is likely because log directory failure happened while broker was " +
@@ -367,29 +415,39 @@ class LogManager(logDirs: Seq[File],
 
   /**
    * Recover and load all logs in the given data directories
+    * 恢复并加载给定数据目录中的所有日志
    */
   private def loadLogs(): Unit = {
     info("Loading logs.")
     val startMs = time.milliseconds
+    // 线程池集合 一堆线程池
     val threadPools = ArrayBuffer.empty[ExecutorService]
+    // 离线日志
     val offlineDirs = mutable.Set.empty[(String, IOException)]
+
+    // map<File,Seq[Future[_]]>     每个文件对应一个Future集合
     val jobs = mutable.Map.empty[File, Seq[Future[_]]]
 
+    // 遍历每个目录
     for (dir <- liveLogDirs) {
       try {
+        // 固定大小的线程池，newFixedThreadPool：
         val pool = Executors.newFixedThreadPool(numRecoveryThreadsPerDataDir)
         threadPools.append(pool)
 
-        val cleanShutdownFile = new File(dir, Log.CleanShutdownFile)
+        // 清理关闭文件  如果有此文件表明kakfa正常关闭，log不需要recovery
+        val cleanShutdownFile = new File(dir, Log.CleanShutdownFile) //Log.CleanShutdownFile  .kafka_cleanshutdown
 
         if (cleanShutdownFile.exists) {
-          debug(s"Found clean shutdown file. Skipping recovery for all logs in data directory: ${dir.getAbsolutePath}")
+          debug(s"Found clean shutdown file. Skipping recovery for all logs in data directory找到干净的关机文件。跳过数据目录中所有日志的恢复: ${dir.getAbsolutePath}")
         } else {
-          // log recovery itself is being performed by `Log` class during initialization
+          // log recovery itself is being performed by `Log` class during initialization 日志恢复本身在初始化期间由`Log`类执行  这里改变broker状态
           brokerState.newState(RecoveringFromUncleanShutdown)
         }
 
+        // 恢复点   map<TopicPartition, Long>
         var recoveryPoints = Map[TopicPartition, Long]()
+
         try {
           recoveryPoints = this.recoveryPointCheckpoints(dir).read
         } catch {
@@ -397,8 +455,9 @@ class LogManager(logDirs: Seq[File],
             warn("Error occurred while reading recovery-point-offset-checkpoint file of directory " + dir, e)
             warn("Resetting the recovery checkpoint to 0")
         }
-
+        // log开始偏移
         var logStartOffsets = Map[TopicPartition, Long]()
+
         try {
           logStartOffsets = this.logStartOffsetCheckpoints(dir).read
         } catch {
@@ -406,7 +465,9 @@ class LogManager(logDirs: Seq[File],
             warn("Error occurred while reading log-start-offset-checkpoint file of directory " + dir, e)
         }
 
+
         val jobsForDir = for {
+          // 子文件夹  这里要便利每个topic里面的文件    logDir是配置文件里添加的文件路径下面的目录
           dirContent <- Option(dir.listFiles).toList
           logDir <- dirContent if logDir.isDirectory
         } yield {
@@ -420,14 +481,18 @@ class LogManager(logDirs: Seq[File],
             }
           }
         }
+
         jobs(cleanShutdownFile) = jobsForDir.map(pool.submit)
+
       } catch {
         case e: IOException =>
+          // 恢复过程中如果有异常加入离线目录集合
           offlineDirs.add((dir.getAbsolutePath, e))
           error("Error while loading log dir " + dir.getAbsolutePath, e)
       }
     }
 
+    //
     try {
       for ((cleanShutdownFile, dirJobs) <- jobs) {
         dirJobs.foreach(_.get)
@@ -448,11 +513,13 @@ class LogManager(logDirs: Seq[File],
         error("There was an error in one of the threads during logs loading: " + e.getCause)
         throw e.getCause
     } finally {
+      // 关闭线程
       threadPools.foreach(_.shutdown())
     }
 
     info(s"Logs loading complete in ${time.milliseconds - startMs} ms.")
   }
+
 
   /**
    *  Start the background threads to flush logs and do log cleanup

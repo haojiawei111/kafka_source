@@ -107,6 +107,9 @@ case class LogAppendInfo(var firstOffset: Option[Long],
   }
 }
 
+
+
+
 /**
  * A class used to hold useful metadata about a completed transaction. This is used to build
  * the transaction index after appending to the log.
@@ -1927,6 +1930,7 @@ class Log(@volatile var dir: File,
 
 /**
  * Helper functions for logs
+  * logs的辅助程序
  */
 object Log {
 
@@ -1938,19 +1942,20 @@ object Log {
 
   /** a time index file */
   val TimeIndexFileSuffix = ".timeindex"
-
+  // 生产者快照文件后缀
   val ProducerSnapshotFileSuffix = ".snapshot"
+
 
   /** an (aborted) txn index */
   val TxnIndexFileSuffix = ".txnindex"
 
-  /** a file that is scheduled to be deleted */
+  /** 计划删除的文件 */
   val DeletedFileSuffix = ".deleted"
 
-  /** A temporary file that is being used for log cleaning */
+  /** 用于日志清理的临时文件*/
   val CleanedFileSuffix = ".cleaned"
 
-  /** A temporary file used when swapping files into the log */
+  /** A temporary file used when swapping files into the log 将文件交换到日志时使用的临时文件 */
   val SwapFileSuffix = ".swap"
 
   /** Clean shutdown file that indicates the broker was cleanly shutdown in 0.8 and higher.
@@ -1958,13 +1963,15 @@ object Log {
    * avoided by passing in the recovery point, however finding the correct position to do this
    * requires accessing the offset index which may not be safe in an unclean shutdown.
    * For more information see the discussion in PR#2104
+    * 清除关闭文件，指示代理在0.8和更高版本中干净地关闭。这用于避免在干净关闭后不必要的恢复。理论上可以通过传入恢复点来避免这种情况，但是找到正确的位置来执行此操作*需要访问偏移索引，这在非清洁关闭时可能不安全。
+    * 有关更多信息，请参阅PR＃2104中的讨论
    */
   val CleanShutdownFile = ".kafka_cleanshutdown"
 
-  /** a directory that is scheduled to be deleted */
+  /** 计划删除的目录*/
   val DeleteDirSuffix = "-delete"
 
-  /** a directory that is used for future partition */
+  /** a directory that is used for future partition 用于将来分区的目录 */
   val FutureDirSuffix = "-future"
 
   private val DeleteDirPattern = Pattern.compile(s"^(\\S+)-(\\S+)\\.(\\S+)$DeleteDirSuffix")
@@ -1982,10 +1989,12 @@ object Log {
             maxProducerIdExpirationMs: Int,
             producerIdExpirationCheckIntervalMs: Int,
             logDirFailureChannel: LogDirFailureChannel): Log = {
+
     val topicPartition = Log.parseTopicPartitionName(dir)
     val producerStateManager = new ProducerStateManager(topicPartition, dir, maxProducerIdExpirationMs)
     new Log(dir, config, logStartOffset, recoveryPoint, scheduler, brokerTopicStats, time, maxProducerIdExpirationMs,
       producerIdExpirationCheckIntervalMs, topicPartition, producerStateManager, logDirFailureChannel)
+
   }
 
   /**
@@ -2103,6 +2112,7 @@ object Log {
 
   /**
    * Parse the topic and partition out of the directory name of a log
+    * 解析主题和分区日志的目录名称
    */
   def parseTopicPartitionName(dir: File): TopicPartition = {
     if (dir == null)
@@ -2117,6 +2127,8 @@ object Log {
     val dirName = dir.getName
     if (dirName == null || dirName.isEmpty || !dirName.contains('-'))
       throw exception(dir)
+    // -delete
+    // -future
     if (dirName.endsWith(DeleteDirSuffix) && !DeleteDirPattern.matcher(dirName).matches ||
         dirName.endsWith(FutureDirSuffix) && !FutureDirPattern.matcher(dirName).matches)
       throw exception(dir)
