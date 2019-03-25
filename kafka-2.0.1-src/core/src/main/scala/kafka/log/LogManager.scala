@@ -199,7 +199,8 @@ class LogManager(logDirs: Seq[File],
 
   loadLogs()
 
-  // public, so we can access this from kafka.admin.DeleteTopicTest
+  // public, so we can access this from kafka.admin.DeleteTopicTest public，所以我们可以从kafka.admin.DeleteTopicTest访问它
+  // 这里创建清理线程，默认是开始的
   val cleaner: LogCleaner =
     if(cleanerConfig.enableCleaner)
       new LogCleaner(cleanerConfig, liveLogDirs, currentLogs, logDirFailureChannel, time = time)
@@ -282,12 +283,14 @@ class LogManager(logDirs: Seq[File],
     liveLogDirs
   }
 
+  // 调整恢复线程池的大小
   def resizeRecoveryThreadPool(newSize: Int): Unit = {
     info(s"Resizing recovery thread pool size for each data dir from $numRecoveryThreadsPerDataDir to $newSize")
     numRecoveryThreadsPerDataDir = newSize
   }
 
-  // dir should be an absolute path
+
+  // dir应该是一绝对路径
   def handleLogDirFailure(dir: String) {
     info(s"Stopping serving logs in dir $dir")
     logCreationOrDeletionLock synchronized {
@@ -495,7 +498,7 @@ class LogManager(logDirs: Seq[File],
     //
     try {
       for ((cleanShutdownFile, dirJobs) <- jobs) {
-        // 拿到dirJobs线程返回值
+        // 拿到dirJobs线程返回值 ，这里get会阻塞
         dirJobs.foreach(_.get)
         try {
           // 删除 清理关机文件
@@ -508,14 +511,14 @@ class LogManager(logDirs: Seq[File],
       }
 
       offlineDirs.foreach { case (dir, e) =>
-        logDirFailureChannel.maybeAddOfflineLogDir(dir, s"Error while deleting the clean shutdown file in dir $dir", e)
+        logDirFailureChannel.maybeAddOfflineLogDir(dir, s"Error while deleting the clean shutdown file in dir在dir中删除干净关闭文件时出错 $dir", e)
       }
     } catch {
       case e: ExecutionException =>
         error("There was an error in one of the threads during logs loading: " + e.getCause)
         throw e.getCause
     } finally {
-      // 关闭线程
+      // 关闭线程池
       threadPools.foreach(_.shutdown())
     }
 
