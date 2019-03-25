@@ -481,7 +481,7 @@ class LogManager(logDirs: Seq[File],
             }
           }
         }
-
+        // 如果cleanShutdownFile不存在，则上一次关闭不是正常关闭
         jobs(cleanShutdownFile) = jobsForDir.map(pool.submit)
 
       } catch {
@@ -495,8 +495,10 @@ class LogManager(logDirs: Seq[File],
     //
     try {
       for ((cleanShutdownFile, dirJobs) <- jobs) {
+        // 拿到dirJobs线程返回值
         dirJobs.foreach(_.get)
         try {
+          // 删除 清理关机文件
           cleanShutdownFile.delete()
         } catch {
           case e: IOException =>
