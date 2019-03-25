@@ -35,20 +35,81 @@ import scala.collection.JavaConverters._
 import scala.collection._
 import scala.collection.mutable.ArrayBuffer
 
+object LogManager {
+  //恢复点检查点文件
+  val RecoveryPointCheckpointFile = "recovery-point-offset-checkpoint"
+  //记录开始偏移检查点文件
+  val LogStartOffsetCheckpointFile = "log-start-offset-checkpoint"
+  val ProducerIdExpirationCheckIntervalMs = 10 * 60 * 1000
+
+  def apply(config: KafkaConfig,initialOfflineDirs: Seq[String],zkClient: KafkaZkClient,brokerState: BrokerState,
+            kafkaScheduler: KafkaScheduler,time: Time,brokerTopicStats: BrokerTopicStats,logDirFailureChannel: LogDirFailureChannel): LogManager = {
+
+    val defaultProps = KafkaServer.copyKafkaConfigToLog(config)
+
+    val defaultLogConfig = LogConfig(defaultProps)
+
+    // read the log configurations from zookeeper   从zookeeper中读取日志配置
+    val (topicConfigs, failed) = zkClient.getLogConfigs(zkClient.getAllTopicsInCluster, defaultProps)
+    if (!failed.isEmpty) throw failed.head._2
+
+    // 清理线程的相关配置
+    val cleanerConfig = LogCleaner.cleanerConfig(config)
+
+    new LogManager(
+      // 配置文件中的log.dirs
+      logDirs = config.logDirs.map(new File(_).getAbsoluteFile),
+      // 初始化失败的目录，这些目录包含在log.dirs中
+      initialOfflineDirs = initialOfflineDirs.map(new File(_).getAbsoluteFile),
+      // topic的配置信息
+      topicConfigs = topicConfigs,
+      // 默认的日志配置
+      initialDefaultConfig = defaultLogConfig,
+      // 清理线程的配置
+      cleanerConfig = cleanerConfig,
+      // 配置文件中 num.recovery.threads.per.data.dir 每个数据目录的线程数，用于启动时的日志恢复和关闭时的刷新
+      recoveryThreadsPerDataDir = config.numRecoveryThreadsPerDataDir,
+      // log.flush.scheduler.interval.ms 日志刷新器检查是否需要将任何日志刷新到磁盘的频率（以毫秒为单位）
+      flushCheckMs = config.logFlushSchedulerIntervalMs,
+      // log.flush.offset.checkpoint.interval.ms 我们更新上次刷新的持久记录的频率，该记录充当日志恢复点
+      flushRecoveryOffsetCheckpointMs = config.logFlushOffsetCheckpointIntervalMs,
+      // log.flush.start.offset.checkpoint.interval.ms 我们更新日志开始偏移的持久记录的频率
+      flushStartOffsetCheckpointMs = config.logFlushStartOffsetCheckpointIntervalMs,
+      // log.retention.check.interval.ms 日志清理程序检查是否有资格删除日志的频率（以毫秒为单位）
+      retentionCheckMs = config.logCleanupIntervalMs,
+      // transactional.id.expiration.ms 事务协调器在主动过期生产者的事务ID之前将等待的最长时间（以毫秒为单位），而不从其接收任何事务状态更新。
+      maxPidExpirationMs = config.transactionIdExpirationMs,
+      // kafka 调度线程池
+      scheduler = kafkaScheduler,
+      // broker状态
+      brokerState = brokerState,
+      // broker topic状态
+      brokerTopicStats = brokerTopicStats,
+      // 初始化失败的目录的Channel，这些目录包含在log.dirs中
+      logDirFailureChannel = logDirFailureChannel,
+      time = time
+    )
+
+  }
+}
+
 /**
  * The entry point to the kafka log management subsystem. The log manager is responsible for log creation, retrieval, and cleaning.
  * All read and write operations are delegated to the individual log instances.
+  * kafka日志管理子系统的入口点。日志管理器负责日志创建，检索和清理。 *所有读写操作都委托给各个日志实例。
  *
  * The log manager maintains logs in one or more directories. New logs are created in the data directory
  * with the fewest logs. No attempt is made to move partitions after the fact or balance based on
  * size or I/O rate.
+  * 日志管理器将日志保存在一个或多个目录中。使用最少的日志在数据目录*中创建新日志。根据*大小或I / O速率，不会尝试在事实或余额之后移动分区。
  *
  * A background thread handles log retention by periodically truncating excess log segments.
+  * 后台线程通过定期截断多余的日志段来处理日志保留。
  */
 @threadsafe
 class LogManager(logDirs: Seq[File],
                  initialOfflineDirs: Seq[File],
-                 val topicConfigs: Map[String, LogConfig], // note that this doesn't get updated after creation
+                 val topicConfigs: Map[String, LogConfig], // note that this doesn't get updated after creation请注意，创建后不会更新
                  val initialDefaultConfig: LogConfig,
                  val cleanerConfig: CleanerConfig,
                  recoveryThreadsPerDataDir: Int,
@@ -65,16 +126,25 @@ class LogManager(logDirs: Seq[File],
 
   import LogManager._
 
+  // 锁文件
   val LockFile = ".lock"
+  //初始任务延迟Ms
   val InitialTaskDelayMs = 30 * 1000
 
   private val logCreationOrDeletionLock = new Object
+  // 内存池 当前日志
   private val currentLogs = new Pool[TopicPartition, Log]()
+
   // Future logs are put in the directory with "-future" suffix. Future log is created when user wants to move replica
   // from one log directory to another log directory on the same broker. The directory of the future log will be renamed
   // to replace the current log of the partition after the future log catches up with the current log
+  // 将来的日志放在带有“-future”后缀的目录中。当用户想要将副本
+  // 从一个日志目录移动到同一代理上的另一个日志目录时，将创建将来的日志。未来日志的目录将被重命名
+  // 以在将来的日志赶上当前日志后替换分区的当前日志
+  // 内存池 未来的日志
   private val futureLogs = new Pool[TopicPartition, Log]()
   // Each element in the queue contains the log object to be deleted and the time it is scheduled for deletion.
+  // 队列中的每个元素都包含要删除的日志对象以及计划删除的时间。  要删除的日志
   private val logsToBeDeleted = new LinkedBlockingQueue[(Log, Long)]()
 
   private val _liveLogDirs: ConcurrentLinkedQueue[File] = createAndValidateLogDirs(logDirs, initialOfflineDirs)
@@ -927,44 +997,4 @@ class LogManager(logDirs: Seq[File],
   }
 }
 
-object LogManager {
 
-  val RecoveryPointCheckpointFile = "recovery-point-offset-checkpoint"
-  val LogStartOffsetCheckpointFile = "log-start-offset-checkpoint"
-  val ProducerIdExpirationCheckIntervalMs = 10 * 60 * 1000
-
-  def apply(config: KafkaConfig,
-            initialOfflineDirs: Seq[String],
-            zkClient: KafkaZkClient,
-            brokerState: BrokerState,
-            kafkaScheduler: KafkaScheduler,
-            time: Time,
-            brokerTopicStats: BrokerTopicStats,
-            logDirFailureChannel: LogDirFailureChannel): LogManager = {
-    val defaultProps = KafkaServer.copyKafkaConfigToLog(config)
-    val defaultLogConfig = LogConfig(defaultProps)
-
-    // read the log configurations from zookeeper
-    val (topicConfigs, failed) = zkClient.getLogConfigs(zkClient.getAllTopicsInCluster, defaultProps)
-    if (!failed.isEmpty) throw failed.head._2
-
-    val cleanerConfig = LogCleaner.cleanerConfig(config)
-
-    new LogManager(logDirs = config.logDirs.map(new File(_).getAbsoluteFile),
-      initialOfflineDirs = initialOfflineDirs.map(new File(_).getAbsoluteFile),
-      topicConfigs = topicConfigs,
-      initialDefaultConfig = defaultLogConfig,
-      cleanerConfig = cleanerConfig,
-      recoveryThreadsPerDataDir = config.numRecoveryThreadsPerDataDir,
-      flushCheckMs = config.logFlushSchedulerIntervalMs,
-      flushRecoveryOffsetCheckpointMs = config.logFlushOffsetCheckpointIntervalMs,
-      flushStartOffsetCheckpointMs = config.logFlushStartOffsetCheckpointIntervalMs,
-      retentionCheckMs = config.logCleanupIntervalMs,
-      maxPidExpirationMs = config.transactionIdExpirationMs,
-      scheduler = kafkaScheduler,
-      brokerState = brokerState,
-      brokerTopicStats = brokerTopicStats,
-      logDirFailureChannel = logDirFailureChannel,
-      time = time)
-  }
-}

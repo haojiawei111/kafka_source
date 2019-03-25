@@ -39,17 +39,24 @@ class KafkaRequestHandler(id: Int,brokerId: Int,val aggregateIdleMeter: Meter,va
   private val shutdownComplete = new CountDownLatch(1)
   @volatile private var stopped = false
 
+  // kafka请求处理线程主要逻辑
   def run() {
     while (!stopped) {
       // We use a single meter for aggregate idle percentage for the thread pool.
       // Since meter is calculated as total_recorded_value / time_window and
       // time_window is independent of the number of threads, each recorded idle
       // time should be discounted by # threads.
+      // 我们使用单个仪表作为线程池的聚合空闲百分比。
+      // 由于meter计算为total_recorded_value / time_window并且
+      // time_window与线程数无关，因此每个记录的空闲时间应该由＃个线程打折。
+      //开始选择时间
       val startSelectTime = time.nanoseconds
-
+      //获取下一个请求或阻止，直到指定的时间过去
       val req = requestChannel.receiveRequest(300)
       val endTime = time.nanoseconds
+
       val idleTime = endTime - startSelectTime
+
       aggregateIdleMeter.mark(idleTime / totalHandlerThreads.get)
 
       req match {
@@ -60,6 +67,7 @@ class KafkaRequestHandler(id: Int,brokerId: Int,val aggregateIdleMeter: Meter,va
 
         case request: RequestChannel.Request =>
           try {
+            //请求出队时间Nanos
             request.requestDequeueTimeNanos = endTime
             trace(s"Kafka request handler $id on broker $brokerId handling request $request")
             apis.handle(request)
@@ -90,24 +98,29 @@ class KafkaRequestHandler(id: Int,brokerId: Int,val aggregateIdleMeter: Meter,va
 
 }
 
+
 // kafka请求线程的线程池
 class KafkaRequestHandlerPool(val brokerId: Int,val requestChannel: RequestChannel,val apis: KafkaApis,time: Time,numThreads: Int) extends Logging with KafkaMetricsGroup {
 
+  //处理请求的线程数
   private val threadPoolSize: AtomicInteger = new AtomicInteger(numThreads)
-  /* a meter to track the average free capacity of the request handlers */
+  /* a meter to track the average free capacity of the request handlers 用于跟踪请求处理程序的平均可用容量的仪表*/
   private val aggregateIdleMeter = newMeter("RequestHandlerAvgIdlePercent", "percent", TimeUnit.NANOSECONDS)
 
   this.logIdent = "[Kafka Request Handler on Broker " + brokerId + "], "
+
   val runnables = new mutable.ArrayBuffer[KafkaRequestHandler](numThreads)
+
   for (i <- 0 until numThreads) {
     createHandler(i)
   }
-
+  //创建numThreads个KafkaRequestHandler
   def createHandler(id: Int): Unit = synchronized {
     runnables += new KafkaRequestHandler(id, brokerId, aggregateIdleMeter, threadPoolSize, requestChannel, apis, time)
     KafkaThread.daemon("kafka-request-handler-" + id, runnables(id)).start()
   }
 
+  //调整线程池大小
   def resizeThreadPool(newSize: Int): Unit = synchronized {
     val currentSize = threadPoolSize.get
     info(s"Resizing request handler thread pool size from $currentSize to $newSize")
@@ -123,6 +136,7 @@ class KafkaRequestHandlerPool(val brokerId: Int,val requestChannel: RequestChann
     threadPoolSize.set(newSize)
   }
 
+  // 关闭线程
   def shutdown(): Unit = synchronized {
     info("shutting down")
     for (handler <- runnables)
@@ -133,6 +147,7 @@ class KafkaRequestHandlerPool(val brokerId: Int,val requestChannel: RequestChann
   }
 }
 
+// Broker Topic监控
 class BrokerTopicMetrics(name: Option[String]) extends KafkaMetricsGroup {
   val tags: scala.collection.Map[String, String] = name match {
     case None => Map.empty
@@ -174,6 +189,7 @@ class BrokerTopicMetrics(name: Option[String]) extends KafkaMetricsGroup {
   }
 }
 
+// Broker主题统计
 object BrokerTopicStats {
   val MessagesInPerSec = "MessagesInPerSec"
   val BytesInPerSec = "BytesInPerSec"

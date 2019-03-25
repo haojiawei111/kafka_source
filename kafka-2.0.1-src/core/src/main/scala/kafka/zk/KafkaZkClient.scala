@@ -192,14 +192,14 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
 
   /**
    * Get log configs that merge local configs with topic-level configs in zookeeper.
+    * 获取日志配置，将本地配置与zookeeper中的主题级配置合并。
    * @param topics The topics to get log configs for.
    * @param config The local configs.
    * @return A tuple of two values:
    *         1. The successfully gathered log configs
    *         2. Exceptions corresponding to failed log config lookups.
    */
-  def getLogConfigs(topics: Seq[String], config: java.util.Map[String, AnyRef]):
-  (Map[String, LogConfig], Map[String, Exception]) = {
+  def getLogConfigs(topics: Seq[String], config: java.util.Map[String, AnyRef]):(Map[String, LogConfig], Map[String, Exception]) = {
     val logConfigs = mutable.Map.empty[String, LogConfig]
     val failed = mutable.Map.empty[String, Exception]
     val configResponses = try {
@@ -345,6 +345,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
 
   /**
    * Gets all topics in the cluster.  /brokers/topics
+    * 获取集群中的所有主题。
    * @return sequence of topics in the cluster.
    */
   def getAllTopicsInCluster: Seq[String] = {

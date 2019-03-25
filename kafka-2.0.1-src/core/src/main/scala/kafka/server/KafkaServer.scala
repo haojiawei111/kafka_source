@@ -55,6 +55,8 @@ import scala.collection.{Map, Seq, mutable}
 object KafkaServer {
   // Copy the subset of properties that are relevant to Logs
   // I'm listing out individual properties here since the names are slightly different in each Config class...
+  // 复制与Logs相关的属性子集
+  // 我在这里列出了各个属性，因为每个Config类中的名称略有不同......
   private[kafka] def copyKafkaConfigToLog(kafkaConfig: KafkaConfig): java.util.Map[String, Object] = {
     val logProps: util.HashMap[String, Object] = new util.HashMap[String, Object]()
     logProps.put(LogConfig.SegmentBytesProp, kafkaConfig.logSegmentBytes)
@@ -239,7 +241,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
         // 配额管理
         quotaManagers = QuotaFactory.instantiate(config, metrics, time, threadNamePrefix.getOrElse(""))
         notifyClusterListeners(kafkaMetricsReporters ++ metrics.reporters.asScala)
-
+        // 不可用的log Dir
         logDirFailureChannel = new LogDirFailureChannel(config.logDirs.size)
 
         /* start log manager 初始化创建并启动LogManager的实例 */
@@ -304,12 +306,11 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
         /* start processing requests */
         //生成用于对外对外提供服务的KafkaApis实例,并设置当前的broker的状态为运行状态.
-        apis = new KafkaApis(socketServer.requestChannel, replicaManager, adminManager, groupCoordinator, transactionCoordinator,
-          kafkaController, zkClient, config.brokerId, config, metadataCache, metrics, authorizer, quotaManagers,
+        apis = new KafkaApis(socketServer.requestChannel, replicaManager, adminManager, groupCoordinator, transactionCoordinator,kafkaController,
+          zkClient, config.brokerId, config, metadataCache, metrics, authorizer, quotaManagers,
           fetchManager, brokerTopicStats, clusterId, time, tokenManager)
 
-        requestHandlerPool = new KafkaRequestHandlerPool(config.brokerId, socketServer.requestChannel, apis, time,
-          config.numIoThreads)
+        requestHandlerPool = new KafkaRequestHandlerPool(config.brokerId, socketServer.requestChannel, apis, time,config.numIoThreads)//config.numIoThreads = num.io.threads
 
         Mx4jLoader.maybeLoad()
 
@@ -729,6 +730,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
     (brokerId, offlineDirs)
   }
+
 
   private def checkpointBrokerId(brokerId: Int) {
     var logDirsWithoutMetaProps: List[String] = List()

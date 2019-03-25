@@ -78,6 +78,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
 
   // 创建内存池
   private val memoryPool = if (config.queuedMaxBytes > 0) new SimpleMemoryPool(config.queuedMaxBytes, config.socketRequestMaxBytes, false, memoryPoolSensor) else MemoryPool.NONE
+
   // 创建RequestChannel请求处理管道
   val requestChannel = new RequestChannel(maxQueuedRequests)
   // int和Processor的映射

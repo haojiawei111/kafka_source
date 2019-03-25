@@ -364,8 +364,7 @@ class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
   }
 
   /** 获取下一个请求或阻止，直到指定的时间过去 */
-  def receiveRequest(timeout: Long): RequestChannel.BaseRequest =
-    requestQueue.poll(timeout, TimeUnit.MILLISECONDS)
+  def receiveRequest(timeout: Long): RequestChannel.BaseRequest = requestQueue.poll(timeout, TimeUnit.MILLISECONDS)
 
   /** 获取下一个请求或阻止，直到有一个请求或阻止 */
   def receiveRequest(): RequestChannel.BaseRequest =

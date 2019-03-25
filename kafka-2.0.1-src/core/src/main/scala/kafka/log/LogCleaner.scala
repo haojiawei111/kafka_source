@@ -371,7 +371,9 @@ object LogCleaner {
     KafkaConfig.LogCleanerBackoffMsProp
   )
 
+  // 从KafkaConfig中取出日志清理程序的相关配置
   def cleanerConfig(config: KafkaConfig): CleanerConfig = {
+
     CleanerConfig(numThreads = config.logCleanerThreads,
       dedupeBufferSize = config.logCleanerDedupeBufferSize,
       dedupeBufferLoadFactor = config.logCleanerDedupeBufferLoadFactor,

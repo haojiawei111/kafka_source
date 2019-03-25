@@ -18,16 +18,16 @@
 package kafka.log
 
 /**
- * Configuration parameters for the log cleaner
+ * 日志清理程序的配置参数
  * 
- * @param numThreads The number of cleaner threads to run
- * @param dedupeBufferSize The total memory used for log deduplication
- * @param dedupeBufferLoadFactor The maximum percent full for the deduplication buffer
- * @param maxMessageSize The maximum size of a message that can appear in the log
- * @param maxIoBytesPerSecond The maximum read and write I/O that all cleaner threads are allowed to do
- * @param backOffMs The amount of time to wait before rechecking if no logs are eligible for cleaning
- * @param enableCleaner Allows completely disabling the log cleaner
- * @param hashAlgorithm The hash algorithm to use in key comparison.
+ * @param numThreads 要运行的清理线程线程数
+ * @param dedupeBufferSize 用于删除日志重复数据使用的总内存
+ * @param dedupeBufferLoadFactor The maximum percent full for the deduplication buffer重复数据删除缓冲区的最大完整百分比
+ * @param maxMessageSize The maximum size of a message that can appear in the log可以显示在日志中的消息的最大大小
+ * @param maxIoBytesPerSecond The maximum read and write I/O that all cleaner threads are allowed to do允许所有清理线程执行的最大读取和写入I / O.
+ * @param backOffMs The amount of time to wait before rechecking if no logs are eligible for cleaning如果没有日志符合清理条件，则在重新检查之前等待的时间
+ * @param enableCleaner Allows completely disabling the log cleaner允许完全禁用日志清理程序
+ * @param hashAlgorithm The hash algorithm to use in key comparison.用于密钥比较的哈希算法。
  */
 case class CleanerConfig(numThreads: Int = 1,
                          dedupeBufferSize: Long = 4*1024*1024L,

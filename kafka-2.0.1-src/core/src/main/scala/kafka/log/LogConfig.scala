@@ -31,7 +31,7 @@ import org.apache.kafka.common.utils.Utils
 
 import scala.collection.{Map, mutable}
 import org.apache.kafka.common.config.ConfigDef.{ConfigKey, ValidList, Validator}
-
+// logManager 默认配置
 object Defaults {
   val SegmentSize = kafka.server.Defaults.LogSegmentBytes
   val SegmentMs = kafka.server.Defaults.LogRollHours * 60 * 60 * 1000L
@@ -66,8 +66,8 @@ object Defaults {
   val MessageDownConversionEnable = kafka.server.Defaults.MessageDownConversionEnable
 }
 
-case class LogConfig(props: java.util.Map[_, _], overriddenConfigs: Set[String] = Set.empty)
-  extends AbstractConfig(LogConfig.configDef, props, false) {
+
+case class LogConfig(props: java.util.Map[_, _], overriddenConfigs: Set[String] = Set.empty) extends AbstractConfig(LogConfig.configDef, props, false) {
   /**
    * Important note: Any configuration parameter that is passed along from KafkaConfig to LogConfig
    * should also go in [[kafka.server.KafkaServer.copyKafkaConfigToLog]].
