@@ -739,10 +739,11 @@ class Log(@volatile var dir: File,
 
   /**
    * Append this message set to the active segment of the log, rolling over to a fresh segment if necessary.
-   *
+   *将此消息集附加到日志的活动段，如有必要，可以转到新的段。
    * This method will generally be responsible for assigning offsets to the messages,
    * however if the assignOffsets=false flag is passed we will only check that the existing offsets are valid.
-   *
+   *此方法通常负责为消息分配偏移量*但是，如果传递assignOffsets = false标志，我们将仅检查现有偏移量是否有效。
+    *
    * @param records The log records to append
    * @param isFromClient Whether or not this append is from a producer
    * @param assignOffsets Should the log assign offsets to this message set or blindly apply what it is given
@@ -753,21 +754,25 @@ class Log(@volatile var dir: File,
    * @return Information about the appended messages including the first and last offset.
    */
   private def append(records: MemoryRecords, isFromClient: Boolean, assignOffsets: Boolean, leaderEpoch: Int): LogAppendInfo = {
+
     maybeHandleIOException(s"Error while appending records to $topicPartition in dir ${dir.getParent}") {
+      // 分析和验证记录
       val appendInfo = analyzeAndValidateRecords(records, isFromClient = isFromClient)
 
       // return if we have no valid messages or if this is a duplicate of the last appended entry
+      // 如果我们没有有效消息或者这是最后一个附加条目的副本，则返回
       if (appendInfo.shallowCount == 0)
         return appendInfo
 
       // trim any invalid bytes or partial messages before appending it to the on-disk log
+      // 在将任何无效字节或部分消息附加到磁盘日志之前修剪它们
       var validRecords = trimInvalidBytes(records, appendInfo)
 
       // they are valid, insert them in the log
       lock synchronized {
         checkIfMemoryMappedBufferClosed()
         if (assignOffsets) {
-          // assign offsets to the message set
+          // assign offsets to the message set 为消息集分配偏移量
           val offset = new LongRef(nextOffsetMetadata.messageOffset)
           appendInfo.firstOffset = Some(offset.value)
           val now = time.milliseconds
@@ -836,12 +841,14 @@ class Log(@volatile var dir: File,
         }
 
         // update the epoch cache with the epoch stamped onto the message by the leader
+        // 使用由领导者标记在消息上的纪元来更新纪元缓存
         validRecords.batches.asScala.foreach { batch =>
           if (batch.magic >= RecordBatch.MAGIC_VALUE_V2)
             _leaderEpochCache.assign(batch.partitionLeaderEpoch, batch.baseOffset)
         }
 
         // check messages set size may be exceed config.segmentSize
+        // 检查消息集大小可能超过config.segmentSize
         if (validRecords.sizeInBytes > config.segmentSize) {
           throw new RecordBatchTooLargeException(s"Message batch size is ${validRecords.sizeInBytes} bytes in append " +
             s"to partition $topicPartition, which exceeds the maximum configured segment size of ${config.segmentSize}.")
@@ -859,6 +866,7 @@ class Log(@volatile var dir: File,
         }
 
         // maybe roll the log if this segment is full
+        // 如果此段已满，可能会滚动日志
         val segment = maybeRoll(validRecords.sizeInBytes, appendInfo)
 
         val logOffsetMetadata = LogOffsetMetadata(
@@ -871,7 +879,7 @@ class Log(@volatile var dir: File,
           shallowOffsetOfMaxTimestamp = appendInfo.offsetOfMaxTimestamp,
           records = validRecords)
 
-        // update the producer state
+        // update the producer state更新生产者状态
         for ((_, producerAppendInfo) <- updatedProducers) {
           producerAppendInfo.maybeCacheTxnFirstOffsetMetadata(logOffsetMetadata)
           producerStateManager.update(producerAppendInfo)
@@ -888,10 +896,10 @@ class Log(@volatile var dir: File,
         // even if there isn't any idempotent data being written
         producerStateManager.updateMapEndOffset(appendInfo.lastOffset + 1)
 
-        // increment the log end offset
+        // increment the log end offset增加日志结束偏移量
         updateLogEndOffset(appendInfo.lastOffset + 1)
 
-        // update the first unstable offset (which is used to compute LSO)
+        // update the first unstable offset (which is used to compute LSO)更新第一个不稳定偏移量（用于计算LSO）
         updateFirstUnstableOffset()
 
         trace(s"Appended message set with last offset: ${appendInfo.lastOffset}, " +
@@ -1989,8 +1997,9 @@ object Log {
             maxProducerIdExpirationMs: Int,
             producerIdExpirationCheckIntervalMs: Int,
             logDirFailureChannel: LogDirFailureChannel): Log = {
-
+    //解析主题和分区日志的目录名称
     val topicPartition = Log.parseTopicPartitionName(dir)
+
     val producerStateManager = new ProducerStateManager(topicPartition, dir, maxProducerIdExpirationMs)
     new Log(dir, config, logStartOffset, recoveryPoint, scheduler, brokerTopicStats, time, maxProducerIdExpirationMs,
       producerIdExpirationCheckIntervalMs, topicPartition, producerStateManager, logDirFailureChannel)

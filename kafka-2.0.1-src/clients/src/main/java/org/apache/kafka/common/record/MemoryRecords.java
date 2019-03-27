@@ -40,6 +40,8 @@ import java.util.Objects;
  * A {@link Records} implementation backed by a ByteBuffer. This is used only for reading or
  * modifying in-place an existing buffer of record batches. To create a new buffer see {@link MemoryRecordsBuilder},
  * or one of the {@link #builder(ByteBuffer, byte, CompressionType, TimestampType, long)} variants.
+ * 由ByteBuffer支持的{@link Records}实现。这仅用于读取或*就地修改记录批次的现有缓冲区。要创建新缓冲区，请参阅{@link MemoryRecordsBuilder}，
+ * 或{@link #builder（ByteBuffer，byte，CompressionType，TimestampType，long）}变体之一。
  */
 public class MemoryRecords extends AbstractRecords {
     private static final Logger log = LoggerFactory.getLogger(MemoryRecords.class);
@@ -84,6 +86,7 @@ public class MemoryRecords extends AbstractRecords {
 
     /**
      * Write all records to the given channel (including partial records).
+     * 将所有记录写入给定通道（包括部分记录）。
      * @param channel The channel to write to
      * @return The number of bytes written
      * @throws IOException For any IO errors writing to the channel

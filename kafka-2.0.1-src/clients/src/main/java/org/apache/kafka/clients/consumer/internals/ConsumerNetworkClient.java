@@ -49,6 +49,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Higher level consumer access to the network layer with basic support for request futures. This class
  * is thread-safe, but provides no synchronization for response callbacks. This guarantees that no locks
  * are held when they are invoked.
+ * 更高级别的消费者访问网络层，对请求期货提供基本支持。此类*是线程安全的，但不为响应回调提供同步。这可以保证在调用锁时不会持有锁*。
  */
 public class ConsumerNetworkClient implements Closeable {
     private static final int MAX_POLL_TIMEOUT_MS = 5000;
@@ -97,6 +98,7 @@ public class ConsumerNetworkClient implements Closeable {
 
     /**
      * Send a request with the default timeout. See {@link #send(Node, AbstractRequest.Builder, int)}.
+     * 使用默认超时发送请求。
      */
     public RequestFuture<ClientResponse> send(Node node, AbstractRequest.Builder<?> requestBuilder) {
         return send(node, requestBuilder, requestTimeoutMs);
@@ -258,6 +260,7 @@ public class ConsumerNetworkClient implements Closeable {
             handlePendingDisconnects();
 
             // send all the requests we can send now
+            // 发送我们现在可以发送的所有请求
             long pollDelayMs = trySend(now);
             timeout = Math.min(timeout, pollDelayMs);
 
@@ -288,6 +291,7 @@ public class ConsumerNetworkClient implements Closeable {
 
             // try again to send requests since buffer space may have been
             // cleared or a connect finished in the poll
+            // 再次尝试发送请求，因为可能已清除缓冲区空间或在轮询中完成连接
             trySend(now);
 
             // fail requests that couldn't be sent if they have expired
@@ -305,6 +309,7 @@ public class ConsumerNetworkClient implements Closeable {
 
     /**
      * Poll for network IO and return immediately. This will not trigger wakeups.
+     * 轮询网络IO并立即返回。这不会触发唤醒。
      */
     public void pollNoWakeup() {
         poll(0, time.milliseconds(), null, true);
@@ -377,6 +382,7 @@ public class ConsumerNetworkClient implements Closeable {
     /**
      * Check whether there is pending request. This includes both requests that
      * have been transmitted (i.e. in-flight requests) and those which are awaiting transmission.
+     * 检查是否有待处理的请求。这包括已经发送的请求（即正在进行中的请求）和正在等待发送的请求。
      * @return A boolean indicating whether there is pending request
      */
     public boolean hasPendingRequests() {

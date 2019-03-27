@@ -85,8 +85,7 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
   def lastOffset: Long = _lastOffset
 
   /**
-   * Find the largest offset less than or equal to the given targetOffset
-   * and return a pair holding this offset and its corresponding physical file position.
+    * 找到小于或等于给定targetOffset 的最大偏移量，并返回保持此偏移量及其对应物理文件位置的对。
    *
    * @param targetOffset The offset to look up.
    * @return The offset found and the corresponding file position for this offset
@@ -95,7 +94,9 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
    */
   def lookup(targetOffset: Long): OffsetPosition = {
     maybeLock(lock) {
-      val idx = mmap.duplicate
+      //mmap是一个Buffer类
+      //duplicate复制当前的ByteBuffer
+      val idx: ByteBuffer = mmap.duplicate
       val slot = largestLowerBoundSlotFor(idx, targetOffset, IndexSearchType.KEY)
       if(slot == -1)
         OffsetPosition(baseOffset, 0)
@@ -108,6 +109,7 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
    * Find an upper bound offset for the given fetch starting position and size. This is an offset which
    * is guaranteed to be outside the fetched range, but note that it will not generally be the smallest
    * such offset.
+    * 找到给定的提取起始位置和大小的上限偏移量。这是一个偏移，保证在取出的范围之外，但请注意，它通常不会是最小的这样的偏移。
    */
   def fetchUpperBoundOffset(fetchOffset: OffsetPosition, fetchSize: Int): Option[OffsetPosition] = {
     maybeLock(lock) {
@@ -188,6 +190,7 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
 
   /**
    * Truncates index to a known number of entries.
+    * 将索引截断为已知数量的条目。
    */
   private def truncateToEntries(entries: Int) {
     inLock(lock) {

@@ -51,9 +51,9 @@ import scala.math.max
 class GroupCoordinator(val brokerId: Int,
                        val groupConfig: GroupConfig,
                        val offsetConfig: OffsetConfig,
-                       val groupManager: GroupMetadataManager,
-                       val heartbeatPurgatory: DelayedOperationPurgatory[DelayedHeartbeat],
-                       val joinPurgatory: DelayedOperationPurgatory[DelayedJoin],
+                       val groupManager: GroupMetadataManager,  //组元数据管理
+                       val heartbeatPurgatory: DelayedOperationPurgatory[DelayedHeartbeat],  //心跳管理
+                       val joinPurgatory: DelayedOperationPurgatory[DelayedJoin],   // 重平衡
                        time: Time) extends Logging {
   import GroupCoordinator._
 
@@ -67,8 +67,9 @@ class GroupCoordinator(val brokerId: Int,
   def offsetsTopicConfigs: Properties = {
     val props = new Properties
     props.put(LogConfig.CleanupPolicyProp, LogConfig.Compact)
-    props.put(LogConfig.SegmentBytesProp, offsetConfig.offsetsTopicSegmentBytes.toString)
-    props.put(LogConfig.CompressionTypeProp, ProducerCompressionCodec.name)
+    props.put(LogConfig.SegmentBytesProp, offsetConfig.offsetsTopicSegmentBytes.toString)  //100*1024*1024
+    // compression.type
+    props.put(LogConfig.CompressionTypeProp, ProducerCompressionCodec.name) //producer
     props
   }
 
@@ -79,6 +80,7 @@ class GroupCoordinator(val brokerId: Int,
 
   /**
    * Startup logic executed at the same time when the server starts up.
+    * 启动逻辑在服务器启动的同时执行。
    */
   def startup(enableMetadataExpiration: Boolean = true) {
     info("Starting up.")
@@ -303,7 +305,7 @@ class GroupCoordinator(val brokerId: Int,
             }
 
           case Stable =>
-            // if the group is stable, we just return the current assignment
+            // if the group is stable, we just return the current assignment如果该组稳定，我们只返回当前的分配
             val memberMetadata = group.get(memberId)
             responseCallback(memberMetadata.assignment, Errors.NONE)
             completeAndScheduleNextHeartbeatExpiration(group, group.get(memberId))
@@ -675,6 +677,7 @@ class GroupCoordinator(val brokerId: Int,
 
   /**
    * Complete existing DelayedHeartbeats for the given member and schedule the next one
+    * 完成并安排下一次心跳过期
    */
   private def completeAndScheduleNextHeartbeatExpiration(group: GroupMetadata, member: MemberMetadata) {
     // complete current heartbeat expectation
@@ -872,15 +875,30 @@ object GroupCoordinator {
   val EmptyGroup = GroupSummary(NoState, NoProtocolType, NoProtocol, NoMembers)
   val DeadGroup = GroupSummary(Dead.toString, NoProtocolType, NoProtocol, NoMembers)
 
-  def apply(config: KafkaConfig,
-            zkClient: KafkaZkClient,
-            replicaManager: ReplicaManager,
-            time: Time): GroupCoordinator = {
+  def apply(config: KafkaConfig,zkClient: KafkaZkClient,replicaManager: ReplicaManager,time: Time): GroupCoordinator = {
+    // 心跳  这里用到了时间轮
     val heartbeatPurgatory = DelayedOperationPurgatory[DelayedHeartbeat]("Heartbeat", config.brokerId)
+    // 重新平衡
     val joinPurgatory = DelayedOperationPurgatory[DelayedJoin]("Rebalance", config.brokerId)
+
     apply(config, zkClient, replicaManager, heartbeatPurgatory, joinPurgatory, time)
+
   }
 
+
+  def apply(config: KafkaConfig,zkClient: KafkaZkClient,replicaManager: ReplicaManager,heartbeatPurgatory: DelayedOperationPurgatory[DelayedHeartbeat],joinPurgatory: DelayedOperationPurgatory[DelayedJoin], time: Time): GroupCoordinator = {
+    // offset配置
+    val offsetConfig = this.offsetConfig(config)
+    // group配置   group.min.session.timeout.ms     group.max.session.timeout.ms    group.initial.rebalance.delay.ms
+    val groupConfig = GroupConfig(groupMinSessionTimeoutMs = config.groupMinSessionTimeoutMs,groupMaxSessionTimeoutMs = config.groupMaxSessionTimeoutMs, groupInitialRebalanceDelayMs = config.groupInitialRebalanceDelay)
+    // 元数据管理
+    val groupMetadataManager = new GroupMetadataManager(config.brokerId, config.interBrokerProtocolVersion,offsetConfig, replicaManager, zkClient, time)
+    // 组元数据管理  重新平衡  offset管理 心跳管理
+    new GroupCoordinator(config.brokerId, groupConfig, offsetConfig, groupMetadataManager, heartbeatPurgatory, joinPurgatory, time)
+  }
+
+
+  // offset 配置
   private[group] def offsetConfig(config: KafkaConfig) = OffsetConfig(
     maxMetadataSize = config.offsetMetadataMaxSize,
     loadBufferSize = config.offsetsLoadBufferSize,
@@ -894,28 +912,15 @@ object GroupCoordinator {
     offsetCommitRequiredAcks = config.offsetCommitRequiredAcks
   )
 
-  def apply(config: KafkaConfig,
-            zkClient: KafkaZkClient,
-            replicaManager: ReplicaManager,
-            heartbeatPurgatory: DelayedOperationPurgatory[DelayedHeartbeat],
-            joinPurgatory: DelayedOperationPurgatory[DelayedJoin],
-            time: Time): GroupCoordinator = {
-    val offsetConfig = this.offsetConfig(config)
-    val groupConfig = GroupConfig(groupMinSessionTimeoutMs = config.groupMinSessionTimeoutMs,
-      groupMaxSessionTimeoutMs = config.groupMaxSessionTimeoutMs,
-      groupInitialRebalanceDelayMs = config.groupInitialRebalanceDelay)
-
-    val groupMetadataManager = new GroupMetadataManager(config.brokerId, config.interBrokerProtocolVersion,
-      offsetConfig, replicaManager, zkClient, time)
-    new GroupCoordinator(config.brokerId, groupConfig, offsetConfig, groupMetadataManager, heartbeatPurgatory, joinPurgatory, time)
-  }
 
 }
 
+// Group配置
 case class GroupConfig(groupMinSessionTimeoutMs: Int,
                        groupMaxSessionTimeoutMs: Int,
                        groupInitialRebalanceDelayMs: Int)
 
+//加入Group结果
 case class JoinGroupResult(members: Map[String, Array[Byte]],
                            memberId: String,
                            generationId: Int,

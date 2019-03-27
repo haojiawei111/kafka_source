@@ -49,7 +49,7 @@ class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager
 
   val topicPartition = new TopicPartition(topic, partitionId)
 
-  // Do not use replicaManager if this partition is ReplicaManager.OfflinePartition
+  // Do not use replicaManager if this partition is ReplicaManager.OfflinePartition 如果此分区是ReplicaManager.OfflinePartition，请不要使用replicaManager
   private val localBrokerId = if (!isOffline) replicaManager.config.brokerId else -1
   private val logManager = if (!isOffline) replicaManager.logManager else null
   private val zkClient = if (!isOffline) replicaManager.zkClient else null
@@ -77,7 +77,7 @@ class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager
 
   private val tags = Map("topic" -> topic, "partition" -> partitionId.toString)
 
-  // Do not create metrics if this partition is ReplicaManager.OfflinePartition
+  // Do not create metrics if this partition is ReplicaManager.OfflinePartition如果此分区是ReplicaManager.OfflinePartition，请不要创建指标
   if (!isOffline) {
     newGauge("UnderReplicated",
       new Gauge[Int] {
@@ -129,8 +129,7 @@ class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager
 
   private def isLeaderReplicaLocal: Boolean = leaderReplicaIfLocal.isDefined
 
-  def isUnderReplicated: Boolean =
-    isLeaderReplicaLocal && inSyncReplicas.size < assignedReplicas.size
+  def isUnderReplicated: Boolean = isLeaderReplicaLocal && inSyncReplicas.size < assignedReplicas.size
 
   def isUnderMinIsr: Boolean = {
     leaderReplicaIfLocal match {
@@ -484,6 +483,7 @@ class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager
   /**
    * Check and maybe increment the high watermark of the partition;
    * this function can be triggered when
+    * 检查并可能增加分区的高水印; 此功能可以在触发时触发
    *
    * 1. Partition ISR changed
    * 2. Any replica's LEO changed
@@ -639,7 +639,7 @@ class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager
           throw e
     }
   }
-
+  //  向 partition 的 leader 写入数据
   def appendRecordsToLeader(records: MemoryRecords, isFromClient: Boolean, requiredAcks: Int = 0): LogAppendInfo = {
     val (info, leaderHWIncremented) = inReadLock(leaderIsrUpdateLock) {
       leaderReplicaIfLocal match {
@@ -765,7 +765,7 @@ class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager
   }
 
   /**
-   * remove deleted log metrics
+   * remove deleted log metrics删除已删除的日志指标
    */
   def removePartitionMetrics() {
     removeMetric("UnderReplicated", tags)

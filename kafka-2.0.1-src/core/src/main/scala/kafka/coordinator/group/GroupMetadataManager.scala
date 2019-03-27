@@ -47,38 +47,34 @@ import scala.collection.JavaConverters._
 import scala.collection._
 import scala.collection.mutable.ListBuffer
 
-class GroupMetadataManager(brokerId: Int,
-                           interBrokerProtocolVersion: ApiVersion,
-                           config: OffsetConfig,
-                           replicaManager: ReplicaManager,
-                           zkClient: KafkaZkClient,
-                           time: Time) extends Logging with KafkaMetricsGroup {
-
+class GroupMetadataManager(brokerId: Int,interBrokerProtocolVersion: ApiVersion,config: OffsetConfig,replicaManager: ReplicaManager,zkClient: KafkaZkClient,time: Time) extends Logging with KafkaMetricsGroup {
+  //压缩类型
   private val compressionType: CompressionType = CompressionType.forId(config.offsetsTopicCompressionCodec.codec)
-
+  // group元数据的缓存
   private val groupMetadataCache = new Pool[String, GroupMetadata]
 
   /* lock protecting access to loading and owned partition sets */
   private val partitionLock = new ReentrantLock()
 
-  /* partitions of consumer groups that are being loaded, its lock should be always called BEFORE the group lock if needed */
+  /* partitions of consumer groups that are being loaded, its lock should be always called BEFORE the group lock if needed正在加载的使用者组的分区，如果需要，应在组锁定之前始终调用其锁定 */
   private val loadingPartitions: mutable.Set[Int] = mutable.Set()
 
-  /* partitions of consumer groups that are assigned, using the same loading partition lock */
+  /* partitions of consumer groups that are assigned, using the same loading partition lock 使用相同的加载分区锁定分配的使用者组的分区*/
   private val ownedPartitions: mutable.Set[Int] = mutable.Set()
 
-  /* shutting down flag */
+  /* 关闭标志 */
   private val shuttingDown = new AtomicBoolean(false)
 
-  /* number of partitions for the consumer metadata topic */
+  /* number of partitions for the consumer metadata topic 消费者元数据主题的分区数 */
   private val groupMetadataTopicPartitionCount = getGroupMetadataTopicPartitionCount
 
-  /* single-thread scheduler to handle offset/group metadata cache loading and unloading */
+  /* single-thread scheduler to handle offset/group metadata cache loading and unloading单线程调度程序，用于处理偏移/组元数据缓存的加载和卸载 */
   private val scheduler = new KafkaScheduler(threads = 1, threadNamePrefix = "group-metadata-manager-")
 
   /* The groups with open transactional offsets commits per producer. We need this because when the commit or abort
    * marker comes in for a transaction, it is for a particular partition on the offsets topic and a particular producerId.
    * We use this structure to quickly find the groups which need to be updated by the commit/abort marker. */
+  // 具有开放事务偏移的组每个生产者提交。我们需要这个，因为当commit或abort 标记进入事务时，它是针对偏移主题和特定producerId上的特定分区。 *我们使用此结构快速查找需要通过提交/中止标记更新的组。
   private val openGroupsForProducer = mutable.HashMap[Long, mutable.Set[String]]()
 
   this.logIdent = s"[GroupMetadataManager brokerId=$brokerId] "
@@ -135,12 +131,14 @@ class GroupMetadataManager(brokerId: Int,
       })
     })
 
+  // 默认是打开定期删除过期组元数据功能的
   def startup(enableMetadataExpiration: Boolean) {
     scheduler.startup()
     if (enableMetadataExpiration) {
-      scheduler.schedule(name = "delete-expired-group-metadata",
-        fun = cleanupGroupMetadata,
-        period = config.offsetsRetentionCheckIntervalMs,
+      // 提交调度任务
+      scheduler.schedule(name = "delete-expired-group-metadata删除过期组元数据",
+        fun = cleanupGroupMetadata, // 这是要跑的程序
+        period = config.offsetsRetentionCheckIntervalMs,  // 600000L
         unit = TimeUnit.MILLISECONDS)
     }
   }
@@ -175,6 +173,7 @@ class GroupMetadataManager(brokerId: Int,
   }
   /**
    * Get the group associated with the given groupId, or null if not found
+    * 获取与给定groupId关联的组，如果未找到，则返回null
    */
   def getGroup(groupId: String): Option[GroupMetadata] = {
     Option(groupMetadataCache.get(groupId))
@@ -727,10 +726,12 @@ class GroupMetadataManager(brokerId: Int,
     }
   }
 
-  // visible for testing
+  // 可见于测试
   private[group] def cleanupGroupMetadata(): Unit = {
     val startMs = time.milliseconds()
+
     val offsetsRemoved = cleanupGroupMetadata(groupMetadataCache.values, group => {
+      // 删除过期的偏移量
       group.removeExpiredOffsets(time.milliseconds())
     })
     info(s"Removed $offsetsRemoved expired offsets in ${time.milliseconds() - startMs} milliseconds.")
@@ -738,6 +739,7 @@ class GroupMetadataManager(brokerId: Int,
 
   /**
     * This function is used to clean up group offsets given the groups and also a function that performs the offset deletion.
+    * 此功能用于清除给定组的组偏移以及执行偏移删除的功能。
     * @param groups Groups whose metadata are to be cleaned up
     * @param selector A function that implements deletion of (all or part of) group offsets. This function is called while
     *                 a group lock is held, therefore there is no need for the caller to also obtain a group lock.
@@ -747,9 +749,11 @@ class GroupMetadataManager(brokerId: Int,
     var offsetsRemoved = 0
 
     groups.foreach { group =>
+
       val groupId = group.groupId
+
       val (removedOffsets, groupIsDead, generation) = group.inLock {
-        val removedOffsets = selector(group)
+        val removedOffsets : Map[TopicPartition, OffsetAndMetadata] = selector(group)
         if (group.is(Empty) && !group.hasOffsets) {
           info(s"Group $groupId transitioned to Dead in generation ${group.generationId}")
           group.transitionTo(Dead)

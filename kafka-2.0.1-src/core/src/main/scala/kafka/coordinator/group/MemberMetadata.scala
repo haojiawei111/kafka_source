@@ -30,24 +30,26 @@ case class MemberSummary(memberId: String,
                          assignment: Array[Byte])
 
 /**
- * Member metadata contains the following metadata:
+ * Member metadata contains the following metadata: 成员元数据包含以下元数据：
  *
- * Heartbeat metadata:
- * 1. negotiated heartbeat session timeout
- * 2. timestamp of the latest heartbeat
+ * Heartbeat metadata:心跳元数据：
+ * 1. negotiated heartbeat session timeout协商心跳会话超时
+ * 2. timestamp of the latest heartbeat最新心跳的时间戳
  *
- * Protocol metadata:
- * 1. the list of supported protocols (ordered by preference)
- * 2. the metadata associated with each protocol
+ * Protocol metadata:协议元数据：
+ * 1. the list of supported protocols (ordered by preference)支持的协议列表
+ * 2. the metadata associated with each protocol与每个协议相关联的元数据
  *
- * In addition, it also contains the following state information:
+ * In addition, it also contains the following state information:此外，它还包含以下状态信息：
  *
  * 1. Awaiting rebalance callback: when the group is in the prepare-rebalance state,
  *                                 its rebalance callback will be kept in the metadata if the
  *                                 member has sent the join group request
+  *                                 等待重新平衡回调：当组处于准备 - 重新平衡状态时，如果成员已发送加入组请求，则其重新平衡回调将保留在元数据中
  * 2. Awaiting sync callback: when the group is in the awaiting-sync state, its sync callback
  *                            is kept in metadata until the leader provides the group assignment
  *                            and the group transitions to stable
+  *                            等待同步回调：当组处于等待同步状态时，其同步回调保留在元数据中，直到领导者提供组分配并且组转换为稳定
  */
 @nonthreadsafe
 private[group] class MemberMetadata(val memberId: String,

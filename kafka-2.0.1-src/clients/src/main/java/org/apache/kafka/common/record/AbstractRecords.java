@@ -25,6 +25,7 @@ import java.util.Iterator;
 
 public abstract class AbstractRecords implements Records {
 
+    // 返回迭代器
     private final Iterable<Record> records = new Iterable<Record>() {
         @Override
         public Iterator<Record> iterator() {
@@ -50,6 +51,7 @@ public abstract class AbstractRecords implements Records {
 
     /**
      * Get an iterator over the deep records.
+     * 获取深度记录的迭代器。
      * @return An iterator over the records
      */
     @Override

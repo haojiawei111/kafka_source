@@ -1212,6 +1212,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     /**
      * Visible for testing
+     * 如果需要，更新分配元数据
      */
     boolean updateAssignmentMetadataIfNeeded(final long timeoutMs) {
         final long startMs = time.milliseconds();

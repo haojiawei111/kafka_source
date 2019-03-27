@@ -101,6 +101,7 @@ class KafkaApis(val requestChannel: RequestChannel,
 
   /**
     * 顶级方法，处理所有请求并复用到正确的api
+    * 处理43个请求
    */
   def handle(request: RequestChannel.Request) {
 
@@ -128,6 +129,7 @@ class KafkaApis(val requestChannel: RequestChannel,
         case ApiKeys.LIST_GROUPS => handleListGroupsRequest(request)
         case ApiKeys.SASL_HANDSHAKE => handleSaslHandshakeRequest(request)
         case ApiKeys.API_VERSIONS => handleApiVersionsRequest(request)
+
         case ApiKeys.CREATE_TOPICS => handleCreateTopicsRequest(request)
         case ApiKeys.DELETE_TOPICS => handleDeleteTopicsRequest(request)
         case ApiKeys.DELETE_RECORDS => handleDeleteRecordsRequest(request)
@@ -516,7 +518,10 @@ class KafkaApis(val requestChannel: RequestChannel,
 
 
   /**
-   * Handle a fetch request
+   * 处理读请求
+    * 请求来源：
+    * 1.Consumer
+    * 2.副本同步
    */
   def handleFetchRequest(request: RequestChannel.Request) {
     val versionId = request.header.apiVersion
@@ -534,7 +539,9 @@ class KafkaApis(val requestChannel: RequestChannel,
 
     val erroneous = mutable.ArrayBuffer[(TopicPartition, FetchResponse.PartitionData[Records])]()
     val interesting = mutable.ArrayBuffer[(TopicPartition, FetchRequest.PartitionData)]()
-    if (fetchRequest.isFromFollower()) {
+
+    // fetchRequest.replicaId如果大于0就是从Follower来的同步请求，如果是-1就是从Consumer 来的拉数据请求
+    if (fetchRequest.isFromFollower()) {//如果这个请求来自Follower，这是同步请求
       // The follower must have ClusterAction on ClusterResource in order to fetch partition data.
       if (authorize(request.session, ClusterAction, Resource.ClusterResource)) {
         fetchContext.foreachPartition { (topicPartition, data) =>
@@ -548,7 +555,7 @@ class KafkaApis(val requestChannel: RequestChannel,
           erroneous += part -> errorResponse(Errors.TOPIC_AUTHORIZATION_FAILED)
         }
       }
-    } else {
+    } else {//否则这里是从Consumer 来的请求
       // Regular Kafka consumers need READ permission on each partition they are fetching.
       fetchContext.foreachPartition { (topicPartition, data) =>
         if (!authorize(request.session, Read, Resource(Topic, topicPartition.topic, LITERAL)))
@@ -647,7 +654,7 @@ class KafkaApis(val requestChannel: RequestChannel,
           case _ =>
         }
       }
-
+      // 配额情况的处理
       if (fetchRequest.isFromFollower) {
         // We've already evaluated against the quota and are good to go. Just need to record it now.
         unconvertedFetchResponse = fetchContext.updateAndGenerateResponseData(partitions)
@@ -687,7 +694,7 @@ class KafkaApis(val requestChannel: RequestChannel,
           trace(s"Sending Fetch response with partitions.size=${responseSize}, metadata=${unconvertedFetchResponse.sessionId()}")
         }
 
-        // Send the response immediately.
+        // Send the response immediately立即发送回复.
         sendResponse(request, Some(createResponse(maxThrottleTimeMs)), Some(updateConversionStats))
       }
     }
@@ -696,6 +703,7 @@ class KafkaApis(val requestChannel: RequestChannel,
       processResponseCallback(Seq.empty)
     else {
       // call the replica manager to fetch messages from the local replica
+      //调用副本管理器以从本地副本获取消息
       replicaManager.fetchMessages(
         fetchRequest.maxWait.toLong,
         fetchRequest.replicaId,
@@ -1335,9 +1343,10 @@ class KafkaApis(val requestChannel: RequestChannel,
           Collections.emptyMap())
       )
     } else {
-      // let the coordinator handle join-group
+      // let the coordinator handle join-group让协调员处理join-group
       val protocols = joinGroupRequest.groupProtocols().asScala.map(protocol =>
         (protocol.name, Utils.toArray(protocol.metadata))).toList
+
       groupCoordinator.handleJoinGroup(
         joinGroupRequest.groupId,
         joinGroupRequest.memberId,

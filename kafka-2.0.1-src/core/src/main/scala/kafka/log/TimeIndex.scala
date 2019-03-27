@@ -50,8 +50,7 @@ import org.apache.kafka.common.record.RecordBatch
  *
  */
 // Avoid shadowing mutable file in AbstractIndex
-class TimeIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable: Boolean = true)
-    extends AbstractIndex[Long, Long](_file, baseOffset, maxIndexSize, writable) with Logging {
+class TimeIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable: Boolean = true) extends AbstractIndex[Long, Long](_file, baseOffset, maxIndexSize, writable) with Logging {
 
   @volatile private var _lastEntry = lastEntryFromIndexFile
 
@@ -80,6 +79,7 @@ class TimeIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable:
 
   /**
    * Get the nth timestamp mapping from the time index
+    * 从时间索引获取第n个时间戳映射
    * @param n The entry number in the time index
    * @return The timestamp/offset pair at that entry
    */
@@ -100,6 +100,8 @@ class TimeIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable:
    * Attempt to append a time index entry to the time index.
    * The new entry is appended only if both the timestamp and offsets are greater than the last appended timestamp and
    * the last appended offset.
+    * 尝试将时间索引条目附加到时间索引。
+    * 仅当时间戳和偏移量都大于上一个附加时间戳和*最后一个附加偏移量时，才附加新条目。
    *
    * @param timestamp The timestamp of the new time index entry
    * @param offset The offset of the new time index entry
@@ -140,6 +142,7 @@ class TimeIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable:
    * Find the time index entry whose timestamp is less than or equal to the given timestamp.
    * If the target timestamp is smaller than the least timestamp in the time index, (NoTimestamp, baseOffset) is
    * returned.
+    * 查找时间戳小于或等于给定时间戳的时间索引条目。如果目标时间戳小于时间索引中的最小时间戳，则返回（NoTimestamp，baseOffset）。
    *
    * @param targetTimestamp The timestamp to look up.
    * @return The time index entry found.
@@ -162,6 +165,7 @@ class TimeIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable:
   /**
    * Remove all entries from the index which have an offset greater than or equal to the given offset.
    * Truncating to an offset larger than the largest in the index has no effect.
+    * 从索引中删除偏移量大于或等于给定偏移量的所有条目。截断大于索引中最大值的偏移量无效。
    */
   override def truncateTo(offset: Long) {
     inLock(lock) {
@@ -196,6 +200,7 @@ class TimeIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable:
 
   /**
    * Truncates index to a known number of entries.
+    * 将索引截断为已知数量的条目。
    */
   private def truncateToEntries(entries: Int) {
     inLock(lock) {

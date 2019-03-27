@@ -71,7 +71,7 @@ public final class MappedByteBuffers {
 
     public static void unmap(String resourceDescription, MappedByteBuffer buffer) throws IOException {
         if (!buffer.isDirect())
-            throw new IllegalArgumentException("Unmapping only works with direct buffers");
+            throw new IllegalArgumentException("Unmapping only works with direct buffers取消映射仅适用于直接缓冲区");
         if (UNMAP == null)
             throw UNMAP_NOT_SUPPORTED_EXCEPTION;
 

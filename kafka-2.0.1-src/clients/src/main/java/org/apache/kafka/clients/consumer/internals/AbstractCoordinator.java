@@ -351,7 +351,7 @@ public abstract class AbstractCoordinator implements Closeable {
         long joinTimeoutMs = remainingTimeAtLeastZero(timeoutMs, joinStartMs - startMs);
         return joinGroupIfNeeded(joinTimeoutMs, joinStartMs);
     }
-
+    //如果需要，启动心跳线程
     private synchronized void startHeartbeatThreadIfNeeded() {
         if (heartbeatThread == null) {
             heartbeatThread = new HeartbeatThread();
@@ -956,6 +956,7 @@ public abstract class AbstractCoordinator implements Closeable {
         }
     }
 
+    // 心跳线程
     private class HeartbeatThread extends KafkaThread {
         private boolean enabled = false;
         private boolean closed = false;
@@ -999,7 +1000,7 @@ public abstract class AbstractCoordinator implements Closeable {
         @Override
         public void run() {
             try {
-                log.debug("Heartbeat thread started");
+                log.debug("Heartbeat thread started心跳线程开始了");
                 while (true) {
                     synchronized (AbstractCoordinator.this) {
                         if (closed)

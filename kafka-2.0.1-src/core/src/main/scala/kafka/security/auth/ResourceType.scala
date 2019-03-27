@@ -19,7 +19,7 @@ package kafka.security.auth
 import kafka.common.{BaseEnum, KafkaException}
 import org.apache.kafka.common.protocol.Errors
 import org.apache.kafka.common.resource.{ResourceType => JResourceType}
-
+// 资源类型
 sealed trait ResourceType extends BaseEnum with Ordered[ ResourceType ] {
   def error: Errors
   def toJava: JResourceType

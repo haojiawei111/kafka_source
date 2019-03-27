@@ -88,17 +88,14 @@ import scala.collection.{Set, mutable}
  * @param logs The pool of logs
  * @param time A way to control the passage of time
  */
-class LogCleaner(initialConfig: CleanerConfig,
-                 val logDirs: Seq[File],
-                 val logs: Pool[TopicPartition, Log],
-                 val logDirFailureChannel: LogDirFailureChannel,
-                 time: Time = Time.SYSTEM) extends Logging with KafkaMetricsGroup with BrokerReconfigurable
+class LogCleaner(initialConfig: CleanerConfig,val logDirs: Seq[File],val logs: Pool[TopicPartition, Log],
+                 val logDirFailureChannel: LogDirFailureChannel,time: Time = Time.SYSTEM) extends Logging with KafkaMetricsGroup with BrokerReconfigurable
 {
 
-  /* Log cleaner configuration which may be dynamically updated */
+  /* Log cleaner configuration which may be dynamically updated 可以动态更新的日志清理器配置*/
   @volatile private var config = initialConfig
 
-  /* for managing the state of partitions being cleaned. package-private to allow access in tests */
+  /* for managing the state of partitions being cleaned. package-private to allow access in tests 用于管理正在清理的分区的状态。 package-private允许在测试中访问*/
   private[log] val cleanerManager = new LogCleanerManager(logDirs, logs, logDirFailureChannel)
 
   /* a throttle used to limit the I/O of all the cleaner threads to a user-specified maximum rate */

@@ -18,6 +18,7 @@ package org.apache.kafka.common.record;
 
 /**
  * Base interface for accessing records which could be contained in the log, or an in-memory materialization of log records.
+ * 用于访问可能包含在日志中的记录的基本接口，或日志记录的内存中实现。
  */
 public interface BaseRecords {
     /**

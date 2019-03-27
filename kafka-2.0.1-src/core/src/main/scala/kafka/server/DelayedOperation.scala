@@ -43,8 +43,7 @@ import scala.collection.mutable.ListBuffer
  *
  * A subclass of DelayedOperation needs to provide an implementation of both onComplete() and tryComplete().
  */
-abstract class DelayedOperation(override val delayMs: Long,
-    lockOpt: Option[Lock] = None) extends TimerTask with Logging {
+abstract class DelayedOperation(override val delayMs: Long,lockOpt: Option[Lock] = None) extends TimerTask with Logging {
 
   private val completed = new AtomicBoolean(false)
   private val tryCompletePending = new AtomicBoolean(false)
@@ -138,6 +137,7 @@ abstract class DelayedOperation(override val delayMs: Long,
 
   /*
    * run() method defines a task that is executed on timeout
+   * run（）方法定义在超时时执行的任务
    */
   override def run(): Unit = {
     if (forceComplete())
@@ -147,11 +147,7 @@ abstract class DelayedOperation(override val delayMs: Long,
 
 object DelayedOperationPurgatory {
 
-  def apply[T <: DelayedOperation](purgatoryName: String,
-                                   brokerId: Int = 0,
-                                   purgeInterval: Int = 1000,
-                                   reaperEnabled: Boolean = true,
-                                   timerEnabled: Boolean = true): DelayedOperationPurgatory[T] = {
+  def apply[T <: DelayedOperation](purgatoryName: String,brokerId: Int = 0,purgeInterval: Int = 1000,reaperEnabled: Boolean = true,timerEnabled: Boolean = true): DelayedOperationPurgatory[T] = {
     val timer = new SystemTimer(purgatoryName)
     new DelayedOperationPurgatory[T](purgatoryName, timer, brokerId, purgeInterval, reaperEnabled, timerEnabled)
   }
@@ -160,14 +156,10 @@ object DelayedOperationPurgatory {
 
 /**
  * A helper purgatory class for bookkeeping delayed operations with a timeout, and expiring timed out operations.
+  * 用于簿记的辅助炼狱类延迟了超时操作，并使超时操作到期。
  */
-final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: String,
-                                                             timeoutTimer: Timer,
-                                                             brokerId: Int = 0,
-                                                             purgeInterval: Int = 1000,
-                                                             reaperEnabled: Boolean = true,
-                                                             timerEnabled: Boolean = true)
-        extends Logging with KafkaMetricsGroup {
+final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: String,timeoutTimer: Timer,brokerId: Int = 0,purgeInterval: Int = 1000,reaperEnabled: Boolean = true,
+                                                             timerEnabled: Boolean = true) extends Logging with KafkaMetricsGroup {
 
   /* a list of operation watching keys */
   private val watchersForKey = new Pool[Any, Watchers](Some((key: Any) => new Watchers(key)))
@@ -177,7 +169,7 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
   // the number of estimated total operations in the purgatory
   private[this] val estimatedTotalOperations = new AtomicInteger(0)
 
-  /* background thread expiring operations that have timed out */
+  /* background thread expiring operations that have timed out 后台线程到期超时的操作*/
   private val expirationReaper = new ExpiredOperationReaper()
 
   private val metricsTags = Map("delayedOperation" -> purgatoryName)
@@ -198,6 +190,7 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
     metricsTags
   )
 
+  // 默认是开启的
   if (reaperEnabled)
     expirationReaper.start()
 
@@ -281,6 +274,7 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
    * Return the total size of watch lists the purgatory. Since an operation may be watched
    * on multiple lists, and some of its watched entries may still be in the watch lists
    * even when it has been completed, this number may be larger than the number of real operations watched
+    * 返回炼狱的观察名单的总大小。由于可以在多个列表上观看操作*，并且其中一些观看的条目可能仍然在观察列表中*即使已经完成，该数量可能大于观看的实际操作的数量
    */
   def watched: Int = allWatchers.map(_.countWatched).sum
 
@@ -344,6 +338,7 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
 
   /**
    * A linked list of watched delayed operations based on some key
+    * 基于某些键的观察延迟操作的链接列表
    */
   private class Watchers(val key: Any) {
     private[this] val operations = new ConcurrentLinkedQueue[T]()

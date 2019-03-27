@@ -20,7 +20,7 @@ import kafka.common.{BaseEnum, KafkaException}
 import org.apache.kafka.common.acl.AclOperation
 
 /**
- * Different operations a client may perform on kafka resources.
+  * 客户端可能对kafka资源执行的不同操作。
  */
 
 sealed trait Operation extends BaseEnum {

@@ -64,6 +64,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class manages the coordination process with the consumer coordinator.
+ * 此类管理与消费者协调员的协调过程。
  */
 public final class ConsumerCoordinator extends AbstractCoordinator {
     private final Logger log;
@@ -80,6 +81,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
 
     // this collection must be thread-safe because it is modified from the response handler
     // of offset commit requests, which may be invoked from the heartbeat thread
+    // 此集合必须是线程安全的，因为它是从偏移提交请求的响应处理程序修改的，可以从心跳线程调用
     private final ConcurrentLinkedQueue<OffsetCommitCompletion> completedOffsetCommits;
 
     private boolean isLeader = false;
@@ -111,7 +113,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     }
 
     /**
-     * Initialize the coordination manager.
+     * Initialize the coordination manager.初始化协调管理器。
      */
     public ConsumerCoordinator(LogContext logContext,
                                ConsumerNetworkClient client,
@@ -373,7 +375,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     }
 
     /**
-     * Return the time to the next needed invocation of {@link #poll(long)}.
+     * Return the time to the next needed invocation of {@link #poll(long)}.将时间返回到下一次所需的{@link #poll（long）}调用。
      * @param now current time in milliseconds
      * @return the maximum time in milliseconds the caller should wait before the next invocation of poll()
      */

@@ -24,14 +24,20 @@ import scala.collection.{Seq, Set, mutable}
 
 // Controller上下文
 class ControllerContext {
+  // Controller 状态
   val stats = new ControllerStats
 
   var controllerChannelManager: ControllerChannelManager = null
-
+  // 关闭的Broker id
   var shuttingDownBrokerIds: mutable.Set[Int] = mutable.Set.empty
+  // 初始化Controller Epoch
   var epoch: Int = KafkaController.InitialControllerEpoch - 1
+  // zookeeper 版本
   var epochZkVersion: Int = KafkaController.InitialControllerEpochZkVersion - 1
+  // 所有topic 名字
   var allTopics: Set[String] = Set.empty
+  // topic的信息
+  // map<topicName,map<partition,partitionReplica>>
   private var partitionReplicaAssignmentUnderlying: mutable.Map[String, mutable.Map[Int, Seq[Int]]] = mutable.Map.empty
   val partitionLeadershipInfo: mutable.Map[TopicPartition, LeaderIsrAndControllerEpoch] = mutable.Map.empty
   val partitionsBeingReassigned: mutable.Map[TopicPartition, ReassignedPartitionsContext] = mutable.Map.empty
@@ -41,15 +47,20 @@ class ControllerContext {
   private var liveBrokerIdsUnderlying: Set[Int] = Set.empty
 
   def partitionReplicaAssignment(topicPartition: TopicPartition): Seq[Int] = {
-    partitionReplicaAssignmentUnderlying.getOrElse(topicPartition.topic, mutable.Map.empty)
-      .getOrElse(topicPartition.partition, Seq.empty)
+    partitionReplicaAssignmentUnderlying.getOrElse(topicPartition.topic, mutable.Map.empty).getOrElse(topicPartition.partition, Seq.empty)
   }
 
+  // 清空topic状态
   private def clearTopicsState(): Unit = {
+    // 所有topic的名字
     allTopics = Set.empty
+    // map<topicName,map<partition,partitionReplica>>
     partitionReplicaAssignmentUnderlying.clear()
+    // map<topicName,map<TopicPartition,LeaderIsrAndControllerEpoch>>
     partitionLeadershipInfo.clear()
+    // map<topicName,map<TopicPartition,ReassignedPartitionsContext>>  分区被重新分配
     partitionsBeingReassigned.clear()
+    //  map<replicasOnOfflineDirs,Set[TopicPartition]> 离线Dirs上的副本
     replicasOnOfflineDirs.clear()
   }
 

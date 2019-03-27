@@ -226,21 +226,26 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
         kafkaScheduler = new KafkaScheduler(config.backgroundThreads)
         kafkaScheduler.startup()
 
+
         /* create and configure metrics 创建和配置监控*/
         val reporters = new util.ArrayList[MetricsReporter]
 
         //private val jmxPrefix: String = "kafka.server" 组装监控请求
         reporters.add(new JmxReporter(jmxPrefix))
 
+
         val metricConfig = KafkaServer.metricConfig(config)
         metrics = new Metrics(metricConfig, reporters, time, true)
+
 
         /* register broker metrics 向监控注册topic信息 */
         _brokerTopicStats = new BrokerTopicStats
 
+
         // 配额管理
         quotaManagers = QuotaFactory.instantiate(config, metrics, time, threadNamePrefix.getOrElse(""))
         notifyClusterListeners(kafkaMetricsReporters ++ metrics.reporters.asScala)
+
 
         // 不可用的log Dir
         logDirFailureChannel = new LogDirFailureChannel(config.logDirs.size)
@@ -249,11 +254,14 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
         logManager = LogManager(config, initialOfflineDirs, zkClient, brokerState, kafkaScheduler, time, brokerTopicStats, logDirFailureChannel)
         logManager.startup()
 
+
         //元数据缓存
         metadataCache = new MetadataCache(config.brokerId)
         // Enable delegation token cache for all SCRAM mechanisms to simplify dynamic update.
         // This keeps the cache up-to-date if new SCRAM mechanisms are enabled dynamically.
+
         tokenCache = new DelegationTokenCache(ScramMechanism.mechanismNames)
+
         credentialProvider = new CredentialProvider(ScramMechanism.mechanismNames, tokenCache)
 
         // Create and start the socket server acceptor threads so that the bound port is known.
@@ -283,8 +291,9 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
 
         adminManager = new AdminManager(config, metrics, metadataCache, zkClient)
 
-        /* start group coordinator */
+        /* start group coordinator启动小组协调员 */
         // Hardcode Time.SYSTEM for now as some Streams tests fail otherwise, it would be good to fix the underlying issue
+        // 硬编码Time.SYSTEM现在因为某些Streams测试失败，否则修复底层问题会很好
         groupCoordinator = GroupCoordinator(config, zkClient, replicaManager, Time.SYSTEM)
         groupCoordinator.startup()
 
@@ -301,9 +310,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
           authZ
         }
 
-        val fetchManager = new FetchManager(Time.SYSTEM,
-          new FetchSessionCache(config.maxIncrementalFetchSessionCacheSlots,
-            KafkaServer.MIN_INCREMENTAL_FETCH_SESSION_EVICTION_MS))
+        val fetchManager = new FetchManager(Time.SYSTEM,new FetchSessionCache(config.maxIncrementalFetchSessionCacheSlots,KafkaServer.MIN_INCREMENTAL_FETCH_SESSION_EVICTION_MS))
 
         /* start processing requests */
         //生成用于对外对外提供服务的KafkaApis实例,并设置当前的broker的状态为运行状态.
@@ -318,6 +325,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
         /* Add all reconfigurables for config change notification before starting config handlers */
         config.dynamicConfig.addReconfigurables(this)
 
+
         /* start dynamic config manager */
         //生成动态配置修改的处理管理,主要是topic修改与client端配置的修改,并把已经存在的clientid对应的配置进行修改.
         dynamicConfigHandlers = Map[String, ConfigHandler](ConfigType.Topic -> new TopicConfigHandler(logManager, config, quotaManagers),
@@ -325,9 +333,10 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
                                                            ConfigType.User -> new UserConfigHandler(quotaManagers, credentialProvider),
                                                            ConfigType.Broker -> new BrokerConfigHandler(config, quotaManagers))
 
-        // Create the config manager. start listening to notifications
+        // Create the config manager. start listening to notifications 创建配置管理器。开始听通知
         dynamicConfigManager = new DynamicConfigManager(zkClient, dynamicConfigHandlers)
         dynamicConfigManager.startup()
+
 
         socketServer.startProcessors()
         brokerState.newState(RunningAsBroker)
@@ -355,8 +364,8 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
   }
 
   protected def createReplicaManager(isShuttingDown: AtomicBoolean): ReplicaManager =
-    new ReplicaManager(config, metrics, time, zkClient, kafkaScheduler, logManager, isShuttingDown, quotaManagers,
-      brokerTopicStats, metadataCache, logDirFailureChannel)
+  //ReplicaManager需要logManager，ReplicaManager在创建 Partition 对象时，它需要 ReplicaManager 的 logManager 对象，Partition 会通过这个 logManager 对象为每个 replica 创建对应的日志。
+    new ReplicaManager(config, metrics, time, zkClient, kafkaScheduler, logManager, isShuttingDown, quotaManagers, brokerTopicStats, metadataCache, logDirFailureChannel)
 
   /**
     * 初始化zookeeper连接

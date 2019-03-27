@@ -776,6 +776,7 @@ public final class Utils {
 
     /**
      * Attempts to move source to target atomically and falls back to a non-atomic move if it fails.
+     * 尝试以原子方式将源移动到目标，并在失败时回退到非原子移动。
      *
      * @throws IOException if both atomic and non-atomic moves fail
      */

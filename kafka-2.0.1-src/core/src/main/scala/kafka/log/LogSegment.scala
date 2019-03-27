@@ -39,16 +39,19 @@ import scala.math._
  * the actual messages. The index is an OffsetIndex that maps from logical offsets to physical file positions. Each
  * segment has a base offset which is an offset <= the least offset of any message in this segment and > any offset in
  * any previous segment.
+  * 日志的一部分。每个段都有两个组件：日志和索引。日志是包含*实际消息的FileRecords。索引是OffsetIndex，它从逻辑偏移映射到物理文件位置。
+  * 每个段都有一个基本偏移量，它是一个偏移量<=该段中任何消息的最小偏移量和>任何前一个段中的任何偏移量。
  *
  * A segment with a base offset of [base_offset] would be stored in two files, a [base_offset].index and a [base_offset].log file.
- *
- * @param log The file records containing log entries
- * @param offsetIndex The offset index
- * @param timeIndex The timestamp index
- * @param baseOffset A lower bound on the offsets in this segment
- * @param indexIntervalBytes The approximate number of bytes between entries in the index
- * @param time The time instance
+ * 基本偏移为[base_offset]的段将存储在两个文件中，即[base_offset] .index和[base_offset] .log文件。
+ * @param log The file records containing log entries 包含日志条目的文件记录
+ * @param offsetIndex The offset index 偏移指数
+ * @param timeIndex The timestamp index 时间戳索引
+ * @param baseOffset A lower bound on the offsets in this segment 此段中偏移的下限
+ * @param indexIntervalBytes The approximate number of bytes between entries in the index 索引中条目之间的近似字节数
+ * @param time The time instance 时间实例
  */
+//在LogSegment中封装了一个FileRecords和一个OffsetIndex对象，提供日志文件和索引文件的读写功能以及其他辅助功能。
 @nonthreadsafe
 class LogSegment private[log] (val log: FileRecords,
                                val offsetIndex: OffsetIndex,
@@ -93,7 +96,7 @@ class LogSegment private[log] (val log: FileRecords,
   /* The timestamp we used for time based log rolling */
   private var rollingBasedTimestamp: Option[Long] = None
 
-  /* The maximum timestamp we see so far */
+  /* The maximum timestamp we see so far到目前为止我们看到的最大时间戳 */
   @volatile private var maxTimestampSoFar: Long = timeIndex.lastEntry.timestamp
   @volatile private var offsetOfMaxTimestamp: Long = timeIndex.lastEntry.offset
 
@@ -102,6 +105,7 @@ class LogSegment private[log] (val log: FileRecords,
 
   /**
    * checks that the argument offset can be represented as an integer offset relative to the baseOffset.
+    * 检查参数偏移量是否可以表示为相对于baseOffset的整数偏移量。
    */
   def canConvertToRelativeOffset(offset: Long): Boolean = {
     offsetIndex.canAppendOffset(offset)
@@ -110,8 +114,10 @@ class LogSegment private[log] (val log: FileRecords,
   /**
    * Append the given messages starting with the given offset. Add
    * an entry to the index if needed.
-   *
+   *从给定的偏移量开始附加给定的消息。如果需要，在索引中添加条目。
+    *
    * It is assumed this method is being called from within a lock.
+    * 假设从锁内调用此方法
    *
    * @param largestOffset The last offset in the message set
    * @param largestTimestamp The largest timestamp in the message set.
@@ -121,28 +127,30 @@ class LogSegment private[log] (val log: FileRecords,
    * @throws LogSegmentOffsetOverflowException if the largest offset causes index offset overflow
    */
   @nonthreadsafe
-  def append(largestOffset: Long,
-             largestTimestamp: Long,
-             shallowOffsetOfMaxTimestamp: Long,
-             records: MemoryRecords): Unit = {
+  def append(largestOffset: Long,largestTimestamp: Long,shallowOffsetOfMaxTimestamp: Long,records: MemoryRecords): Unit = {
+    //ByteBuffer.limit() 可读的大小
     if (records.sizeInBytes > 0) {
       trace(s"Inserting ${records.sizeInBytes} bytes at end offset $largestOffset at position ${log.sizeInBytes} " +
             s"with largest timestamp $largestTimestamp at shallow offset $shallowOffsetOfMaxTimestamp")
+
       val physicalPosition = log.sizeInBytes()
       if (physicalPosition == 0)
         rollingBasedTimestamp = Some(largestTimestamp)
 
       ensureOffsetInRange(largestOffset)
 
-      // append the messages
+      // append the messages附上消息
       val appendedBytes = log.append(records)
       trace(s"Appended $appendedBytes to ${log.file} at end offset $largestOffset")
       // Update the in memory max timestamp and corresponding offset.
+      // 更新内存最大时间戳和相应的偏移量。
       if (largestTimestamp > maxTimestampSoFar) {
         maxTimestampSoFar = largestTimestamp
         offsetOfMaxTimestamp = shallowOffsetOfMaxTimestamp
       }
+
       // append an entry to the index (if needed)
+      // 在索引附加一个条目（如果需要）
       if (bytesSinceLastIndexEntry > indexIntervalBytes) {
         offsetIndex.append(largestOffset, physicalPosition)
         timeIndex.maybeAppend(maxTimestampSoFar, offsetOfMaxTimestamp)
@@ -151,7 +159,7 @@ class LogSegment private[log] (val log: FileRecords,
       bytesSinceLastIndexEntry += records.sizeInBytes
     }
   }
-
+  // 确保偏移范围
   private def ensureOffsetInRange(offset: Long): Unit = {
     if (!canConvertToRelativeOffset(offset))
       throw new LogSegmentOffsetOverflowException(this, offset)
@@ -458,6 +466,7 @@ class LogSegment private[log] (val log: FileRecords,
 
   /**
    * Flush this log segment to disk
+    * 将此日志段刷新到磁盘
    */
   @threadsafe
   def flush() {

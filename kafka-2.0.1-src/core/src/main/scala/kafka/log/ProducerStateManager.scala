@@ -346,6 +346,10 @@ private[log] class ProducerAppendInfo(val producerId: Long,
   }
 }
 
+
+
+
+
 object ProducerStateManager {
   private val ProducerSnapshotVersion: Short = 1
   private val VersionField = "version"
@@ -373,6 +377,8 @@ object ProducerStateManager {
     new Field(TimestampField, Type.INT64, "Max timestamp from the last written entry"),
     new Field(CoordinatorEpochField, Type.INT32, "The epoch of the last transaction coordinator to send an end transaction marker"),
     new Field(CurrentTxnFirstOffsetField, Type.INT64, "The first offset of the on-going transaction (-1 if there is none)"))
+
+
   val PidSnapshotMapSchema = new Schema(
     new Field(VersionField, Type.INT16, "Version of the snapshot file"),
     new Field(CrcField, Type.UNSIGNED_INT32, "CRC of the snapshot data"),

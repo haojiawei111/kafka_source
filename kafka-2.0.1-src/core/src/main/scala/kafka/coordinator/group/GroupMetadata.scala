@@ -17,6 +17,7 @@
 package kafka.coordinator.group
 
 import java.util.UUID
+
 import java.util.concurrent.locks.ReentrantLock
 
 import kafka.common.OffsetAndMetadata
@@ -25,6 +26,7 @@ import org.apache.kafka.common.TopicPartition
 
 import scala.collection.{Seq, immutable, mutable}
 
+// 组状态
 private[group] sealed trait GroupState
 
 /**
@@ -154,12 +156,12 @@ case class CommitRecordMetadataAndOffset(appendedBatchOffset: Option[Long], offs
 }
 
 /**
- * Group contains the following metadata:
+ * 组包含以下元数据：
  *
  *  Membership metadata:
- *  1. Members registered in this group
- *  2. Current protocol assigned to the group (e.g. partition assignment strategy for consumers)
- *  3. Protocol metadata associated with group members
+ *  1. Members registered in this group 在此组中注册的会员
+ *  2. Current protocol assigned to the group (e.g. partition assignment strategy for consumers)分配给该组的当前协议
+ *  3. Protocol metadata associated with group members与组成员关联的协议元数据
  *
  *  State metadata:
  *  1. group state

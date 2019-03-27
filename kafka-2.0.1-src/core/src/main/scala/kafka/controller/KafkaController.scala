@@ -1641,8 +1641,7 @@ class ControllerChangeHandler(controller: KafkaController, eventManager: Control
   override def handleDataChange(): Unit = eventManager.put(controller.ControllerChange)
 }
 
-case class ReassignedPartitionsContext(var newReplicas: Seq[Int] = Seq.empty,
-                                       val reassignIsrChangeHandler: PartitionReassignmentIsrChangeHandler) {
+case class ReassignedPartitionsContext(var newReplicas: Seq[Int] = Seq.empty,val reassignIsrChangeHandler: PartitionReassignmentIsrChangeHandler) {
 
   def registerReassignIsrChangeHandler(zkClient: KafkaZkClient): Unit =
     zkClient.registerZNodeChangeHandler(reassignIsrChangeHandler)

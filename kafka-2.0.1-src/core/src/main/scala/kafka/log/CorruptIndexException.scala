@@ -16,5 +16,5 @@
  */
 
 package kafka.log
-
+// 异常
 class CorruptIndexException(message: String) extends RuntimeException(message)

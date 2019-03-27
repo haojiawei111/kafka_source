@@ -24,6 +24,7 @@ import java.util.Set;
 
 /**
  * Represents the state of a single thread running within a {@link KafkaStreams} application.
+ * 表示在{@link KafkaStreams}应用程序中运行的单个线程的状态。
  */
 public class ThreadMetadata {
 

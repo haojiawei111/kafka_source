@@ -19,6 +19,8 @@ package kafka.common
 
 import org.apache.kafka.common.protocol.Errors
 
+
+//Offset元数据
 case class OffsetMetadata(offset: Long, metadata: String = OffsetMetadata.NoMetadata) {
   override def toString = "OffsetMetadata[%d,%s]"
     .format(offset,

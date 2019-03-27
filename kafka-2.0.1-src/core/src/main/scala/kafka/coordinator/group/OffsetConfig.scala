@@ -20,7 +20,7 @@ package kafka.coordinator.group
 import kafka.message.{CompressionCodec, NoCompressionCodec}
 
 /**
- * Configuration settings for in-built offset management
+ * Configuration settings for in-built offset management 内置偏移管理的配置设置
  * @param maxMetadataSize The maximum allowed metadata for any offset commit.
  * @param loadBufferSize Batch size for reading from the offsets segments when loading offsets into the cache.
  * @param offsetsRetentionMs Offsets older than this retention period will be discarded.

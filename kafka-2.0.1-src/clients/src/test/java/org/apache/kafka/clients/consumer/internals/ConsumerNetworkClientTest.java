@@ -126,6 +126,7 @@ public class ConsumerNetworkClientTest {
         assertTrue(future.exception() instanceof DisconnectException);
     }
 
+    // 测试超时未发送请求
     @Test
     public void testTimeoutUnsentRequest() {
         // Delay connection to the node so that the request remains unsent

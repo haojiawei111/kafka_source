@@ -40,6 +40,7 @@ import java.util.Set;
  * Provides access to the {@link StreamsMetadata} in a KafkaStreams application. This can be used
  * to discover the locations of {@link org.apache.kafka.streams.processor.StateStore}s
  * in a KafkaStreams application
+ * 提供对KafkaStreams应用程序中{@link StreamsMetadata}的访问。这可用于*在KafkaStreams应用程序中发现{@link org.apache.kafka.streams.processor.StateStore} s *的位置
  */
 public class StreamsMetadataState {
     public static final HostInfo UNKNOWN_HOST = new HostInfo("unknown", -1);

@@ -457,6 +457,7 @@ class ReplicaManager(val config: KafkaConfig,
    * Append messages to leader replicas of the partition, and wait for them to be replicated to other replicas;
    * the callback function will be triggered either when timeout or the required acks are satisfied;
    * if the callback function itself is already synchronized on some object then pass this object to avoid deadlock.
+    * 将消息附加到分区的领导者副本，并等待它们复制到其他副本; 当超时或满足所需的ack时，将触发回调函数; 如果回调函数本身已经在某个对象上同步，则传递此对象以避免死锁。
    */
   def appendRecords(timeout: Long,
                     requiredAcks: Short,
@@ -724,6 +725,7 @@ class ReplicaManager(val config: KafkaConfig,
 
   /**
    * Append the messages to the local replica logs
+    * 将消息附加到本地副本日志
    */
   private def appendToLocalLog(internalTopicsAllowed: Boolean,
                                isFromClient: Boolean,
@@ -784,6 +786,7 @@ class ReplicaManager(val config: KafkaConfig,
   /**
    * Fetch messages from the leader replica, and wait until enough data can be fetched and return;
    * the callback function will be triggered either when timeout or required fetch info is satisfied
+    * 从领导副本中获取消息，并等待，直到获取足够的数据并返回; 当超时或满足所需的获取信息时，将触发回调函数
    */
   def fetchMessages(timeout: Long,
                     replicaId: Int,

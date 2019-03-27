@@ -29,6 +29,9 @@ sealed trait IndexEntry {
 
 /**
   * 逻辑日志偏移量与消息集条目开头的某个日志文件中的物理位置之间的映射，带有给定的偏移量。
+  *
+  * key 是 offset
+  * value 是 position
  */
 case class OffsetPosition(offset: Long, position: Int) extends IndexEntry {
   override def indexKey = offset
@@ -40,13 +43,18 @@ case class OffsetPosition(offset: Long, position: Int) extends IndexEntry {
   * 时间戳与消息偏移之间的映射。该条目表示任何时间戳大于该时间戳的消息必须在该偏移量处或之后。
  * @param timestamp The max timestamp before the given offset.
  * @param offset The message offset.
+  *
+  *key 是 timestamp
+  *value 是 offset
+  *
  */
 case class TimestampOffset(timestamp: Long, offset: Long) extends IndexEntry {
   override def indexKey = timestamp
   override def indexValue = offset
 }
 
+
 object TimestampOffset {
-  // 未知时间戳 身份offset
+  // 未知时间戳 身份offset    Unknown是TimestampOffset，key = timestamp = -1、value = offset = -1
   val Unknown = TimestampOffset(ListOffsetResponse.UNKNOWN_TIMESTAMP, ListOffsetResponse.UNKNOWN_OFFSET)
 }
