@@ -36,6 +36,7 @@ import scala.collection.JavaConverters._
 
 /**
   * The ConfigHandler is used to process config change notifications received by the DynamicConfigManager
+  * ConfigHandler用于处理DynamicConfigManager接收的配置更改通知
   */
 trait ConfigHandler {
   def processConfigChanges(entityName: String, value: Properties)
@@ -44,6 +45,8 @@ trait ConfigHandler {
 /**
   * The TopicConfigHandler will process topic config changes in ZK.
   * The callback provides the topic name and the full properties set read from ZK
+  * TopicConfigHandler将处理ZK中的主题配置更改。
+  * 回调提供主题名称和从ZK读取的完整属性集
   */
 class TopicConfigHandler(private val logManager: LogManager, kafkaConfig: KafkaConfig, val quotas: QuotaManagers) extends ConfigHandler with Logging  {
 

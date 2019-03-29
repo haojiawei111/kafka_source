@@ -343,6 +343,7 @@ private[group] class GroupMetadata(val groupId: String, initialState: GroupState
   }
 
   def prepareOffsetCommit(offsets: Map[TopicPartition, OffsetAndMetadata]) {
+    //收到消费者Offset提交
     receivedConsumerOffsetCommits = true
     pendingOffsetCommits ++= offsets
   }

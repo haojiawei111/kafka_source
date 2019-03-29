@@ -467,6 +467,7 @@ class GroupCoordinator(val brokerId: Int,
                           responseCallback: immutable.Map[TopicPartition, Errors] => Unit) {
     validateGroupStatus(groupId, ApiKeys.OFFSET_COMMIT) match {
       case Some(error) => responseCallback(offsetMetadata.mapValues(_ => error))
+        // 提交offset
       case None =>
         groupManager.getGroup(groupId) match {
           case None =>

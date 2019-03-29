@@ -20,7 +20,4 @@ package kafka.server
 import org.apache.kafka.common.record.Records
 import org.apache.kafka.common.requests.FetchResponse.AbortedTransaction
 
-case class FetchDataInfo(fetchOffsetMetadata: LogOffsetMetadata,
-                         records: Records,
-                         firstEntryIncomplete: Boolean = false,
-                         abortedTransactions: Option[List[AbortedTransaction]] = None)
+case class FetchDataInfo(fetchOffsetMetadata: LogOffsetMetadata,records: Records,firstEntryIncomplete: Boolean = false,abortedTransactions: Option[List[AbortedTransaction]] = None)

@@ -31,6 +31,7 @@ import scala.collection.JavaConverters._
 /**
   * Class used to hold dynamic configs. These are configs which have no physical manifestation in the server.properties
   * and can only be set dynamically.
+  * 用于保持动态配置的类。这些是在server.properties 中没有物理表现形式的配置，只能动态设置。
   */
 object DynamicConfig {
 
@@ -73,12 +74,12 @@ object DynamicConfig {
     val ConsumerByteRateOverrideProp = "consumer_byte_rate"
     val RequestPercentageOverrideProp = "request_percentage"
 
-    //Defaults
+    //默认值
     val DefaultProducerOverride = ClientQuotaManagerConfig.QuotaBytesPerSecondDefault
     val DefaultConsumerOverride = ClientQuotaManagerConfig.QuotaBytesPerSecondDefault
     val DefaultRequestOverride = ClientQuotaManagerConfig.QuotaRequestPercentDefault
 
-    //Documentation
+    //文档
     val ProducerOverrideDoc = "A rate representing the upper bound (bytes/sec) for producer traffic."
     val ConsumerOverrideDoc = "A rate representing the upper bound (bytes/sec) for consumer traffic."
     val RequestOverrideDoc = "A percentage representing the upper bound of time spent for processing requests."
@@ -111,11 +112,13 @@ object DynamicConfig {
     //Validate Names
     val names = configDef.names()
     val propKeys = props.keySet.asScala.map(_.asInstanceOf[String])
+
     if (!customPropsAllowed) {
       val unknownKeys = propKeys.filter(!names.contains(_))
-      require(unknownKeys.isEmpty, s"Unknown Dynamic Configuration: $unknownKeys.")
+      require(unknownKeys.isEmpty, s"Unknown Dynamic Configuration未知的动态配置: $unknownKeys.")
     }
     //ValidateValues
     configDef.parse(props)
   }
+
 }

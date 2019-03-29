@@ -37,15 +37,17 @@ import org.apache.kafka.common.requests.{MetadataResponse, UpdateMetadataRequest
 /**
  *  A cache for the state (e.g., current leader) of each partition. This cache is updated through
  *  UpdateMetadataRequest from the controller. Every broker maintains the same cache, asynchronously.
+  *  每个分区的状态（例如，当前领导者）的高速缓存。此缓存通过控制器的* UpdateMetadataRequest更新。每个代理都异步维护相同的缓存。
  */
 class MetadataCache(brokerId: Int) extends Logging {
 
   private val cache = mutable.Map[String, mutable.Map[Int, UpdateMetadataRequest.PartitionState]]()
+
   @volatile private var controllerId: Option[Int] = None
   private val aliveBrokers = mutable.Map[Int, Broker]()
   private val aliveNodes = mutable.Map[Int, collection.Map[ListenerName, Node]]()
-  private val partitionMetadataLock = new ReentrantReadWriteLock()
 
+  private val partitionMetadataLock = new ReentrantReadWriteLock()
   this.logIdent = s"[MetadataCache brokerId=$brokerId] "
   private val stateChangeLogger = new StateChangeLogger(brokerId, inControllerContext = false, None)
 
