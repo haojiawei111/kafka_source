@@ -48,26 +48,35 @@ object ConfigEntityName {
 
 /**
  * This class initiates and carries out config changes for all entities defined in ConfigType.
+ *此类为ConfigType中定义的所有实体启动并执行配置更改。
+ * It works as follows.它的工作原理如下。
  *
- * It works as follows.
- *
- * Config is stored under the path: /config/entityType/entityName
+ * 配置存储在路径下: /config/entityType/entityName
  *   E.g. /config/topics/<topic_name> and /config/clients/<clientId>
  * This znode stores the overrides for this entity in properties format with defaults stored using entityName "<default>".
+  * 这个节点对于属性格式的此实体，使用entityName“<default>”存储默认值。
+  *
  * Multiple entity names may be specified (eg. <user, client-id> quotas) using a hierarchical path:
+  * 可以使用分层路径指定多个实体名称（例如，<user，client-id> quotas）
  *   E.g. /config/users/<user>/clients/<clientId>
  *
  * To avoid watching all topics for changes instead we have a notification path
+  * 为了避免看到所有主题的变化，我们有一个通知路径
  *   /config/changes
  * The DynamicConfigManager has a child watch on this path.
+  * DynamicConfigManager在此路径上有一个子监视。
  *
  * To update a config we first update the config properties. Then we create a new sequential
+  * 要更新配置，我们首先更新配置属性。然后我们在更改路径下创建一个新的顺序
  * znode under the change path which contains the name of the entityType and entityName that was updated, say
+ * 更改路径下的znode，其中包含更新的entityType和entityName的名称
  *   /config/changes/config_change_13321
- * The sequential znode contains data in this format: {"version" : 1, "entity_type":"topic/client", "entity_name" : "topic_name/client_id"}
+ * The sequential znode contains data in this format顺序znode包含此格式的数据: {"version" : 1, "entity_type":"topic/client", "entity_name" : "topic_name/client_id"}
  * This is just a notification--the actual config change is stored only once under the /config/entityType/entityName path.
- * Version 2 of notifications has the format: {"version" : 2, "entity_path":"entity_type/entity_name"}
+  * 这只是一个通知 - 实际的配置更改仅在/ config / entityType / entityName路径下存储一次。
+ * Version 2 of notifications has the format通知版本2具有格式: {"version" : 2, "entity_path":"entity_type/entity_name"}
  * Multiple entities may be specified as a hierarchical path (eg. users/<user>/clients/<clientId>).
+  * 可以将多个实体指定为分层路径（例如，users / <user> / clients / <clientId>）。
  *
  * This will fire a watcher on all brokers. This watcher works as follows. It reads all the config change notifications.
  * It keeps track of the highest config change suffix number it has applied previously. For any previously applied change it finds
@@ -82,15 +91,18 @@ object ConfigEntityName {
  *
  * On restart the config manager re-processes all notifications. This will usually be wasted work, but avoids any race conditions
  * on startup where a change might be missed between the initial config load and registering for change notifications.
+  * 重新启动时，配置管理器会重新处理所有通知。这通常是浪费的工作，但避免了启动时的任何竞争条件*，在初始配置加载和注册更改通知之间可能会错过更改。
  *
  */
 class DynamicConfigManager(private val zkClient: KafkaZkClient,
                            private val configHandlers: Map[String, ConfigHandler],
                            private val changeExpirationMs: Long = 15*60*1000,
                            private val time: Time = Time.SYSTEM) extends Logging {
+
   val adminZkClient = new AdminZkClient(zkClient)
 
   object ConfigChangedNotificationHandler extends NotificationHandler {
+
     override def processNotification(jsonBytes: Array[Byte]) = {
       // Ignore non-json notifications because they can be from the deprecated TopicConfigManager
       Json.parseBytes(jsonBytes).foreach { js =>
@@ -109,6 +121,7 @@ class DynamicConfigManager(private val zkClient: KafkaZkClient,
       }
     }
 
+
     private def processEntityConfigChangeVersion1(jsonBytes: Array[Byte], js: JsonObject) {
       val validConfigTypes = Set(ConfigType.Topic, ConfigType.Client)
       val entityType = js.get("entity_type").flatMap(_.to[Option[String]]).filter(validConfigTypes).getOrElse {
@@ -126,6 +139,7 @@ class DynamicConfigManager(private val zkClient: KafkaZkClient,
       configHandlers(entityType).processConfigChanges(entity, entityConfig)
 
     }
+
 
     private def processEntityConfigChangeVersion2(jsonBytes: Array[Byte], js: JsonObject) {
 
@@ -151,18 +165,23 @@ class DynamicConfigManager(private val zkClient: KafkaZkClient,
       configHandlers(rootEntityType).processConfigChanges(fullSanitizedEntityName, entityConfig)
 
     }
+
   }
 
-  private val configChangeListener = new ZkNodeChangeNotificationListener(zkClient, ConfigEntityChangeNotificationZNode.path,
-    ConfigEntityChangeNotificationSequenceZNode.SequenceNumberPrefix, ConfigChangedNotificationHandler)
+  private val configChangeListener = new ZkNodeChangeNotificationListener(
+    zkClient,
+    ConfigEntityChangeNotificationZNode.path,// 监听zookeeper上/config/changes路径
+    ConfigEntityChangeNotificationSequenceZNode.SequenceNumberPrefix,  // 序列号前缀config_change_
+    ConfigChangedNotificationHandler)
 
   /**
-   * Begin watching for config changes
+   * 开始观察配置更改
    */
   def startup(): Unit = {
     configChangeListener.init()
 
     // Apply all existing client/user configs to the ClientIdConfigHandler/UserConfigHandler to bootstrap the overrides
+    // 将所有现有客户端/用户配置应用于ClientIdConfigHandler / UserConfigHandler以引导覆盖
     configHandlers.foreach {
       case (ConfigType.User, handler) =>
         adminZkClient.fetchAllEntityConfigs(ConfigType.User).foreach {
@@ -177,6 +196,7 @@ class DynamicConfigManager(private val zkClient: KafkaZkClient,
         }
     }
   }
+
 
   def shutdown(): Unit = {
     configChangeListener.close()

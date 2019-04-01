@@ -343,7 +343,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         dynamicConfigManager.startup()
 
 
-        socketServer.startProcessors()
+        socketServer.startProcessors() //开启网络服务处理程序
         brokerState.newState(RunningAsBroker)
         shutdownLatch = new CountDownLatch(1)
         startupComplete.set(true)
