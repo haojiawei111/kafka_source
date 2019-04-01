@@ -92,12 +92,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * when sending a request that affects the state of the group (e.g. JoinGroup, LeaveGroup).
  */
 public abstract class AbstractCoordinator implements Closeable {
-    public static final String HEARTBEAT_THREAD_PREFIX = "kafka-coordinator-heartbeat-thread";
+    public static final String HEARTBEAT_THREAD_PREFIX = "kafka-coordinator-heartbeat-thread";//kafka协调心跳线程
 
     private enum MemberState {
-        UNJOINED,    // the client is not part of a group
-        REBALANCING, // the client has begun rebalancing
-        STABLE,      // the client has joined and is sending heartbeats
+        UNJOINED,    // the client is not part of a group客户不是团体的一部分
+        REBALANCING, // the client has begun rebalancing客户已经开始重新平衡
+        STABLE,      // the client has joined and is sending heartbeats客户已加入并正在发送心跳
     }
 
     private final Logger log;
@@ -320,6 +320,7 @@ public abstract class AbstractCoordinator implements Closeable {
 
     /**
      * Ensure that the group is active (i.e. joined and synced)
+     * 确保该组处于活动状态
      */
     public void ensureActiveGroup() {
         while (!ensureActiveGroup(Long.MAX_VALUE)) {
@@ -351,6 +352,8 @@ public abstract class AbstractCoordinator implements Closeable {
         long joinTimeoutMs = remainingTimeAtLeastZero(timeoutMs, joinStartMs - startMs);
         return joinGroupIfNeeded(joinTimeoutMs, joinStartMs);
     }
+
+
     //如果需要，启动心跳线程
     private synchronized void startHeartbeatThreadIfNeeded() {
         if (heartbeatThread == null) {
@@ -524,6 +527,7 @@ public abstract class AbstractCoordinator implements Closeable {
                 .compose(new JoinGroupResponseHandler());
     }
 
+    //加入群组响应处理程序
     private class JoinGroupResponseHandler extends CoordinatorResponseHandler<JoinGroupResponse, ByteBuffer> {
         @Override
         public void handle(JoinGroupResponse joinResponse, RequestFuture<ByteBuffer> future) {
@@ -608,6 +612,7 @@ public abstract class AbstractCoordinator implements Closeable {
                 .compose(new SyncGroupResponseHandler());
     }
 
+    //同步组响应处理程序
     private class SyncGroupResponseHandler extends CoordinatorResponseHandler<SyncGroupResponse, ByteBuffer> {
         @Override
         public void handle(SyncGroupResponse syncResponse,
@@ -655,6 +660,7 @@ public abstract class AbstractCoordinator implements Closeable {
                      .compose(new FindCoordinatorResponseHandler());
     }
 
+    //查找协调器响应处理程序
     private class FindCoordinatorResponseHandler extends RequestFutureAdapter<ClientResponse, Void> {
 
         @Override
@@ -814,6 +820,7 @@ public abstract class AbstractCoordinator implements Closeable {
         resetGeneration();
     }
 
+    //离开组响应处理程序
     private class LeaveGroupResponseHandler extends CoordinatorResponseHandler<LeaveGroupResponse, Void> {
         @Override
         public void handle(LeaveGroupResponse leaveResponse, RequestFuture<Void> future) {
@@ -837,6 +844,7 @@ public abstract class AbstractCoordinator implements Closeable {
                 .compose(new HeartbeatResponseHandler());
     }
 
+    //心跳响应处理程序
     private class HeartbeatResponseHandler extends CoordinatorResponseHandler<HeartbeatResponse, Void> {
         @Override
         public void handle(HeartbeatResponse heartbeatResponse, RequestFuture<Void> future) {
@@ -871,6 +879,7 @@ public abstract class AbstractCoordinator implements Closeable {
         }
     }
 
+    //协调员响应处理程序
     protected abstract class CoordinatorResponseHandler<R, T> extends RequestFutureAdapter<ClientResponse, T> {
         protected ClientResponse response;
 
@@ -907,7 +916,7 @@ public abstract class AbstractCoordinator implements Closeable {
                 metrics.metricName(baseName + "-total", groupName,
                         String.format("The total number of %s", descriptiveName)));
     }
-
+    // Group协调员指标
     private class GroupCoordinatorMetrics {
         public final String metricGrpName;
 

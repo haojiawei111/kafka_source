@@ -18,9 +18,11 @@ package org.apache.kafka.common;
 
 /**
  * A callback interface that users can implement when they wish to get notified about changes in the Cluster metadata.
+ * 用户可以在希望获得有关群集元数据更改的通知时实现的回调接口。
  * <p>
  * Users who need access to cluster metadata in interceptors, metric reporters, serializers and deserializers
  * can implement this interface. The order of method calls for each of these types is described below.
+ * 需要访问拦截器，度量标准报告器，序列化器和反序列化器*中的群集元数据的用户可以实现此接口。下面描述了对这些类型中的每一种的方法调用的顺序。
  * <p>
  * <h4>Clients</h4>
  * There will be one invocation of {@link ClusterResourceListener#onUpdate(ClusterResource)} after each metadata response.

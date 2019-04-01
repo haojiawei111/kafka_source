@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
  */
 public class SubscriptionState {
     private static final String SUBSCRIPTION_EXCEPTION_MESSAGE =
-            "Subscription to topics, partitions and pattern are mutually exclusive";
+            "Subscription to topics, partitions and pattern are mutually exclusive主题，分区和模式的订阅是互斥的";
 
     private enum SubscriptionType {
         NONE, AUTO_TOPICS, AUTO_PATTERN, USER_ASSIGNED
@@ -533,8 +533,9 @@ public class SubscriptionState {
         /**
          * Fired after a new assignment is received (after a group rebalance or when the user manually changes the
          * assignment).
+         * 收到新分配后（组重新平衡后或用户手动更改*分配时）触发。
          *
-         * @param assignment The topic partitions assigned to the consumer
+         * @param assignment The topic partitions assigned to the consumer分配给使用者的主题分区
          */
         void onAssignment(Set<TopicPartition> assignment);
     }

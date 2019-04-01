@@ -56,6 +56,7 @@ public class ConsumerNetworkClient implements Closeable {
 
     // the mutable state of this class is protected by the object's monitor (excluding the wakeup
     // flag and the request completion queue below).
+    //该类的可变状态受对象监视器的保护（不包括wakeup //标志和下面的请求完成队列）。
     private final Logger log;
     private final KafkaClient client;
     private final UnsentRequests unsent = new UnsentRequests();
@@ -488,6 +489,7 @@ public class ConsumerNetworkClient implements Closeable {
 
             while (iterator.hasNext()) {
                 ClientRequest request = iterator.next();
+                // 建立连接
                 if (client.ready(node, now)) {
                     client.send(request, now);
                     iterator.remove();
@@ -623,6 +625,7 @@ public class ConsumerNetworkClient implements Closeable {
 
     /*
      * A thread-safe helper class to hold requests per node that have not been sent yet
+     * 一个线程安全的帮助程序类，用于保存尚未发送的每个节点的请求
      */
     private final static class UnsentRequests {
         private final ConcurrentMap<Node, ConcurrentLinkedQueue<ClientRequest>> unsent;

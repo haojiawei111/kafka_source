@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The state of our connection to each node in the cluster.
+ * 我们与集群中每个节点的连接状态。
  *
  */
 final class ClusterConnectionStates {

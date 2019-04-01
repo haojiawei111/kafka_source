@@ -554,7 +554,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     final Metrics metrics;
 
     private final Logger log;
+
     private final String clientId;
+
     private final ConsumerCoordinator coordinator;
     private final Deserializer<K> keyDeserializer;
     private final Deserializer<V> valueDeserializer;
@@ -573,11 +575,14 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     // currentThread holds the threadId of the current thread accessing KafkaConsumer
     // and is used to prevent multi-threaded access
+    // currentThread保存当前线程的threadId访问KafkaConsumer 并用于防止多线程访问
     private final AtomicLong currentThread = new AtomicLong(NO_CURRENT_THREAD);
     // refcount is used to allow reentrant access by the thread who has acquired currentThread
+    // refcount用于允许已获取currentThread的线程进行重入访问
     private final AtomicInteger refcount = new AtomicInteger(0);
 
     // to keep from repeatedly scanning subscriptions in poll(), cache the result during metadata updates
+    // 要避免在poll（）中重复扫描订阅，请在元数据更新期间缓存结果
     private boolean cachedSubscriptionHashAllFetchPositions;
 
     /**
@@ -647,108 +652,132 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public KafkaConsumer(Properties properties,
                          Deserializer<K> keyDeserializer,
                          Deserializer<V> valueDeserializer) {
-        this(new ConsumerConfig(ConsumerConfig.addDeserializerToConfig(properties, keyDeserializer, valueDeserializer)),
+        this(new ConsumerConfig(ConsumerConfig.addDeserializerToConfig(properties, keyDeserializer, valueDeserializer)), // 这里如果没有设置key value序列化器
              keyDeserializer, valueDeserializer);
     }
 
+    // KafkaConsumer构建
     @SuppressWarnings("unchecked")
-    private KafkaConsumer(ConsumerConfig config,
-                          Deserializer<K> keyDeserializer,
-                          Deserializer<V> valueDeserializer) {
+    private KafkaConsumer(ConsumerConfig config,Deserializer<K> keyDeserializer,Deserializer<V> valueDeserializer) {
         try {
+            //client.id
             String clientId = config.getString(ConsumerConfig.CLIENT_ID_CONFIG);
             if (clientId.isEmpty())
                 clientId = "consumer-" + CONSUMER_CLIENT_ID_SEQUENCE.getAndIncrement();
             this.clientId = clientId;
+            //group.id
             String groupId = config.getString(ConsumerConfig.GROUP_ID_CONFIG);
-
+            // 设置日志
             LogContext logContext = new LogContext("[Consumer clientId=" + clientId + ", groupId=" + groupId + "] ");
             this.log = logContext.logger(getClass());
 
             log.debug("Initializing the Kafka consumer");
-            this.requestTimeoutMs = config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG);
-            this.defaultApiTimeoutMs = config.getInt(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG);
+            this.requestTimeoutMs = config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG); //request.timeout.ms
+            this.defaultApiTimeoutMs = config.getInt(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG); //default.api.timeout.ms
             this.time = Time.SYSTEM;
-
+            // 监控的biaoqian
             Map<String, String> metricsTags = Collections.singletonMap("client-id", clientId);
-            MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ConsumerConfig.METRICS_NUM_SAMPLES_CONFIG))
-                    .timeWindow(config.getLong(ConsumerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS)
-                    .recordLevel(Sensor.RecordingLevel.forName(config.getString(ConsumerConfig.METRICS_RECORDING_LEVEL_CONFIG)))
+            MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ConsumerConfig.METRICS_NUM_SAMPLES_CONFIG))//metrics.num.samples
+                    .timeWindow(config.getLong(ConsumerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS)//metrics.sample.window.ms
+                    .recordLevel(Sensor.RecordingLevel.forName(config.getString(ConsumerConfig.METRICS_RECORDING_LEVEL_CONFIG))) //metrics.log.level
                     .tags(metricsTags);
             List<MetricsReporter> reporters = config.getConfiguredInstances(ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG,
-                    MetricsReporter.class);
-            reporters.add(new JmxReporter(JMX_PREFIX));
+                    MetricsReporter.class); //metric.reporters
+            reporters.add(new JmxReporter(JMX_PREFIX)); //kafka.consumer
             this.metrics = new Metrics(metricConfig, reporters, time);
-            this.retryBackoffMs = config.getLong(ConsumerConfig.RETRY_BACKOFF_MS_CONFIG);
 
-            // load interceptors and make sure they get clientId
+            this.retryBackoffMs = config.getLong(ConsumerConfig.RETRY_BACKOFF_MS_CONFIG);//retry.backoff.ms
+
+
+            // load interceptors and make sure they get clientId 加载拦截器并确保它们获得clientId
             Map<String, Object> userProvidedConfigs = config.originals();
             userProvidedConfigs.put(ConsumerConfig.CLIENT_ID_CONFIG, clientId);
-            List<ConsumerInterceptor<K, V>> interceptorList = (List) (new ConsumerConfig(userProvidedConfigs, false)).getConfiguredInstances(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
+
+            // 拦截器  初始化拦截器
+            List<ConsumerInterceptor<K, V>> interceptorList = (List) (new ConsumerConfig(userProvidedConfigs, false)).getConfiguredInstances(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,//interceptor.classes
                     ConsumerInterceptor.class);
             this.interceptors = new ConsumerInterceptors<>(interceptorList);
+
+            //初始化key反序列化器
             if (keyDeserializer == null) {
-                this.keyDeserializer = config.getConfiguredInstance(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                        Deserializer.class);
+                this.keyDeserializer = config.getConfiguredInstance(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,Deserializer.class);
                 this.keyDeserializer.configure(config.originals(), true);
             } else {
                 config.ignore(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG);
                 this.keyDeserializer = keyDeserializer;
             }
+            //初始化value反序列化器
             if (valueDeserializer == null) {
-                this.valueDeserializer = config.getConfiguredInstance(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                        Deserializer.class);
+                this.valueDeserializer = config.getConfiguredInstance(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,Deserializer.class);
                 this.valueDeserializer.configure(config.originals(), false);
             } else {
                 config.ignore(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG);
                 this.valueDeserializer = valueDeserializer;
             }
+
+            //群集资源监听器    k v 反序列化器   监控   拦截器  ( 监控   拦截器如果没有实现ClusterResourceListener根本添加不进去ClusterResourceListeners.clusterResourceListeners)
             ClusterResourceListeners clusterResourceListeners = configureClusterResourceListeners(keyDeserializer, valueDeserializer, reporters, interceptorList);
-            this.metadata = new Metadata(retryBackoffMs, config.getLong(ConsumerConfig.METADATA_MAX_AGE_CONFIG),
-                    true, false, clusterResourceListeners);
-            List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(config.getList(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+            //retryBackoffMs = retry.backoff.ms
+            // METADATA_MAX_AGE_CONFIG = metadata.max.age.ms
+            this.metadata = new Metadata(retryBackoffMs, config.getLong(ConsumerConfig.METADATA_MAX_AGE_CONFIG),true, false, clusterResourceListeners);
+            List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(config.getList(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG)); //bootstrap.servers
             this.metadata.update(Cluster.bootstrap(addresses), Collections.<String>emptySet(), 0);
+
+            // 消费者监控指标
             String metricGrpPrefix = "consumer";
             ConsumerMetrics metricsRegistry = new ConsumerMetrics(metricsTags.keySet(), "consumer");
+
+            //创建Channel
             ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(config);
 
-            IsolationLevel isolationLevel = IsolationLevel.valueOf(
-                    config.getString(ConsumerConfig.ISOLATION_LEVEL_CONFIG).toUpperCase(Locale.ROOT));
+            IsolationLevel isolationLevel = IsolationLevel.valueOf(config.getString(ConsumerConfig.ISOLATION_LEVEL_CONFIG).toUpperCase(Locale.ROOT));//isolation.level
             Sensor throttleTimeSensor = Fetcher.throttleTimeSensor(metrics, metricsRegistry.fetcherMetrics);
 
+
+            // heartbeat.interval.ms 心跳间隔
             int heartbeatIntervalMs = config.getInt(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG);
 
             NetworkClient netClient = new NetworkClient(
+                    // connections.max.idle.ms
                     new Selector(config.getLong(ConsumerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG), metrics, time, metricGrpPrefix, channelBuilder, logContext),
                     this.metadata,
                     clientId,
-                    100, // a fixed large enough value will suffice for max in-flight requests
-                    config.getLong(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG),
-                    config.getLong(ConsumerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG),
-                    config.getInt(ConsumerConfig.SEND_BUFFER_CONFIG),
-                    config.getInt(ConsumerConfig.RECEIVE_BUFFER_CONFIG),
-                    config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG),
+                    100, // a fixed large enough value will suffice for max in-flight requests足够大的固定值足以满足最大飞行请求
+                    config.getLong(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG), //reconnect.backoff.ms
+                    config.getLong(ConsumerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG), //reconnect.backoff.max.ms
+                    config.getInt(ConsumerConfig.SEND_BUFFER_CONFIG), //send.buffer.bytes
+                    config.getInt(ConsumerConfig.RECEIVE_BUFFER_CONFIG), //receive.buffer.bytes
+                    config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG), //request.timeout.ms
                     time,
                     true,
                     new ApiVersions(),
                     throttleTimeSensor,
                     logContext);
+
+
+            // 消费者网络客户端  装饰NetworkClient
             this.client = new ConsumerNetworkClient(
                     logContext,
                     netClient,
                     metadata,
                     time,
                     retryBackoffMs,
-                    config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG),
-                    heartbeatIntervalMs); //Will avoid blocking an extended period of time to prevent heartbeat thread starvation
-            OffsetResetStrategy offsetResetStrategy = OffsetResetStrategy.valueOf(config.getString(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG).toUpperCase(Locale.ROOT));
-            this.subscriptions = new SubscriptionState(offsetResetStrategy);
-            this.assignors = config.getConfiguredInstances(
-                    ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
-                    PartitionAssignor.class);
+                    config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG), //request.timeout.ms
+                    heartbeatIntervalMs); //Will avoid blocking an extended period of time to prevent heartbeat thread starvation 将避免长时间阻塞，以防止心跳线程饥饿
 
-            int maxPollIntervalMs = config.getInt(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG);
-            int sessionTimeoutMs = config.getInt(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG);
+
+
+
+            OffsetResetStrategy offsetResetStrategy = OffsetResetStrategy.valueOf(config.getString(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG).toUpperCase(Locale.ROOT)); //auto.offset.reset
+
+            this.subscriptions = new SubscriptionState(offsetResetStrategy);
+
+            this.assignors = config.getConfiguredInstances(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,PartitionAssignor.class); //partition.assignment.strategy
+
+            int maxPollIntervalMs = config.getInt(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG); //max.poll.interval.ms
+            int sessionTimeoutMs = config.getInt(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG); //session.timeout.ms
+
+            // 消费者协调组件
             this.coordinator = new ConsumerCoordinator(logContext,
                     this.client,
                     groupId,
@@ -762,20 +791,21 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     metricGrpPrefix,
                     this.time,
                     retryBackoffMs,
-                    config.getBoolean(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG),
-                    config.getInt(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG),
+                    config.getBoolean(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG), //enable.auto.commit
+                    config.getInt(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG), //auto.commit.interval.ms
                     this.interceptors,
-                    config.getBoolean(ConsumerConfig.EXCLUDE_INTERNAL_TOPICS_CONFIG),
-                    config.getBoolean(ConsumerConfig.LEAVE_GROUP_ON_CLOSE_CONFIG));
+                    config.getBoolean(ConsumerConfig.EXCLUDE_INTERNAL_TOPICS_CONFIG), //exclude.internal.topics
+                    config.getBoolean(ConsumerConfig.LEAVE_GROUP_ON_CLOSE_CONFIG)); //internal.leave.group.on.close
+            // 拿消息组件
             this.fetcher = new Fetcher<>(
                     logContext,
                     this.client,
-                    config.getInt(ConsumerConfig.FETCH_MIN_BYTES_CONFIG),
-                    config.getInt(ConsumerConfig.FETCH_MAX_BYTES_CONFIG),
-                    config.getInt(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG),
-                    config.getInt(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG),
-                    config.getInt(ConsumerConfig.MAX_POLL_RECORDS_CONFIG),
-                    config.getBoolean(ConsumerConfig.CHECK_CRCS_CONFIG),
+                    config.getInt(ConsumerConfig.FETCH_MIN_BYTES_CONFIG), //fetch.min.bytes
+                    config.getInt(ConsumerConfig.FETCH_MAX_BYTES_CONFIG), //fetch.max.bytes
+                    config.getInt(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG), //fetch.max.wait.ms
+                    config.getInt(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG), //max.partition.fetch.bytes
+                    config.getInt(ConsumerConfig.MAX_POLL_RECORDS_CONFIG), //max.poll.records
+                    config.getBoolean(ConsumerConfig.CHECK_CRCS_CONFIG), //check.crcs
                     this.keyDeserializer,
                     this.valueDeserializer,
                     this.metadata,
@@ -788,6 +818,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     isolationLevel);
 
             config.logUnused();
+            // 往jmx中注册appinfo
             AppInfoParser.registerAppInfo(JMX_PREFIX, clientId, metrics);
 
             log.debug("Kafka consumer initialized");
@@ -1155,21 +1186,24 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     }
 
     private ConsumerRecords<K, V> poll(final long timeoutMs, final boolean includeMetadataInTimeout) {
+
         acquireAndEnsureOpen();
         try {
             if (timeoutMs < 0) throw new IllegalArgumentException("Timeout must not be negative");
 
             if (this.subscriptions.hasNoSubscriptionOrUserAssignment()) {
-                throw new IllegalStateException("Consumer is not subscribed to any topics or assigned any partitions");
+                throw new IllegalStateException("Consumer is not subscribed to any topics or assigned any partitions消费者未订阅任何主题或分配任何分区");
             }
 
-            // poll for new data until the timeout expires
+            // poll for new data until the timeout expires 在超时到期之前轮询新数据
             long elapsedTime = 0L;
+            //轮训
             do {
-
+                // 唤醒
                 client.maybeTriggerWakeup();
 
                 final long metadataEnd;
+                // 包括超时元数据
                 if (includeMetadataInTimeout) {
                     final long metadataStart = time.milliseconds();
                     if (!updateAssignmentMetadataIfNeeded(remainingTimeAtLeastZero(timeoutMs, elapsedTime))) {
@@ -1178,6 +1212,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     metadataEnd = time.milliseconds();
                     elapsedTime += metadataEnd - metadataStart;
                 } else {
+                    // 这里会触发心跳线程
                     while (!updateAssignmentMetadataIfNeeded(Long.MAX_VALUE)) {
                         log.warn("Still waiting for metadata");
                     }
@@ -1197,12 +1232,13 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                         client.pollNoWakeup();
                     }
 
+                    //过一遍拦截器
                     return this.interceptors.onConsume(new ConsumerRecords<>(records));
                 }
                 final long fetchEnd = time.milliseconds();
                 elapsedTime += fetchEnd - metadataEnd;
 
-            } while (elapsedTime < timeoutMs);
+            } while (elapsedTime < timeoutMs); //时间不到就一直轮训
 
             return ConsumerRecords.empty();
         } finally {
@@ -2115,6 +2151,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     /**
      * Wakeup the consumer. This method is thread-safe and is useful in particular to abort a long poll.
+     * 唤醒消费者。此方法是线程安全的，特别适用于中止长轮询。
      * The thread which is blocking in an operation will throw {@link org.apache.kafka.common.errors.WakeupException}.
      * If no thread is blocking in a method which can throw {@link org.apache.kafka.common.errors.WakeupException}, the next call to such a method will raise it instead.
      */
@@ -2124,8 +2161,11 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     }
 
     private ClusterResourceListeners configureClusterResourceListeners(Deserializer<K> keyDeserializer, Deserializer<V> valueDeserializer, List<?>... candidateLists) {
+
         ClusterResourceListeners clusterResourceListeners = new ClusterResourceListeners();
+
         for (List<?> candidateList: candidateLists)
+            // 监控列表   拦截器列表
             clusterResourceListeners.maybeAddAll(candidateList);
 
         clusterResourceListeners.maybeAdd(keyDeserializer);
@@ -2194,6 +2234,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     /**
      * Acquire the light lock and ensure that the consumer hasn't been closed.
+     * 获取灯锁并确保消费者尚未关闭。
      * @throws IllegalStateException If the consumer has been closed
      */
     private void acquireAndEnsureOpen() {
@@ -2219,6 +2260,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     /**
      * Release the light lock protecting the consumer from multi-threaded access.
+     * 释放灯锁，保护消费者免受多线程访问。
      */
     private void release() {
         if (refcount.decrementAndGet() == 0)

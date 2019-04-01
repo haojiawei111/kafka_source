@@ -32,6 +32,7 @@ import java.util.TreeMap;
 
 /**
  * An internal class which represents the API versions supported by a particular node.
+ * 一个内部类，表示特定节点支持的API版本。
  */
 public class NodeApiVersions {
     // A map of the usable versions of each API, keyed by the ApiKeys instance

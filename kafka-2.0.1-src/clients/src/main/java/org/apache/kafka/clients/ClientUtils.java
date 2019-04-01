@@ -83,8 +83,9 @@ public final class ClientUtils {
      * @return configured ChannelBuilder based on the configs.
      */
     public static ChannelBuilder createChannelBuilder(AbstractConfig config) {
+        // 安全协议配置   SECURITY_PROTOCOL_CONFIG = security.protocol
         SecurityProtocol securityProtocol = SecurityProtocol.forName(config.getString(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
-        String clientSaslMechanism = config.getString(SaslConfigs.SASL_MECHANISM);
+        String clientSaslMechanism = config.getString(SaslConfigs.SASL_MECHANISM); //SASL_MECHANISM = sasl.mechanism
         return ChannelBuilders.clientChannelBuilder(securityProtocol, JaasContext.Type.CLIENT, config, null,
                 clientSaslMechanism, true);
     }

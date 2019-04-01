@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 /**
  * A network client for asynchronous request/response network i/o. This is an internal class used to implement the
  * user-facing producer and consumer clients.
+ * 异步请求/响应网络i / o的网络客户端。这是一个内部类，用于实现面向用户的生产者和消费者客户端。
  * <p>
  * This class is not thread-safe!
  */
@@ -392,7 +393,7 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Are we connected and ready and able to send more requests to the given connection?
-     *
+     *我们是否已连接并准备好并能够向给定连接发送更多请求？
      * @param node The node
      * @param now the current timestamp
      */
@@ -487,6 +488,7 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Do actual reads and writes to sockets.
+     * 对插槽进行实际读写操作。
      *
      * @param timeout The maximum amount of time to wait (in ms) for responses if there are none immediately,
      *                must be non-negative. The actual timeout will be the minimum of timeout, request timeout and
@@ -811,6 +813,7 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Record any newly completed connections
+     * 记录任何新完成的连接
      */
     private void handleConnections() {
         for (String node : this.selector.connected()) {
@@ -855,6 +858,7 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Initiate a connection to the given node
+     * 启动与给定节点的连接
      */
     private void initiateConnect(Node node, long now) {
         String nodeConnectionId = node.idString();
@@ -874,12 +878,14 @@ public class NetworkClient implements KafkaClient {
         }
     }
 
+
     class DefaultMetadataUpdater implements MetadataUpdater {
 
         /* the current cluster metadata */
         private final Metadata metadata;
 
         /* true iff there is a metadata request that has been sent and for which we have not yet received a response */
+        // 元数据获取进行中
         private boolean metadataFetchInProgress;
 
         DefaultMetadataUpdater(Metadata metadata) {
@@ -1067,6 +1073,7 @@ public class NetworkClient implements KafkaClient {
         return discoverBrokerVersions;
     }
 
+    // 正在发送中的请求
     static class InFlightRequest {
         final RequestHeader header;
         final String destination;

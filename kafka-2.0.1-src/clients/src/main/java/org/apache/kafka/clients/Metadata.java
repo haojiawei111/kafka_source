@@ -63,6 +63,7 @@ public final class Metadata implements Closeable {
     private long lastRefreshMs;
     private long lastSuccessfulRefreshMs;
     private AuthenticationException authenticationException;
+    // 封装的集群信息
     private Cluster cluster;
     private boolean needUpdate;
     /* Topics with expiry time */
@@ -79,17 +80,15 @@ public final class Metadata implements Closeable {
     }
 
     /**
-     * Create a new Metadata instance
-     * @param refreshBackoffMs The minimum amount of time that must expire between metadata refreshes to avoid busy
-     *        polling
-     * @param metadataExpireMs The maximum amount of time that metadata can be retained without refresh
-     * @param allowAutoTopicCreation If this and the broker config 'auto.create.topics.enable' are true, topics that
-     *                               don't exist will be created by the broker when a metadata request is sent
-     * @param topicExpiryEnabled If true, enable expiry of unused topics
-     * @param clusterResourceListeners List of ClusterResourceListeners which will receive metadata updates.
+     * 创建一个新的元数据实例
+     * @param refreshBackoffMs The minimum amount of time that must expire between metadata refreshes to avoid busy polling元数据刷新之间必须到期的最短时间，以避免繁忙轮询
+     * @param metadataExpireMs The maximum amount of time that metadata can be retained without refresh 无需刷新即可保留元数据的最长时间
+     * @param allowAutoTopicCreation If this and the broker config 'auto.create.topics.enable' are true, topics that don't exist will be created by the broker when a metadata request is sent
+     *                               如果broker配置'auto.create.topics.enable'为真，则在发送元数据请求时，代理将创建不存在的主题
+     * @param topicExpiryEnabled If true, enable expiry of unused topics如果为true，则启用未使用主题的到期时间
+     * @param clusterResourceListeners List of ClusterResourceListeners which will receive metadata updates.将接收元数据更新的ClusterResourceListeners列表。
      */
-    public Metadata(long refreshBackoffMs, long metadataExpireMs, boolean allowAutoTopicCreation,
-                    boolean topicExpiryEnabled, ClusterResourceListeners clusterResourceListeners) {
+    public Metadata(long refreshBackoffMs, long metadataExpireMs, boolean allowAutoTopicCreation,boolean topicExpiryEnabled, ClusterResourceListeners clusterResourceListeners) {
         this.refreshBackoffMs = refreshBackoffMs;
         this.metadataExpireMs = metadataExpireMs;
         this.allowAutoTopicCreation = allowAutoTopicCreation;
@@ -107,15 +106,14 @@ public final class Metadata implements Closeable {
     }
 
     /**
-     * Get the current cluster info without blocking
+     * 无阻塞地获取当前群集信息
      */
     public synchronized Cluster fetch() {
         return this.cluster;
     }
 
     /**
-     * Add the topic to maintain in the metadata. If topic expiry is enabled, expiry time
-     * will be reset on the next update.
+     * 添加要在元数据中维护的主题。如果启用了主题到期，则将在下次更新时重置到期时间*。
      */
     public synchronized void add(String topic) {
         Objects.requireNonNull(topic, "topic cannot be null");
@@ -126,7 +124,7 @@ public final class Metadata implements Closeable {
 
     /**
      * Return the next time when the current cluster info can be updated (i.e., backoff time has elapsed).
-     *
+     *当下一次可以更新当前群集信息时返回（即，退避时间已经过去）。
      * @param nowMs current time in ms
      * @return remaining time in ms till the cluster info can be updated again
      */
@@ -149,6 +147,7 @@ public final class Metadata implements Closeable {
 
     /**
      * Request an update of the current cluster metadata info, return the current version before the update
+     * 请求更新当前群集元数据信息，在更新之前返回当前版本
      */
     public synchronized int requestUpdate() {
         this.needUpdate = true;
@@ -166,6 +165,7 @@ public final class Metadata implements Closeable {
     /**
      * If any non-retriable authentication exceptions were encountered during
      * metadata update, clear and return the exception.
+     * 如果在*元数据更新期间遇到任何不可重试的身份验证异常，请清除并返回异常。
      */
     public synchronized AuthenticationException getAndClearAuthenticationException() {
         if (authenticationException != null) {
@@ -178,6 +178,7 @@ public final class Metadata implements Closeable {
 
     /**
      * Wait for metadata update until the current version is larger than the last version we know of
+     * 等待元数据更新，直到当前版本大于我们知道的最新版本
      */
     public synchronized void awaitUpdate(final int lastVersion, final long maxWaitMs) throws InterruptedException {
         if (maxWaitMs < 0)
@@ -204,6 +205,7 @@ public final class Metadata implements Closeable {
      * Replace the current set of topics maintained to the one provided.
      * If topic expiry is enabled, expiry time of the topics will be
      * reset on the next update.
+     * 将维护的当前主题集替换为提供的主题。 如果启用了主题到期，则主题的到期时间将在下次更新时重置。
      * @param topics
      */
     public synchronized void setTopics(Collection<String> topics) {
@@ -234,6 +236,7 @@ public final class Metadata implements Closeable {
     /**
      * Updates the cluster metadata. If topic expiry is enabled, expiry time
      * is set for topics if required and expired topics are removed from the metadata.
+     * 更新群集元数据。如果启用了主题到期，则在需要时为主题设置到期时间*，并从元数据中删除过期主题。
      *
      * @param newCluster the cluster containing metadata for topics with valid metadata
      * @param unavailableTopics topics which are non-existent or have one or more partitions whose
@@ -251,7 +254,7 @@ public final class Metadata implements Closeable {
         this.version += 1;
 
         if (topicExpiryEnabled) {
-            // Handle expiry of topics from the metadata refresh set.
+            // 处理元数据刷新集中主题的过期。
             for (Iterator<Map.Entry<String, Long>> it = topics.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, Long> entry = it.next();
                 long expireMs = entry.getValue();
@@ -265,6 +268,7 @@ public final class Metadata implements Closeable {
         }
 
         for (Listener listener: listeners)
+            // 便利向每个listener拿元数据更新
             listener.onMetadataUpdate(newCluster, unavailableTopics);
 
         String previousClusterId = cluster.clusterResource().clusterId();
@@ -278,7 +282,7 @@ public final class Metadata implements Closeable {
             this.cluster = newCluster;
         }
 
-        // The bootstrap cluster is guaranteed not to have any useful information
+        // The bootstrap cluster is guaranteed not to have any useful information保证引导群集没有任何有用的信息
         if (!newCluster.isBootstrapConfigured()) {
             String newClusterId = newCluster.clusterResource().clusterId();
             if (newClusterId == null ? previousClusterId != null : !newClusterId.equals(previousClusterId))
@@ -339,6 +343,7 @@ public final class Metadata implements Closeable {
 
     /**
      * Add a Metadata listener that gets notified of metadata updates
+     * 添加元数据侦听器，以获取元数据更新的通知
      */
     public synchronized void addListener(Listener listener) {
         this.listeners.add(listener);
@@ -371,21 +376,21 @@ public final class Metadata implements Closeable {
     }
 
     /**
-     * MetadataUpdate Listener
+     * MetadataUpdate ListenerMetadataUpdate侦听器
      */
     public interface Listener {
         /**
-         * Callback invoked on metadata update.
+         * Callback invoked on metadata update.在元数据更新时调用回调。
          *
-         * @param cluster the cluster containing metadata for topics with valid metadata
-         * @param unavailableTopics topics which are non-existent or have one or more partitions whose
-         *        leader is not known
+         * @param cluster the cluster containing metadata for topics with valid metadata包含具有有效元数据的主题的元数据的集群
+         * @param unavailableTopics topics which are non-existent or have one or more partitions whose leader is not known
+         *                          不存在的主题或具有一个或多个其领导者未知的分区的主题
          */
         void onMetadataUpdate(Cluster cluster, Set<String> unavailableTopics);
     }
 
     private synchronized void requestUpdateForNewTopics() {
-        // Override the timestamp of last refresh to let immediate update.
+        // 覆盖上次刷新的时间戳以立即更新。
         this.lastRefreshMs = 0;
         requestUpdate();
     }
