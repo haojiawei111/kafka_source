@@ -190,10 +190,10 @@ class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging 
   }
 
   /**
-   * Clear all cached values. This is used to clear state on broker shutdown to avoid
-   * exceptions in tests when broker is restarted. These fields are re-initialized when
-   * broker starts up.
-   */
+    * Clear all cached values. This is used to clear state on broker shutdown to avoid
+    * exceptions in tests when broker is restarted. These fields are re-initialized when
+    * broker starts up.
+    */
   private[server] def clear(): Unit = {
     dynamicBrokerConfigs.clear()
     dynamicDefaultConfigs.clear()
@@ -266,7 +266,7 @@ class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging 
   }
 
   private def maybeCreatePasswordEncoder(secret: Option[Password]): Option[PasswordEncoder] = {
-   secret.map { secret =>
+    secret.map { secret =>
       new PasswordEncoder(secret,
         kafkaConfig.passwordEncoderKeyFactoryAlgorithm,
         kafkaConfig.passwordEncoderCipherAlgorithm,
@@ -502,9 +502,6 @@ class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging 
   }
 }
 
-
-
-
 trait BrokerReconfigurable {
 
   def reconfigurableConfigs: Set[String]
@@ -514,7 +511,6 @@ trait BrokerReconfigurable {
   def reconfigure(oldConfig: KafkaConfig, newConfig: KafkaConfig): Unit
 }
 
-
 object DynamicLogConfig {
   // Exclude message.format.version for now since we need to check that the version
   // is supported on all brokers in the cluster.
@@ -523,8 +519,6 @@ object DynamicLogConfig {
   val ReconfigurableConfigs = LogConfig.TopicConfigSynonyms.values.toSet -- ExcludedConfigs
   val KafkaConfigToLogConfigName = LogConfig.TopicConfigSynonyms.map { case (k, v) => (v, k) }
 }
-
-
 class DynamicLogConfig(logManager: LogManager, server: KafkaServer) extends Reconfigurable with Logging {
 
   override def configure(configs: util.Map[String, _]): Unit = {}
@@ -567,8 +561,6 @@ class DynamicLogConfig(logManager: LogManager, server: KafkaServer) extends Reco
   }
 }
 
-
-
 object DynamicThreadPool {
   val ReconfigurableConfigs = Set(
     KafkaConfig.NumIoThreadsProp,
@@ -577,8 +569,6 @@ object DynamicThreadPool {
     KafkaConfig.NumRecoveryThreadsPerDataDirProp,
     KafkaConfig.BackgroundThreadsProp)
 }
-
-
 
 class DynamicThreadPool(server: KafkaServer) extends BrokerReconfigurable {
 
@@ -626,7 +616,6 @@ class DynamicThreadPool(server: KafkaServer) extends BrokerReconfigurable {
     }
   }
 }
-
 
 class DynamicMetricsReporters(brokerId: Int, server: KafkaServer) extends Reconfigurable {
 
@@ -703,8 +692,6 @@ class DynamicMetricsReporters(brokerId: Int, server: KafkaServer) extends Reconf
     configs.get(KafkaConfig.MetricReporterClassesProp).asInstanceOf[util.List[String]].asScala
   }
 }
-
-
 object DynamicListenerConfig {
 
   val ReconfigurableConfigs = Set(
@@ -749,7 +736,6 @@ object DynamicListenerConfig {
   )
 }
 
-
 class DynamicClientQuotaCallback(brokerId: Int, server: KafkaServer) extends Reconfigurable {
 
   override def configure(configs: util.Map[String, _]): Unit = {}
@@ -780,7 +766,6 @@ class DynamicClientQuotaCallback(brokerId: Int, server: KafkaServer) extends Rec
     }
   }
 }
-
 
 class DynamicListenerConfig(server: KafkaServer) extends BrokerReconfigurable with Logging {
 
@@ -841,4 +826,3 @@ class DynamicListenerConfig(server: KafkaServer) extends BrokerReconfigurable wi
     listeners.map(e => (e.listenerName, e)).toMap
 
 }
-

@@ -28,7 +28,7 @@ import scala.collection.JavaConverters._
   *
   * `import kafka.utils.Implicits._`
   */
-
+object Implicits {
   /**
    * The java.util.Properties.putAll override introduced in Java 9 is seen as an overload by the
    * Scala compiler causing ambiguity errors in some cases. The `++=` methods introduced via
@@ -36,6 +36,7 @@ import scala.collection.JavaConverters._
    *
    * See https://github.com/scala/bug/issues/10418 for more details.
    */
+
   implicit class PropertiesOps(properties: Properties) {
 
     def ++=(props: Properties): Unit =
@@ -44,5 +45,5 @@ import scala.collection.JavaConverters._
     def ++=(map: collection.Map[String, AnyRef]): Unit =
       (properties: util.Hashtable[AnyRef, AnyRef]).putAll(map.asJava)
 
-
+  }
 }

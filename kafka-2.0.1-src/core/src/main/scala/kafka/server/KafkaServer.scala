@@ -99,7 +99,7 @@ object KafkaServer {
  * Represents the lifecycle of a single Kafka broker. Handles all functionality required
  * to start up and shutdown a single Kafka node.
  */
-class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNamePrefix: Option[String] = None,
+class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNamePrefix: Option[String] = None,
                   kafkaMetricsReporters: Seq[KafkaMetricsReporter] = List()) extends Logging with KafkaMetricsGroup {
   private val startupComplete = new AtomicBoolean(false)
   private val isShuttingDown = new AtomicBoolean(false)
@@ -460,8 +460,7 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
           config.interBrokerListenerName,
           config.saslMechanismInterBrokerProtocol,
           config.saslInterBrokerHandshakeRequestEnable)
-        val selector = new Selector(
-          NetworkReceive.UNLIMITED,
+        val selector = new Selector(NetworkReceive.UNLIMITED,
           config.connectionsMaxIdleMs,
           metrics,
           time,
@@ -469,8 +468,8 @@ class KafkaService(val config: KafkaConfig, time: Time = Time.SYSTEM, threadName
           Map.empty.asJava,
           false,
           channelBuilder,
-          logContext
-        )
+          logContext)
+
         new NetworkClient(
           selector,
           metadataUpdater,
