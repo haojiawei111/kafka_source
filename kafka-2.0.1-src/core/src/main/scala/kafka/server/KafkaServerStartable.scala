@@ -27,6 +27,7 @@ import kafka.utils.{Exit, Logging, VerifiableProperties}
   */
 object KafkaServerStartable {
   def fromProps(serverProps: Properties) = {
+    // VerifiableProperties 校验输入参数 把Properties类包装了一层
     val reporters = KafkaMetricsReporter.startReporters(new VerifiableProperties(serverProps))
     //KafkaConfig.fromProps创建KafkaConfig对象，初始化配置参数
     new KafkaServerStartable(KafkaConfig.fromProps(serverProps, false), reporters)

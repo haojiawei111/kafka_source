@@ -34,8 +34,9 @@ public final class JaasUtils {
     private JaasUtils() {}
 
     public static boolean isZkSecurityEnabled() {
-        boolean zkSaslEnabled = Boolean.parseBoolean(System.getProperty(ZK_SASL_CLIENT, "true"));
-        String zkLoginContextName = System.getProperty(ZK_LOGIN_CONTEXT_NAME_KEY, "Client");
+
+        boolean zkSaslEnabled = Boolean.parseBoolean(System.getProperty(ZK_SASL_CLIENT, "true")); //zookeeper.sasl.client
+        String zkLoginContextName = System.getProperty(ZK_LOGIN_CONTEXT_NAME_KEY, "Client");  //zookeeper.sasl.clientconfig
 
         boolean isSecurityEnabled;
         try {
@@ -44,7 +45,7 @@ public final class JaasUtils {
         } catch (Exception e) {
             throw new KafkaException("Exception while loading Zookeeper JAAS login context '" + zkLoginContextName + "'", e);
         }
-        if (isSecurityEnabled && !zkSaslEnabled) {
+        if (isSecurityEnabled && !zkSaslEnabled) {//isSecurityEnabled==true zkSaslEnabled=false的时候报错
             LOG.error("JAAS configuration is present, but system property " +
                         ZK_SASL_CLIENT + " is set to false, which disables " +
                         "SASL in the ZooKeeper client");

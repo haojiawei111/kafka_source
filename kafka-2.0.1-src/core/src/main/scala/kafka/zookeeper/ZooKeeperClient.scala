@@ -37,7 +37,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.Set
 
 /**
-  * 继承自KafkaMetricsGroup
+  * 这个是kafka里面最底层的zk类，KafkaZkClient是它的包装类，提供了一些kafka集群通用的功能
   *
  * A ZooKeeper client that encourages pipelined requests.
  *
@@ -89,7 +89,7 @@ class ZooKeeperClient(connectString: String,
 
   info(s"Initializing a new session to $connectString.")
   // Fail-fast if there's an error during construction (so don't call initialize, which retries forever)
-  // 如果在构造期间出现错误，则快速失败（因此不要调用initialize，永远重试）
+  // 如果在构造期间出现错误，则快速失败（因此不要调用initialize，永远重试）  //这里用zookeeper的包连接zookeeper集群
   @volatile private var zooKeeper = new ZooKeeper(connectString, sessionTimeoutMs, ZooKeeperClientWatcher)
 
   newGauge("SessionState", new Gauge[String] {
@@ -143,6 +143,7 @@ class ZooKeeperClient(connectString: String,
       //返回空集合
       Seq.empty
     else {
+
       //同步工具类,它允许一个或多个线程一直等待,直到其他线程的操作执行完后再执行
       val countDownLatch = new CountDownLatch(requests.size)
       val responseQueue = new ArrayBlockingQueue[Req#Response](requests.size)
@@ -170,6 +171,7 @@ class ZooKeeperClient(connectString: String,
     }
   }
 
+  // 这里的最底层的发送逻辑，根据请求类型分别执行不同的zookeeperClient API，注意每个发送请求都会注册回调函数，回调接口是AsyncCallback
   // Visibility to override for testing 覆盖测试的可见性
   private[zookeeper] def send[Req <: AsyncRequest](request: Req)(processResponse: Req#Response => Unit): Unit = {
     // Safe to cast as we always create a response of the right type
@@ -180,50 +182,62 @@ class ZooKeeperClient(connectString: String,
     //zookeeper发送request
     val sendTimeMs = time.hiResClockMs()
     request match {
+
       case ExistsRequest(path, ctx) =>
         zooKeeper.exists(path, shouldWatch(request), new StatCallback {
           override def processResult(rc: Int, path: String, ctx: Any, stat: Stat): Unit =
             callback(ExistsResponse(Code.get(rc), path, Option(ctx), stat, responseMetadata(sendTimeMs)))
         }, ctx.orNull)
+
       case GetDataRequest(path, ctx) =>
         zooKeeper.getData(path, shouldWatch(request), new DataCallback {
           override def processResult(rc: Int, path: String, ctx: Any, data: Array[Byte], stat: Stat): Unit =
             callback(GetDataResponse(Code.get(rc), path, Option(ctx), data, stat, responseMetadata(sendTimeMs)))
         }, ctx.orNull)
+
       case GetChildrenRequest(path, ctx) =>
         zooKeeper.getChildren(path, shouldWatch(request), new Children2Callback {
           override def processResult(rc: Int, path: String, ctx: Any, children: java.util.List[String], stat: Stat): Unit =
             callback(GetChildrenResponse(Code.get(rc), path, Option(ctx),
               Option(children).map(_.asScala).getOrElse(Seq.empty), stat, responseMetadata(sendTimeMs)))
         }, ctx.orNull)
+
       case CreateRequest(path, data, acl, createMode, ctx) =>
         zooKeeper.create(path, data, acl.asJava, createMode, new StringCallback {
           override def processResult(rc: Int, path: String, ctx: Any, name: String): Unit =
             callback(CreateResponse(Code.get(rc), path, Option(ctx), name, responseMetadata(sendTimeMs)))
         }, ctx.orNull)
+
       case SetDataRequest(path, data, version, ctx) =>
         zooKeeper.setData(path, data, version, new StatCallback {
           override def processResult(rc: Int, path: String, ctx: Any, stat: Stat): Unit =
             callback(SetDataResponse(Code.get(rc), path, Option(ctx), stat, responseMetadata(sendTimeMs)))
         }, ctx.orNull)
+
       case DeleteRequest(path, version, ctx) =>
         zooKeeper.delete(path, version, new VoidCallback {
           override def processResult(rc: Int, path: String, ctx: Any): Unit =
             callback(DeleteResponse(Code.get(rc), path, Option(ctx), responseMetadata(sendTimeMs)))
         }, ctx.orNull)
+
       case GetAclRequest(path, ctx) =>
         zooKeeper.getACL(path, null, new ACLCallback {
           override def processResult(rc: Int, path: String, ctx: Any, acl: java.util.List[ACL], stat: Stat): Unit = {
             callback(GetAclResponse(Code.get(rc), path, Option(ctx), Option(acl).map(_.asScala).getOrElse(Seq.empty),
               stat, responseMetadata(sendTimeMs)))
         }}, ctx.orNull)
+
       case SetAclRequest(path, acl, version, ctx) =>
         zooKeeper.setACL(path, acl.asJava, version, new StatCallback {
           override def processResult(rc: Int, path: String, ctx: Any, stat: Stat): Unit =
             callback(SetAclResponse(Code.get(rc), path, Option(ctx), stat, responseMetadata(sendTimeMs)))
         }, ctx.orNull)
+
     }
   }
+
+
+
 
   /**
    * Wait indefinitely until the underlying zookeeper client to reaches the CONNECTED state.
@@ -405,10 +419,11 @@ class ZooKeeperClient(connectString: String,
   }
 
   // Visibility for testing
+  //zookeeper会话到期处理程序
   private[zookeeper] def scheduleSessionExpiryHandler(): Unit = {
     expiryScheduler.scheduleOnce("zk-session-expired", () => {
       info("Session expired.")
-      reinitialize()
+      reinitialize() //从新初始化
     })
   }
 
@@ -544,14 +559,21 @@ case class ResponseMetadata(sendTimeMs: Long, receivedTimeMs: Long) {
 }
 
 case class CreateResponse(resultCode: Code, path: String, ctx: Option[Any], name: String, metadata: ResponseMetadata) extends AsyncResponse
+
 case class DeleteResponse(resultCode: Code, path: String, ctx: Option[Any], metadata: ResponseMetadata) extends AsyncResponse
+
 case class ExistsResponse(resultCode: Code, path: String, ctx: Option[Any], stat: Stat, metadata: ResponseMetadata) extends AsyncResponse
+
 case class GetDataResponse(resultCode: Code, path: String, ctx: Option[Any], data: Array[Byte], stat: Stat,
                            metadata: ResponseMetadata) extends AsyncResponse
+
 case class SetDataResponse(resultCode: Code, path: String, ctx: Option[Any], stat: Stat, metadata: ResponseMetadata) extends AsyncResponse
+
 case class GetAclResponse(resultCode: Code, path: String, ctx: Option[Any], acl: Seq[ACL], stat: Stat,
                           metadata: ResponseMetadata) extends AsyncResponse
+
 case class SetAclResponse(resultCode: Code, path: String, ctx: Option[Any], stat: Stat, metadata: ResponseMetadata) extends AsyncResponse
+
 case class GetChildrenResponse(resultCode: Code, path: String, ctx: Option[Any], children: Seq[String], stat: Stat,
                                metadata: ResponseMetadata) extends AsyncResponse
 

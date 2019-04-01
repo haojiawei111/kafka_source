@@ -19,6 +19,7 @@ package kafka.log
 
 import java.io._
 import java.nio.file.Files
+import java.util
 import java.util.concurrent._
 
 import com.yammer.metrics.core.Gauge
@@ -45,12 +46,14 @@ object LogManager {
   def apply(config: KafkaConfig,initialOfflineDirs: Seq[String],zkClient: KafkaZkClient,brokerState: BrokerState,
             kafkaScheduler: KafkaScheduler,time: Time,brokerTopicStats: BrokerTopicStats,logDirFailureChannel: LogDirFailureChannel): LogManager = {
 
-    val defaultProps = KafkaServer.copyKafkaConfigToLog(config)
+    val defaultProps : util.Map[String, Object] = KafkaServer.copyKafkaConfigToLog(config)
 
     val defaultLogConfig = LogConfig(defaultProps)
 
     // read the log configurations from zookeeper   从zookeeper中读取日志配置
+    //   zkClient.getAllTopicsInCluster 从zookeeper中拿到左右的topic
     val (topicConfigs, failed) = zkClient.getLogConfigs(zkClient.getAllTopicsInCluster, defaultProps)
+
     if (!failed.isEmpty) throw failed.head._2
 
     // 清理线程的相关配置

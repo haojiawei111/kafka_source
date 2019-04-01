@@ -53,10 +53,9 @@ import scala.collection.JavaConverters._
 import scala.collection.{Map, Seq, mutable}
 
 object KafkaServer {
-  // Copy the subset of properties that are relevant to Logs
-  // I'm listing out individual properties here since the names are slightly different in each Config class...
+
   // 复制与Logs相关的属性子集
-  // 我在这里列出了各个属性，因为每个Config类中的名称略有不同......
+  // 这里列出了各个属性，因为每个Config类中的名称略有不同......
   private[kafka] def copyKafkaConfigToLog(kafkaConfig: KafkaConfig): java.util.Map[String, Object] = {
     val logProps: util.HashMap[String, Object] = new util.HashMap[String, Object]()
     logProps.put(LogConfig.SegmentBytesProp, kafkaConfig.logSegmentBytes)
@@ -93,11 +92,11 @@ object KafkaServer {
   }
 
   val MIN_INCREMENTAL_FETCH_SESSION_EVICTION_MS: Long = 120000
+
 }
 
 /**
- * Represents the lifecycle of a single Kafka broker. Handles all functionality required
- * to start up and shutdown a single Kafka node.
+  * 表示单个Kafka代理的生命周期。处理启动和关闭单个Kafka节点所需的所有功能。
  */
 class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNamePrefix: Option[String] = None,
                   kafkaMetricsReporters: Seq[KafkaMetricsReporter] = List()) extends Logging with KafkaMetricsGroup {
@@ -146,6 +145,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
   private var _zkClient: KafkaZkClient = null
   val correlationId: AtomicInteger = new AtomicInteger(0)
   val brokerMetaPropsFile = "meta.properties"
+  //log.dirs   这里没有创建meta.properties
   val brokerMetadataCheckpoints = config.logDirs.map(logDir => (logDir, new BrokerMetadataCheckpoint(new File(logDir + File.separator + brokerMetaPropsFile)))).toMap
 
   private var _clusterId: String = null
@@ -196,21 +196,22 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
       if (startupComplete.get)
         return
 
-      //compareAndSet 如果当前值 == 预期值，则以原子方式将该值设置为给定的更新值
+      //如果isStartingUp的当前值 == 预期值，则以原子方式将该值设置为给定的更新值
       val canStartup = isStartingUp.compareAndSet(false, true)
       if (canStartup) {
         //设置brokerState的状态为Starting的状态.
         brokerState.newState(Starting)
 
         /* setup zookeeper 初始化zookeeper 这里的time是系统时间，不是连接超时时间 */
+        // 这一步主要是在zookeeper中创建持久类型的节点，同时把zookeeper客户端对象赋值给this._zkClient对象
         initZkClient(time)
 
-        /* Get or create cluster_id 从zk中得到集群ID或者创建集群ID，并注册到zookeeper中 */
+        /* 从zk中得到集群ID或者创建集群ID，并注册到zookeeper中 */
         _clusterId = getOrGenerateClusterId(zkClient)
         info(s"Cluster ID = $clusterId")
 
         /* generate brokerId 从配置文件中得到broker ID*/
-        val (brokerId, initialOfflineDirs) = getBrokerIdAndOfflineDirs
+        val (brokerId, initialOfflineDirs) = getBrokerIdAndOfflineDirs  //读meta.properties有IO异常就会放到initialOfflineDirs里面来
 
         config.brokerId = brokerId
 
@@ -220,6 +221,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         // initialize dynamic broker configs from ZooKeeper. Any updates made after this will be
         // applied after DynamicConfigManager starts.  从kafka初始化broker动态配置，在DynamicConfigManager启动之后进行的任何更新都将被应用
         config.dynamicConfig.initialize(zkClient)
+
 
         /* start scheduler 开启调度线程 backgroundThreads为后台线程数background.threads*/
         //启动kafka的调度器,这个KafkaScheduler的实例生成时需要得到background.threads配置的值,默认是10个,用于配置后台线程池的个数
@@ -238,17 +240,20 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         metrics = new Metrics(metricConfig, reporters, time, true)
 
 
-        /* register broker metrics 向监控注册topic信息 */
+        /*  向监控注册topic信息 */
         _brokerTopicStats = new BrokerTopicStats
 
 
         // 配额管理
         quotaManagers = QuotaFactory.instantiate(config, metrics, time, threadNamePrefix.getOrElse(""))
+
+        //通知群集侦听器  这里没看懂。不重要
         notifyClusterListeners(kafkaMetricsReporters ++ metrics.reporters.asScala)
 
 
-        // 不可用的log Dir
+        // 不可用的log Dir,有两个属性，一个是map，一个是Queue，这里只做了初始化，
         logDirFailureChannel = new LogDirFailureChannel(config.logDirs.size)
+
 
         /* start log manager 初始化创建并启动LogManager的实例 */
         logManager = LogManager(config, initialOfflineDirs, zkClient, brokerState, kafkaScheduler, time, brokerTopicStats, logDirFailureChannel)
@@ -322,7 +327,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
 
         Mx4jLoader.maybeLoad()
 
-        /* Add all reconfigurables for config change notification before starting config handlers */
+        /* Add all reconfigurables for config change notification before starting config handlers 在启动配置处理程序之前，为配置更改通知添加所有可重新配置*/
         config.dynamicConfig.addReconfigurables(this)
 
 
@@ -350,7 +355,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     catch {
       case e: Throwable =>
         fatal("Fatal error during KafkaServer startup. Prepare to shutdown", e)
-        //启动失败，isStartingUp设置为false，这是钩子函数还没有注册，手动执行shutdown方法
+        //启动失败，isStartingUp设置为false，这时钩子函数还没有注册，手动执行shutdown方法
         isStartingUp.set(false)
         shutdown()
         throw e
@@ -376,8 +381,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     info(s"Connecting to zookeeper on ${config.zkConnect}")
 
     def createZkClient(zkConnect: String, isSecure: Boolean) =
-      KafkaZkClient(zkConnect, isSecure, config.zkSessionTimeoutMs, config.zkConnectionTimeoutMs,
-        config.zkMaxInFlightRequests, time)
+      KafkaZkClient(zkConnect, isSecure, config.zkSessionTimeoutMs, config.zkConnectionTimeoutMs,config.zkMaxInFlightRequests, time)
 
     val chrootIndex = config.zkConnect.indexOf("/")
     // hostname1:port1,hostname2:port2,hostname3:port3/chroot/path
@@ -386,23 +390,25 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
       if (chrootIndex > 0) Some(config.zkConnect.substring(chrootIndex))
       else None
     }
-    //zookeeper可以设置Acl进行访问控制
+    //zookeeper可以设置Acl进行访问控制        zookeeper.set.acl  默认是关闭
     val secureAclsEnabled = config.zkEnableSecureAcls
+    // isZkSecurityEnabled是从环境变量中zookeeper.sasl.client和zookeeper.sasl.clientconfig这两个值判断的
     val isZkSecurityEnabled = JaasUtils.isZkSecurityEnabled()
 
-    if (secureAclsEnabled && !isZkSecurityEnabled)
-      throw new java.lang.SecurityException(s"${KafkaConfig.ZkEnableSecureAclsProp} is true, but the verification of the JAAS login file failed.")
+    if (secureAclsEnabled && !isZkSecurityEnabled) //如果secureAclsEnabled=true isZkSecurityEnabled=false则报错
+      throw new java.lang.SecurityException(s"${KafkaConfig.ZkEnableSecureAclsProp} is true, but the verification of the JAAS login file failed.但是JAAS登录文件的验证失败了。")
 
-    // 连接zk注册chroot路径
+    // 连接zk创建chroot路径
     chrootOption.foreach { chroot =>
-      val zkConnForChrootCreation = config.zkConnect.substring(0, chrootIndex)
+      val zkConnForChrootCreation = config.zkConnect.substring(0, chrootIndex)//连接zookeeper地址
       val zkClient = createZkClient(zkConnForChrootCreation, secureAclsEnabled)
       zkClient.makeSurePersistentPathExists(chroot)
       info(s"Created zookeeper path $chroot")
       zkClient.close()
     }
 
-    _zkClient = createZkClient(config.zkConnect, secureAclsEnabled)
+    _zkClient = createZkClient(config.zkConnect, secureAclsEnabled)//这里创建的是KafkaZkClient类
+    // 这里方法只会创建kafak在zookeeper的持久化节点
     _zkClient.createTopLevelPaths()
   }
 
@@ -412,6 +418,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     * @return
     */
   private def getOrGenerateClusterId(zkClient: KafkaZkClient): String = {
+    //如果zkClient.getClusterId返回None就执行getOrElse
     zkClient.getClusterId.getOrElse(zkClient.createOrGetClusterId(CoreUtils.generateUuidAsBase64))
   }
 
@@ -460,7 +467,8 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
           config.interBrokerListenerName,
           config.saslMechanismInterBrokerProtocol,
           config.saslInterBrokerHandshakeRequestEnable)
-        val selector = new Selector(NetworkReceive.UNLIMITED,
+        val selector = new Selector(
+          NetworkReceive.UNLIMITED,
           config.connectionsMaxIdleMs,
           metrics,
           time,
@@ -654,6 +662,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
           CoreUtils.swallow(brokerTopicStats.close(), this)
 
         // Clear all reconfigurable instances stored in DynamicBrokerConfig
+        // 清除存储在DynamicBrokerConfig中的所有可重新配置的实例
         config.dynamicConfig.clear()
 
         brokerState.newState(NotRunning)
@@ -702,16 +711,18 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
     * @return A 2-tuple containing the brokerId and a sequence of offline log directories.包含brokerId和一系列脱机日志目录的2元组。
     */
   private def getBrokerIdAndOfflineDirs: (Int, Seq[String]) = {
-    var brokerId = config.brokerId
+    var brokerId = config.brokerId //从配置文件中读取brokerId
     val brokerIdSet = mutable.HashSet[Int]()
     val offlineDirs = mutable.ArrayBuffer.empty[String]
 
     //这里log文件可以设置多个 配置log路径log.dirs
     for (logDir <- config.logDirs) {
       try {
+        //brokerMetadataCheckpoints是map，
         val brokerMetadataOpt = brokerMetadataCheckpoints(logDir).read()
         //这里brokerMetadata管理broker元数据，然后把brokerId添加进brokerIdSet中进行管理
         brokerMetadataOpt.foreach { brokerMetadata =>
+          //这里如果第一次启动，则是空。如果不是第一次则size=1.如果大于1则可能的多个broker的数据
           brokerIdSet.add(brokerMetadata.brokerId)
         }
       } catch {
@@ -721,11 +732,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
       }
     }
 
-    if (brokerIdSet.size > 1)
+    if (brokerIdSet.size > 1) //一个目录中有多个broker数据的情况
       throw new InconsistentBrokerIdException(
         s"Failed to match broker.id across log.dirs. This could happen if multiple brokers shared a log directory (log.dirs) " +
         s"or partial data was manually copied from another broker. Found $brokerIdSet")
-    else if (brokerId >= 0 && brokerIdSet.size == 1 && brokerIdSet.last != brokerId)
+    else if (brokerId >= 0 && brokerIdSet.size == 1 && brokerIdSet.last != brokerId)//配置问价那种配置的和数据目录中的ID不一样，这不是这个broker的数据
       throw new InconsistentBrokerIdException(
         s"Configured broker.id $brokerId doesn't match stored broker.id ${brokerIdSet.last} in meta.properties. " +
         s"If you moved your data, make sure your configured broker.id matches. " +
@@ -733,7 +744,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
       //config.brokerIdGenerationEnable  brokerId自动生成
     else if (brokerIdSet.isEmpty && brokerId < 0 && config.brokerIdGenerationEnable) // 从Zookeeper生成一个新的brokerId
       brokerId = generateBrokerId
-    else if (brokerIdSet.size == 1) // 从meta.properties中选择broker.id
+    else if (brokerIdSet.size == 1) // 从meta.properties中拿到broker.id
       brokerId = brokerIdSet.last
 
 

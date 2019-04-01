@@ -36,6 +36,7 @@ public class ClusterResourceListeners {
      * @param candidate Object which might implement {@link ClusterResourceListener}
      */
     public void maybeAdd(Object candidate) {
+        // 这里只有candidate是ClusterResourceListener子类才能加入
         if (candidate instanceof ClusterResourceListener) {
             clusterResourceListeners.add((ClusterResourceListener) candidate);
         }

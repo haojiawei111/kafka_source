@@ -61,9 +61,11 @@ object KafkaMetricsReporter {
     ReporterStarted synchronized {
       if (!ReporterStarted.get()) {
         reporters = ArrayBuffer[KafkaMetricsReporter]()
+
         val metricsConfig = new KafkaMetricsConfig(verifiableProps)
-        if(metricsConfig.reporters.nonEmpty) {
-          metricsConfig.reporters.foreach(reporterType => {
+
+        if(metricsConfig.reporters.nonEmpty) {//如果不是空
+          metricsConfig.reporters.foreach(reporterType => {//这里遍历出reporterType，逐一初始化并添加到reporters列表中
             val reporter = CoreUtils.createObject[KafkaMetricsReporter](reporterType)
             reporter.init(verifiableProps)
             reporters += reporter

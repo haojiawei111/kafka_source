@@ -58,6 +58,7 @@ class BrokerMetadataCheckpoint(val file: File) extends Logging {
 
   // 读取meta.properties文件
   def read(): Option[BrokerMetadata] = {
+    // 删除已经存在的meta.properties.tmp
     Files.deleteIfExists(new File(file + ".tmp").toPath()) // try to delete any existing temp files for cleanliness
 
     lock synchronized {
@@ -73,6 +74,7 @@ class BrokerMetadataCheckpoint(val file: File) extends Logging {
         }
       } catch {
         case _: FileNotFoundException =>
+          //第一次启动会报错，没有meta.properties文件
           warn("No meta.properties file under dir %s".format(file.getAbsolutePath()))
           None
         case e1: Exception =>

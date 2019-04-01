@@ -200,6 +200,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    *         2. Exceptions corresponding to failed log config lookups.
    */
   def getLogConfigs(topics: Seq[String], config: java.util.Map[String, AnyRef]):(Map[String, LogConfig], Map[String, Exception]) = {
+
     val logConfigs = mutable.Map.empty[String, LogConfig]
     val failed = mutable.Map.empty[String, Exception]
     val configResponses = try {
@@ -222,6 +223,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
         case _ => failed.put(topic, configResponse.resultException.get)
       }
     }
+
     (logConfigs.toMap, failed.toMap)
   }
 
@@ -232,6 +234,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * @return The successfully gathered log configs
    */
   def getEntityConfigs(rootEntityType: String, sanitizedEntityName: String): Properties = {
+    println(ConfigEntityZNode.path(rootEntityType, sanitizedEntityName))
     val getDataRequest = GetDataRequest(ConfigEntityZNode.path(rootEntityType, sanitizedEntityName))
     val getDataResponse = retryRequestUntilConnected(getDataRequest)
 
@@ -1321,11 +1324,11 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   }
 
   /**
-    * Get the cluster id.
-    * @return optional cluster id in String.
+    * 获取群集ID。
+    * @return optional 返回集群ID的字符串
     */
   def getClusterId: Option[String] = {
-    val getDataRequest = GetDataRequest(ClusterIdZNode.path)
+    val getDataRequest = GetDataRequest(ClusterIdZNode.path) //zookeeper中的路径是/cluster/id
     val getDataResponse = retryRequestUntilConnected(getDataRequest)
     getDataResponse.resultCode match {
       case Code.OK => Some(ClusterIdZNode.fromJson(getDataResponse.data))
@@ -1369,7 +1372,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   }
 
   /**
-    * 第一次连接zookeeper，创建顶级目录
+    * 连接zookeeper，确保存在持久化的路径
     * Pre-create top level paths in ZK if needed.
     */
   def createTopLevelPaths(): Unit = {
@@ -1386,6 +1389,8 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
 //      /config/clients
 //      /config/users
 //      /config/brokers
+//    ZkData.PersistentZkPaths.foreach(println(_))
+
     ZkData.PersistentZkPaths.foreach(makeSurePersistentPathExists(_))
    }
 
@@ -1450,9 +1455,9 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
       path.substring(0, indexOfLastSlash)
     }
 
+    // 在zookeeper中创建节点
     def createRecursive0(path: String): Unit = {
-      // 创建持久性的节点
-      val createRequest = CreateRequest(path, null, acls(path), CreateMode.PERSISTENT)
+      val createRequest = CreateRequest(path, null, acls(path), CreateMode.PERSISTENT)// 创建持久性的节点
       var createResponse = retryRequestUntilConnected(createRequest)
       //Code.NONODE 节点不存在
       if (createResponse.resultCode == Code.NONODE) {
@@ -1466,17 +1471,17 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
       }
     }
 
-    val createRequest = CreateRequest(path, data, acls(path), CreateMode.PERSISTENT)
+    val createRequest = CreateRequest(path, data, acls(path), CreateMode.PERSISTENT)//CreateMode.PERSISTENT 创建的是持久化节点
     var createResponse = retryRequestUntilConnected(createRequest)
 
-    if (throwIfPathExists && createResponse.resultCode == Code.NODEEXISTS) {
+    if (throwIfPathExists && createResponse.resultCode == Code.NODEEXISTS) {//这个节点已经存在并且配置的节点存在就抛异常
       createResponse.maybeThrow
-    } else if (createResponse.resultCode == Code.NONODE) {
+    } else if (createResponse.resultCode == Code.NONODE) {//这个节点不存在
       createRecursive0(parentPath(path))
       createResponse = retryRequestUntilConnected(createRequest)
       if (throwIfPathExists || createResponse.resultCode != Code.NODEEXISTS)
         createResponse.maybeThrow
-    } else if (createResponse.resultCode != Code.NODEEXISTS)
+    } else if (createResponse.resultCode != Code.NODEEXISTS)//这个节点已经存在
       createResponse.maybeThrow
 
   }
@@ -1511,6 +1516,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
     retryRequestsUntilConnected(Seq(request)).head
   }
 
+  // 这里是zookeeper客户端往集群发送请求的具体逻辑
   private def retryRequestsUntilConnected[Req <: AsyncRequest](requests: Seq[Req]): Seq[Req#Response] = {
     val remainingRequests = ArrayBuffer(requests: _*)
     val responses = new ArrayBuffer[Req#Response]

@@ -210,9 +210,12 @@ object CoreUtils extends Logging {
 
   /**
    * Create an instance of the class with the given class name
+    * 使用给定的类名创建类的实例
    */
   def createObject[T <: AnyRef](className: String, args: AnyRef*): T = {
     val klass = Class.forName(className, true, Utils.getContextOrKafkaClassLoader()).asInstanceOf[Class[T]]
+
+    // 通过反射拿到实现类
     val constructor = klass.getConstructor(args.map(_.getClass): _*)
     constructor.newInstance(args: _*)
   }

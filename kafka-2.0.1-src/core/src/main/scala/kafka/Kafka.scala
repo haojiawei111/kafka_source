@@ -59,6 +59,7 @@ object Kafka extends Logging {
   def main(args: Array[String]): Unit = {
     try {
       val serverProps: Properties = getPropsFromArgs(args)
+      // 这里主要执行KafkaServer的实例初始化工作，new出了KafkaServer类的实例
       val kafkaServerStartable = KafkaServerStartable.fromProps(serverProps)
 
       try {
@@ -76,8 +77,9 @@ object Kafka extends Logging {
       Runtime.getRuntime().addShutdownHook(new Thread("kafka-shutdown-hook") {
         override def run(): Unit = kafkaServerStartable.shutdown()
       })
-
+      // 启动
       kafkaServerStartable.startup()
+      // 阻塞等到关闭
       kafkaServerStartable.awaitShutdown()
     }
     catch {

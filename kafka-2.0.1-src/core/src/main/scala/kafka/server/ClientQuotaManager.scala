@@ -72,6 +72,10 @@ object ClientQuotaManagerConfig {
   val UnlimitedQuota = Quota.upperBound(Long.MaxValue)
 }
 
+
+
+
+
 object QuotaTypes {
   val NoQuotas = 0
   val ClientIdQuotaEnabled = 1
@@ -79,6 +83,11 @@ object QuotaTypes {
   val UserClientIdQuotaEnabled = 4
   val CustomQuotas = 8 // No metric update optimizations are used with custom quotas
 }
+
+
+
+
+
 
 object ClientQuotaManager {
   val DefaultClientIdQuotaEntity = KafkaQuotaEntity(None, Some(DefaultClientIdEntity))
@@ -175,7 +184,9 @@ class ClientQuotaManager(private val config: ClientQuotaManagerConfig,
   private val lock = new ReentrantReadWriteLock()
   private val delayQueue = new DelayQueue[ThrottledChannel]()
   private val sensorAccessor = new SensorAccess(lock, metrics)
+
   private[server] val throttledChannelReaper = new ThrottledChannelReaper(delayQueue, threadNamePrefix)
+
   private val quotaCallback = clientQuotaCallback.getOrElse(new DefaultQuotaCallback)
 
   private val delayQueueSensor = metrics.sensor(quotaType + "-delayQueue")
@@ -189,6 +200,7 @@ class ClientQuotaManager(private val config: ClientQuotaManagerConfig,
 
   /**
    * Reaper thread that triggers channel unmute callbacks on all throttled channels
+    * 收割者线程在所有受限制的通道上触发通道非静音回调
    * @param delayQueue DelayQueue to dequeue from
    */
   class ThrottledChannelReaper(delayQueue: DelayQueue[ThrottledChannel], prefix: String) extends ShutdownableThread(

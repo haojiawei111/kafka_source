@@ -168,6 +168,7 @@ object DynamicBrokerConfig {
   }
 }
 
+
 class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging {
 
   private[server] val staticBrokerConfigs = ConfigDef.convertToStringMapWithPasswordValues(kafkaConfig.originalsFromThisConfig).asScala
@@ -177,14 +178,19 @@ class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging 
   private val reconfigurables = mutable.Buffer[Reconfigurable]()
   private val brokerReconfigurables = mutable.Buffer[BrokerReconfigurable]()
   private val lock = new ReentrantReadWriteLock
-  private var currentConfig = kafkaConfig
-  private val dynamicConfigPasswordEncoder = maybeCreatePasswordEncoder(kafkaConfig.passwordEncoderSecret)
+  private var currentConfig = kafkaConfig //当前配置
+  private val dynamicConfigPasswordEncoder = maybeCreatePasswordEncoder(kafkaConfig.passwordEncoderSecret) //password.encoder.secret 用于为此代理编码动态配置密码的秘密。
+
 
   private[server] def initialize(zkClient: KafkaZkClient): Unit = {
     currentConfig = new KafkaConfig(kafkaConfig.props, false, None)
+    // zookeeper管理类，包装KafkaZkClient类
     val adminZkClient = new AdminZkClient(zkClient)
+//    adminZkClient.fetchEntityConfig(ConfigType.Broker, ConfigEntityName.Default)//从zookeeper的/config/brokers/<default>路径下面拿配置
     updateDefaultConfig(adminZkClient.fetchEntityConfig(ConfigType.Broker, ConfigEntityName.Default))
-    val props = adminZkClient.fetchEntityConfig(ConfigType.Broker, kafkaConfig.brokerId.toString)
+
+    val props = adminZkClient.fetchEntityConfig(ConfigType.Broker, kafkaConfig.brokerId.toString)//从zookeeper的/config/brokers/brokerId路径下面拿配置
+
     val brokerConfig = maybeReEncodePasswords(props, adminZkClient)
     updateBrokerConfig(kafkaConfig.brokerId, brokerConfig)
   }
@@ -501,6 +507,9 @@ class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging 
     }
   }
 }
+
+
+
 
 trait BrokerReconfigurable {
 

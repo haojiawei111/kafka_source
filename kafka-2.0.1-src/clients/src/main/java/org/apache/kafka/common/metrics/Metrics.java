@@ -68,9 +68,9 @@ public class Metrics implements Closeable {
 
     private final MetricConfig config;
     private final ConcurrentMap<MetricName, KafkaMetric> metrics;
-    private final ConcurrentMap<String, Sensor> sensors;
+    private final ConcurrentMap<String, Sensor> sensors;//传感器
     private final ConcurrentMap<Sensor, List<Sensor>> childrenSensors;
-    private final List<MetricsReporter> reporters;
+    private final List<MetricsReporter> reporters; //MetricsReporter
     private final Time time;
     private final ScheduledThreadPoolExecutor metricsScheduler;
     private static final Logger log = LoggerFactory.getLogger(Metrics.class);
@@ -125,7 +125,7 @@ public class Metrics implements Closeable {
      * @param defaultConfig The default config
      * @param reporters The metrics reporters
      * @param time The time instance to use with the metrics
-     * @param enableExpiration true if the metrics instance can garbage collect inactive sensors, false otherwise
+     * @param enableExpiration true if the metrics instance can garbage collect inactive sensors, false otherwise 如果度量实例可以垃圾收集非活动传感器，则为true，否则为false
      */
     public Metrics(MetricConfig defaultConfig, List<MetricsReporter> reporters, Time time, boolean enableExpiration) {
         this.config = defaultConfig;
@@ -134,10 +134,11 @@ public class Metrics implements Closeable {
         this.childrenSensors = new ConcurrentHashMap<>();
         this.reporters = Utils.notNull(reporters);
         this.time = time;
+
         for (MetricsReporter reporter : reporters)
             reporter.init(new ArrayList<KafkaMetric>());
 
-        // Create the ThreadPoolExecutor only if expiration of Sensors is enabled.
+        // Create the ThreadPoolExecutor only if expiration of Sensors is enabled.仅在启用传感器到期时才创建ThreadPoolExecutor。
         if (enableExpiration) {
             this.metricsScheduler = new ScheduledThreadPoolExecutor(1);
             // Creating a daemon thread to not block shutdown
@@ -156,7 +157,7 @@ public class Metrics implements Closeable {
                 @Override
                 public double measure(MetricConfig config, long now) {
                     return metrics.size();
-                }
+                } //指标有多少
             });
     }
 
@@ -586,6 +587,7 @@ public class Metrics implements Closeable {
     /**
      * This iterates over every Sensor and triggers a removeSensor if it has expired
      * Package private for testing
+     * 这会迭代每个传感器并触发removeSensor（如果已过期）
      */
     class ExpireSensorTask implements Runnable {
         public void run() {
@@ -599,7 +601,7 @@ public class Metrics implements Closeable {
                 // and thus not necessary to optimize
                 synchronized (sensorEntry.getValue()) {
                     if (sensorEntry.getValue().hasExpired()) {
-                        log.debug("Removing expired sensor {}", sensorEntry.getKey());
+                        log.debug("Removing expired sensor删除过期的传感器 {}", sensorEntry.getKey());
                         removeSensor(sensorEntry.getKey());
                     }
                 }

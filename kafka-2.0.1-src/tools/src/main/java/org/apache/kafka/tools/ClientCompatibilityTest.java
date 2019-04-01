@@ -72,7 +72,7 @@ import static net.sourceforge.argparse4j.impl.Arguments.store;
  * client behavior when various broker versions are in use.  It runs various client operations and tests whether they
  * are supported or not.
  */
-public class ClientCompatibilityTest {
+public class ClientCompatibilityTest { //客户端兼容性测试
     private static final Logger log = LoggerFactory.getLogger(ClientCompatibilityTest.class);
 
     static class TestConfig {
@@ -328,6 +328,8 @@ public class ClientCompatibilityTest {
         }
     }
 
+
+
     public static class ClientCompatibilityTestDeserializer implements Deserializer<byte[]>, ClusterResourceListener {
         private final boolean expectClusterId;
 
@@ -364,12 +366,16 @@ public class ClientCompatibilityTest {
         }
     }
 
+
+
+
     public void testConsume(final long prodTimeMs) throws Throwable {
         Properties consumerProps = new Properties();
         consumerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, testConfig.bootstrapServer);
         consumerProps.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, 512);
-        ClientCompatibilityTestDeserializer deserializer =
-            new ClientCompatibilityTestDeserializer(testConfig.expectClusterId);
+
+        ClientCompatibilityTestDeserializer deserializer = new ClientCompatibilityTestDeserializer(testConfig.expectClusterId);
+
         try (final KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(consumerProps, deserializer, deserializer)) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(testConfig.topic);
             if (partitionInfos.size() < 1)
