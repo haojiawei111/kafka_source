@@ -197,6 +197,7 @@ public class Selector implements Selectable, AutoCloseable {
     /**
      * Begin connecting to the given address and add the connection to this nioSelector associated with the given id
      * number.
+     * 开始连接到给定地址并将连接添加到与给定id *编号关联的此nioSelector。
      * <p>
      * Note that this call only initiates the connection, which will be completed on a future {@link #poll(long)}
      * call. Check {@link #connected()} to see which (if any) connections have completed after a given poll call.

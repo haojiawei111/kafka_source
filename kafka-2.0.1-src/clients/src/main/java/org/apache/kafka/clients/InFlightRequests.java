@@ -28,12 +28,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The set of requests which have been sent or are being sent but haven't yet received a response
+ * 已发送或正在发送但尚未收到响应的请求集
  */
 final class InFlightRequests {
 
     private final int maxInFlightRequestsPerConnection;
+    // map<node,已发送或正在发送但尚未收到响应的请求集>
     private final Map<String, Deque<NetworkClient.InFlightRequest>> requests = new HashMap<>();
-    /** Thread safe total number of in flight requests. */
+
+
+
+    /** Thread safe 已发送或正在发送但尚未收到响应的请求总数。 */
     private final AtomicInteger inFlightRequestCount = new AtomicInteger(0);
 
     public InFlightRequests(int maxInFlightRequestsPerConnection) {
@@ -42,9 +47,10 @@ final class InFlightRequests {
 
     /**
      * Add the given request to the queue for the connection it was directed to
+     * 将给定的请求添加到队列以获取它所指向的连接
      */
     public void add(NetworkClient.InFlightRequest request) {
-        String destination = request.destination;
+        String destination = request.destination;//目的地
         Deque<NetworkClient.InFlightRequest> reqs = this.requests.get(destination);
         if (reqs == null) {
             reqs = new ArrayDeque<>();
@@ -56,6 +62,7 @@ final class InFlightRequests {
 
     /**
      * Get the request queue for the given node
+     * 获取给定节点的请求队列
      */
     private Deque<NetworkClient.InFlightRequest> requestQueue(String node) {
         Deque<NetworkClient.InFlightRequest> reqs = requests.get(node);
@@ -66,6 +73,7 @@ final class InFlightRequests {
 
     /**
      * Get the oldest request (the one that will be completed next) for the given node
+     * 获取给定节点的最旧请求（下一个将完成的请求）
      */
     public NetworkClient.InFlightRequest completeNext(String node) {
         NetworkClient.InFlightRequest inFlightRequest = requestQueue(node).pollLast();
@@ -75,6 +83,7 @@ final class InFlightRequests {
 
     /**
      * Get the last request we sent to the given node (but don't remove it from the queue)
+     * 获取我们发送到给定节点的最后一个请求（但不要将其从队列中删除）
      * @param node The node id
      */
     public NetworkClient.InFlightRequest lastSent(String node) {
@@ -83,6 +92,7 @@ final class InFlightRequests {
 
     /**
      * Complete the last request that was sent to a particular node.
+     * 完成发送到特定节点的最后一个请求。
      * @param node The node the request was sent to
      * @return The request
      */
@@ -94,7 +104,7 @@ final class InFlightRequests {
 
     /**
      * Can we send more requests to this node?
-     *
+     * 我们可以向此节点发送更多请求吗？
      * @param node Node in question
      * @return true iff we have no requests still being sent to the given node
      */
@@ -105,7 +115,7 @@ final class InFlightRequests {
     }
 
     /**
-     * Return the number of in-flight requests directed at the given node
+     * Return the number of in-flight requests directed at the given node返回指向给定节点的正在进行的请求的数量
      * @param node The node
      * @return The request count.
      */
@@ -115,7 +125,7 @@ final class InFlightRequests {
     }
 
     /**
-     * Return true if there is no in-flight request directed at the given node and false otherwise
+     * Return true if there is no in-flight request directed at the given node and false otherwise如果没有针对给定节点的正在进行的请求，则返回true，否则返回false
      */
     public boolean isEmpty(String node) {
         Deque<NetworkClient.InFlightRequest> queue = requests.get(node);
@@ -123,7 +133,7 @@ final class InFlightRequests {
     }
 
     /**
-     * Count all in-flight requests for all nodes. This method is thread safe, but may lag the actual count.
+     * Count all in-flight requests for all nodes. This method is thread safe, but may lag the actual count.计算所有节点的所有正在进行的请求。此方法是线程安全的，但可能滞后于实际计数。
      */
     public int count() {
         return inFlightRequestCount.get();
@@ -131,6 +141,7 @@ final class InFlightRequests {
 
     /**
      * Return true if there is no in-flight request and false otherwise
+     * 如果没有飞行请求则返回true，否则返回false
      */
     public boolean isEmpty() {
         for (Deque<NetworkClient.InFlightRequest> deque : this.requests.values()) {
@@ -142,6 +153,7 @@ final class InFlightRequests {
 
     /**
      * Clear out all the in-flight requests for the given node and return them
+     *清除给定节点的所有正在进行的请求并返回它们
      *
      * @param node The node
      * @return All the in-flight requests for that node that have been removed
@@ -173,6 +185,7 @@ final class InFlightRequests {
 
     /**
      * Returns a list of nodes with pending in-flight request, that need to be timed out
+     * 返回具有待处理的正在进行的请求的节点列表，需要超时
      *
      * @param now current time in milliseconds
      * @return list of nodes

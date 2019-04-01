@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Result of an asynchronous request from {@link ConsumerNetworkClient}. Use {@link ConsumerNetworkClient#poll(long)}
  * (and variants) to finish a request future. Use {@link #isDone()} to check if the future is complete, and
  * {@link #succeeded()} to check if the request completed successfully. Typical usage might look like this:
+ * 来自{@link ConsumerNetworkClient}的异步请求的结果。使用{@link ConsumerNetworkClient＃poll（long）} *（和变体）完成未来的请求。使用{@link #isDone（）}检查未来是否完整，使用* {@link #succeeded（）}检查请求是否成功完成。典型用法可能如下所示：
  *
  * <pre>
  *     RequestFuture<ClientResponse> future = client.send(api, request);

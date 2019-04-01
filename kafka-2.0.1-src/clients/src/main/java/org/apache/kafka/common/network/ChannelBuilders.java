@@ -62,8 +62,7 @@ public class ChannelBuilders {
             if (clientSaslMechanism == null)
                 throw new IllegalArgumentException("`clientSaslMechanism` must be non-null in client mode if `securityProtocol` is `" + securityProtocol + "`");
         }
-        return create(securityProtocol, Mode.CLIENT, contextType, config, listenerName, false, clientSaslMechanism,
-                saslHandshakeRequestEnable, null, null);
+        return create(securityProtocol, Mode.CLIENT, contextType, config, listenerName, false, clientSaslMechanism, saslHandshakeRequestEnable, null, null);
     }
 
     /**
