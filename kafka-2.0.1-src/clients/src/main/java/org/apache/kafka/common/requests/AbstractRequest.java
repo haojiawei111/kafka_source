@@ -27,6 +27,7 @@ import java.util.Map;
 
 public abstract class AbstractRequest extends AbstractRequestResponse {
 
+    // 构建请求抽象类
     public static abstract class Builder<T extends AbstractRequest> {
         private final ApiKeys apiKey;
         private final short oldestAllowedVersion;
@@ -74,6 +75,7 @@ public abstract class AbstractRequest extends AbstractRequestResponse {
         public abstract T build(short version);
     }
 
+
     private final short version;
 
     public AbstractRequest(short version) {
@@ -81,7 +83,7 @@ public abstract class AbstractRequest extends AbstractRequestResponse {
     }
 
     /**
-     * Get the version of this AbstractRequest object.获取此AbstractRequest对象的版本。
+     * 获取此AbstractRequest对象的版本。
      */
     public short version() {
         return version;
@@ -134,7 +136,7 @@ public abstract class AbstractRequest extends AbstractRequestResponse {
     }
 
     /**
-     * Factory method for getting a request object based on ApiKey ID and a version
+     * 用于根据ApiKey ID和版本获取请求对象的工厂方法
      */
     public static AbstractRequest parseRequest(ApiKeys apiKey, short apiVersion, Struct struct) {
         switch (apiKey) {

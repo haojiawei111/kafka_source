@@ -1299,9 +1299,11 @@ class KafkaConfig(val props: java.util.Map[_, _], doLog: Boolean, dynamicConfigO
   // If he didn't but did define advertised host or port, we'll use those and fill in the missing value from regular host / port or defaults
   // If none of these are defined, we'll use the listeners
   def advertisedListeners: Seq[EndPoint] = {
-    val advertisedListenersProp = getString(KafkaConfig.AdvertisedListenersProp)
+    val advertisedListenersProp = getString(KafkaConfig.AdvertisedListenersProp)//advertised.listeners
     if (advertisedListenersProp != null)
       CoreUtils.listenerListToEndPoints(advertisedListenersProp, listenerSecurityProtocolMap)
+      //advertised.host.name
+      //advertised.port
     else if (getString(KafkaConfig.AdvertisedHostNameProp) != null || getInt(KafkaConfig.AdvertisedPortProp) != null)
       CoreUtils.listenerListToEndPoints("PLAINTEXT://" + advertisedHostName + ":" + advertisedPort, listenerSecurityProtocolMap)
     else

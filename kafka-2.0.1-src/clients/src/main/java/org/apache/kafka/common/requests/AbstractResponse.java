@@ -36,6 +36,7 @@ public abstract class AbstractResponse extends AbstractRequestResponse {
 
     /**
      * Visible for testing, typically {@link #toSend(String, ResponseHeader, short)} should be used instead.
+     * 可以进行测试，通常应该使用{@link #toSend（String，ResponseHeader，short）}。
      */
     public ByteBuffer serialize(short version, ResponseHeader responseHeader) {
         return serialize(responseHeader.toStruct(), toStruct(version));
@@ -61,6 +62,7 @@ public abstract class AbstractResponse extends AbstractRequestResponse {
         return errorCounts;
     }
 
+    // 更新errorCounts中的Errors Count
     protected void updateErrorCounts(Map<Errors, Integer> errorCounts, Errors error) {
         Integer count = errorCounts.get(error);
         errorCounts.put(error, count == null ? 1 : count + 1);
@@ -68,6 +70,7 @@ public abstract class AbstractResponse extends AbstractRequestResponse {
 
     protected abstract Struct toStruct(short version);
 
+    // 响应统一转换成Struct对象
     public static AbstractResponse parseResponse(ApiKeys apiKey, Struct struct) {
         switch (apiKey) {
             case PRODUCE:
@@ -166,6 +169,8 @@ public abstract class AbstractResponse extends AbstractRequestResponse {
      * Returns whether or not client should throttle upon receiving a response of the specified version with a non-zero
      * throttle time. Client-side throttling is needed when communicating with a newer version of broker which, on
      * quota violation, sends out responses before throttling.
+     * 返回客户端是否应在收到具有非零节流时间的指定版本的响应时进行限制。
+     * 与较新版本的代理进行通信时需要客户端限制，该代理违反配额违规，在限制之前发送响应。
      */
     public boolean shouldClientThrottle(short version) {
         return false;

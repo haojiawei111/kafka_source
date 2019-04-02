@@ -20,6 +20,8 @@ trait NotificationHandler {
 }
 
 /**
+  * Zk节点更改通知侦听器
+  *
  * A listener that subscribes to seqNodeRoot for any child changes where all children are assumed to be sequence node
  * with seqNodePrefix. When a child is added under seqNodeRoot this class gets notified, it looks at lastExecutedChange
  * number to avoid duplicate processing and if it finds an unprocessed child, it reads its data and calls supplied
@@ -40,7 +42,9 @@ class ZkNodeChangeNotificationListener(private val zkClient: KafkaZkClient,
                                        private val changeExpirationMs: Long = 15 * 60 * 1000,
                                        private val time: Time = Time.SYSTEM) extends Logging {
   private var lastExecutedChange = -1L
+  // 这个对列中只有一个ChangeNotification
   private val queue = new LinkedBlockingQueue[ChangeNotification]
+
   private val thread = new ChangeEventProcessThread(s"$seqNodeRoot-event-process-thread")
   private val isClosed = new AtomicBoolean(false)
 
@@ -64,12 +68,14 @@ class ZkNodeChangeNotificationListener(private val zkClient: KafkaZkClient,
    */
   private def processNotifications() {
     try {
+      // seqNodeRoot = /delegation_token/token_changes
       val notifications = zkClient.getChildren(seqNodeRoot).sorted
       if (notifications.nonEmpty) {
         info(s"Processing notification(s) to $seqNodeRoot")
         val now = time.milliseconds
         for (notification <- notifications) {
           val changeId = changeNumber(notification)
+          // 按顺序处理
           if (changeId > lastExecutedChange) {
             processNotification(notification)
             lastExecutedChange = changeId
@@ -88,14 +94,16 @@ class ZkNodeChangeNotificationListener(private val zkClient: KafkaZkClient,
     val (data, _) = zkClient.getDataAndStat(changeZnode)
     data match {
       case Some(d) => Try(notificationHandler.processNotification(d)) match {
-        case Failure(e) => error(s"error processing change notification ${new String(d, UTF_8)} from $changeZnode", e)
+        case Failure(e) => error(s"error processing change notification错误处理更改通知 ${new String(d, UTF_8)} from $changeZnode", e)
         case _ =>
       }
       case None => warn(s"read null data from $changeZnode")
     }
   }
 
+
   private def addChangeNotification(): Unit = {
+    //  返回队列头部的元素  如果队列为空，则返回null
     if (!isClosed.get && queue.peek() == null)
       queue.put(new ChangeNotification)
   }
@@ -123,18 +131,20 @@ class ZkNodeChangeNotificationListener(private val zkClient: KafkaZkClient,
     }
   }
 
-  /* get the change number from a change notification znode */
+  /* get the change number from a change notification znode  ”token_change_“*/
   private def changeNumber(name: String): Long = name.substring(seqNodePrefix.length).toLong
 
   class ChangeEventProcessThread(name: String) extends ShutdownableThread(name = name) {
     override def doWork(): Unit = queue.take().process
   }
 
+  // 这个ZNodeChildChangeHandler处理类，往queue中添加ChangeNotification
   object ChangeNotificationHandler extends ZNodeChildChangeHandler {
     override val path: String = seqNodeRoot
     override def handleChildChange(): Unit = addChangeNotification
   }
 
+  // 这个StateChangeHandler处理类，往queue中添加ChangeNotification
   object ZkStateChangeHandler extends  StateChangeHandler {
     override val name: String = StateChangeHandlers.zkNodeChangeListenerHandler(seqNodeRoot)
     override def afterInitializingSession(): Unit = addChangeNotification

@@ -299,6 +299,8 @@ object CoreUtils extends Logging {
       .filter { case (_, l) => l > 1 }
       .keys
   }
+
+
   // 生成EndPoint
   def listenerListToEndPoints(listeners: String, securityProtocolMap: Map[ListenerName, SecurityProtocol]): Seq[EndPoint] = {
     def validate(endPoints: Seq[EndPoint]): Unit = {

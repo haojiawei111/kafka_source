@@ -40,6 +40,7 @@ import static org.apache.kafka.common.protocol.types.Type.INT64;
 
 /**
  * This wrapper supports both v0 and v1 of ProduceResponse.
+ * 此包装器支持ProduceResponse的v0和v1。
  */
 public class ProduceResponse extends AbstractResponse {
 

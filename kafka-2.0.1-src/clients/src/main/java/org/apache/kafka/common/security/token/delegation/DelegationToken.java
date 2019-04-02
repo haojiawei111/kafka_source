@@ -23,7 +23,7 @@ import java.util.Base64;
 
 /**
  * A class representing a delegation token.
- *
+ * 表示委托令牌的类
  */
 @InterfaceStability.Evolving
 public class DelegationToken {

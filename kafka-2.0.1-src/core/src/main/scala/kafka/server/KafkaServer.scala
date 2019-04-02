@@ -279,11 +279,12 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         replicaManager = createReplicaManager(isShuttingDown)
         replicaManager.startup()
 
+        // 从zookeeper中做校验，然后创建自己的brokerInfo
         val brokerInfo = createBrokerInfo
         //把brokerInfo发送到zookeeper的/brokers/ids/目录下创建brokerID节点并写入brokerInfo
         zkClient.registerBrokerInZk(brokerInfo)
 
-        // Now that the broker id is successfully registered, checkpoint it
+        // Now that the broker id is successfully registered, checkpoint it 既然brokerID已成功注册，请检查它
         checkpointBrokerId(config.brokerId)
 
         /* 令牌管理 */
@@ -428,8 +429,10 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
 
   private[server] def createBrokerInfo: BrokerInfo = {
     val endPoints = config.advertisedListeners.map(e => s"${e.host}:${e.port}")
+
     zkClient.getAllBrokersInCluster.filter(_.id != config.brokerId).foreach { broker =>
       val commonEndPoints = broker.endPoints.map(e => s"${e.host}:${e.port}").intersect(endPoints)
+
       require(commonEndPoints.isEmpty, s"Configured end points ${commonEndPoints.mkString(",")} in" +
         s" advertised listeners are already registered by broker ${broker.id}")
     }
@@ -762,10 +765,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
 
     for (logDir <- config.logDirs if logManager.isLogDirOnline(new File(logDir).getAbsolutePath)) {
       val brokerMetadataOpt = brokerMetadataCheckpoints(logDir).read()
+
       if (brokerMetadataOpt.isEmpty)
         logDirsWithoutMetaProps ++= List(logDir)
     }
-
+    // 这里如果logDir下面没有meta.properties文件就会创建并写入该文件
     for (logDir <- logDirsWithoutMetaProps) {
       val checkpoint = brokerMetadataCheckpoints(logDir)
       checkpoint.write(BrokerMetadata(brokerId))

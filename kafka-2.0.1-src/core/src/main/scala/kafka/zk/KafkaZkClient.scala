@@ -80,7 +80,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   }
 
   def registerBrokerInZk(brokerInfo: BrokerInfo): Unit = {
-    val path = brokerInfo.path
+    val path = brokerInfo.path //    /brokers/ids/brokerId
     checkedEphemeralCreate(path, brokerInfo.toJsonBytes)
     info(s"Registered broker ${brokerInfo.broker.id} at path $path with addresses: ${brokerInfo.broker.endPoints}")
   }
@@ -307,7 +307,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   }
 
   /**
-   * Gets all brokers in the cluster.
+   * Gets all brokers in the cluster.获取集群中的所有brokers。
    * @return sequence of brokers in the cluster.
    */
   def getAllBrokersInCluster: Seq[Broker] = {
@@ -1150,16 +1150,21 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * Creates the required zk nodes for Delegation Token storage
    */
   def createDelegationTokenPaths(): Unit = {
+    // /delegation_token//token_changes
     createRecursive(DelegationTokenChangeNotificationZNode.path, throwIfPathExists = false)
+    // /delegation_token//tokens
     createRecursive(DelegationTokensZNode.path, throwIfPathExists = false)
   }
 
   /**
    * Creates Delegation Token change notification message
+    * 创建委派令牌更改通知消息
+    *
    * @param tokenId token Id
    */
   def createTokenChangeNotification(tokenId: String): Unit = {
-    val path = DelegationTokenChangeNotificationSequenceZNode.createPath
+
+    val path = DelegationTokenChangeNotificationSequenceZNode.createPath //    /delegation_token/token_changes/token_change_
     val createRequest = CreateRequest(path, DelegationTokenChangeNotificationSequenceZNode.encode(tokenId), acls(path), CreateMode.PERSISTENT_SEQUENTIAL)
     val createResponse = retryRequestUntilConnected(createRequest)
     createResponse.resultException.foreach(e => throw e)
@@ -1215,6 +1220,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * @return delete status
    */
   def deleteDelegationToken(delegationTokenId: String): Boolean = {
+    // /delegation_token/tokens/tokenId
     deleteRecursive(DelegationTokenInfoZNode.path(delegationTokenId))
   }
 
@@ -1548,6 +1554,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   }
 
   def checkedEphemeralCreate(path: String, data: Array[Byte]): Unit = {
+    // path和data的包装类
     val checkedEphemeral = new CheckedEphemeral(path, data)
     info(s"Creating $path (is it secure? $isSecure)")
     val code = checkedEphemeral.create()

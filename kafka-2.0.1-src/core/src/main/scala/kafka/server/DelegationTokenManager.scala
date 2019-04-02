@@ -63,6 +63,8 @@ object DelegationTokenManager {
 
   /**
    * Convert the byte[] to a secret key
+    * 将byte []转换为密钥
+    *
    * @param keybytes the byte[] to create the secret key from
    * @return the secret key
    */
@@ -71,8 +73,7 @@ object DelegationTokenManager {
   }
 
   /**
-   *
-   *
+   *  根据tokenId和SecretKey得到hmac
    * @param tokenId
    * @param secretKey
    * @return
@@ -89,15 +90,17 @@ object DelegationTokenManager {
    * @return  String of the generated hmac
    */
   def createHmac(tokenId: String, secretKey: SecretKey) : Array[Byte] = {
-    val mac =  Mac.getInstance(DefaultHmacAlgorithm)
+    // 返回实现指定 MAC 算法的 Mac 对象。
+    val mac: Mac = Mac.getInstance(DefaultHmacAlgorithm)
     try
-      mac.init(secretKey)
+      mac.init(secretKey) // 用给定的密钥和算法参数初始化此 Mac 对象。
     catch {
       case ike: InvalidKeyException => throw new IllegalArgumentException("Invalid key to HMAC computation", ike);
     }
     mac.doFinal(tokenId.getBytes(StandardCharsets.UTF_8))
   }
 
+  // 返回map，map里面包含token信息
   def toJsonCompatibleMap(token: DelegationToken):  Map[String, Any] = {
     val tokenInfo = token.tokenInfo
     val tokenInfoMap = mutable.Map[String, Any]()
@@ -111,6 +114,7 @@ object DelegationTokenManager {
     tokenInfoMap.toMap
   }
 
+  // 把bytes[]解析并包装成TokenInformation
   def fromBytes(bytes: Array[Byte]): Option[TokenInformation] = {
     if (bytes == null || bytes.isEmpty)
       return None
@@ -135,17 +139,17 @@ object DelegationTokenManager {
         None
     }
   }
-
+  //过滤令牌
   def filterToken(requestedPrincipal: KafkaPrincipal, owners : Option[List[KafkaPrincipal]], token: TokenInformation, authorizeToken: String => Boolean) : Boolean = {
 
     val allow =
-    //exclude tokens which are not requested
+    //exclude tokens which are not requested排除未请求的令牌
       if (!owners.isEmpty && !owners.get.exists(owner => token.ownerOrRenewer(owner))) {
         false
-        //Owners and the renewers can describe their own tokens
+        //Owners and the renewers can describe their own tokens业主和续约者可以描述他们自己的代币
       } else if (token.ownerOrRenewer(requestedPrincipal)) {
         true
-        // Check permission for non-owned tokens
+        // Check permission for non-owned tokens 检查非拥有令牌的权限
       } else if ((authorizeToken(token.tokenId))) {
         true
       }
@@ -185,9 +189,12 @@ class DelegationTokenManager(val config: KafkaConfig,
 
   def startup() = {
     if (config.tokenAuthEnabled) {
+      // zookeeper上创建路径
       zkClient.createDelegationTokenPaths
       loadCache
-      tokenChangeListener = new ZkNodeChangeNotificationListener(zkClient, DelegationTokenChangeNotificationZNode.path, DelegationTokenChangeNotificationSequenceZNode.SequenceNumberPrefix, TokenChangedNotificationHandler)
+      // 创建zookeeper节点监听   监听/delegation_token/token_changes节点
+      tokenChangeListener = new ZkNodeChangeNotificationListener(zkClient, DelegationTokenChangeNotificationZNode.path, DelegationTokenChangeNotificationSequenceZNode.SequenceNumberPrefix,
+        TokenChangedNotificationHandler)
       tokenChangeListener.init
     }
   }
@@ -198,12 +205,15 @@ class DelegationTokenManager(val config: KafkaConfig,
     }
   }
 
+  //加载缓存
   private def loadCache() {
     lock.synchronized {
+      //从zookeeper下拿到/delegation_token//tokens的子节点
       val tokens = zkClient.getChildren(DelegationTokensZNode.path)
       info(s"Loading the token cache. Total token count : " + tokens.size)
       for (tokenId <- tokens) {
         try {
+          // 从zookeeper上拿到tokenId的数据，更新进缓存
           getTokenFromZk(tokenId) match {
             case Some(token) => updateCache(token)
             case None =>
@@ -216,6 +226,7 @@ class DelegationTokenManager(val config: KafkaConfig,
   }
 
   private def getTokenFromZk(tokenId: String): Option[DelegationToken] = {
+    // 从zookeeper上拿到tokenId节点的数据
     zkClient.getDelegationTokenInfo(tokenId) match {
       case Some(tokenInformation) => {
         val hmac = createHmac(tokenId, secretKey)
@@ -227,14 +238,16 @@ class DelegationTokenManager(val config: KafkaConfig,
   }
 
   /**
-   *
+   * 更新tokenCache里的信息
    * @param token
    */
   private def updateCache(token: DelegationToken): Unit = {
+    // 拿到token的hmac
     val hmacString = token.hmacAsBase64String
     val scramCredentialMap =  prepareScramCredentials(hmacString)
     tokenCache.updateCache(token, scramCredentialMap.asJava)
   }
+
   /**
    * @param hmacString
    */
@@ -431,7 +444,7 @@ class DelegationTokenManager(val config: KafkaConfig,
   }
 
   /**
-   *
+   * 去zookeeper里面删除tokenId的信息
    * @param tokenId
    */
   private def removeToken(tokenId: String): Unit = {
@@ -441,7 +454,8 @@ class DelegationTokenManager(val config: KafkaConfig,
   }
 
   /**
-   *
+   * 更具tokenId移除tokenCache里面的内容
+    *
    * @param tokenId
    */
   private def removeCache(tokenId: String): Unit = {
@@ -476,17 +490,20 @@ class DelegationTokenManager(val config: KafkaConfig,
     getAllTokenInformation().filter(filterToken).map(token => getToken(token))
   }
 
+  //令牌更改通知处理程序
   object TokenChangedNotificationHandler extends NotificationHandler {
+
     override def processNotification(tokenIdBytes: Array[Byte]) {
       lock.synchronized {
         val tokenId = new String(tokenIdBytes, StandardCharsets.UTF_8)
         info(s"Processing Token Notification for tokenId : $tokenId")
         getTokenFromZk(tokenId) match {
-          case Some(token) => updateCache(token)
+          case Some(token) => updateCache(token) //更新缓存
           case None => removeCache(tokenId)
         }
       }
     }
+
   }
 
 }

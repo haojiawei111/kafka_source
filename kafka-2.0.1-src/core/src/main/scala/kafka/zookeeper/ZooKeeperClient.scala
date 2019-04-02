@@ -58,8 +58,12 @@ class ZooKeeperClient(connectString: String,
   private val initializationLock = new ReentrantReadWriteLock()
   private val isConnectedOrExpiredLock = new ReentrantLock()
   private val isConnectedOrExpiredCondition = isConnectedOrExpiredLock.newCondition()
+
+  // zookeeper节点变化处理程序合集
   private val zNodeChangeHandlers = new ConcurrentHashMap[String, ZNodeChangeHandler]().asScala
+  // zookeeper子节点改变处理程序合集
   private val zNodeChildChangeHandlers = new ConcurrentHashMap[String, ZNodeChildChangeHandler]().asScala
+
   private val inFlightRequests = new Semaphore(maxInFlightRequests)
   private val stateChangeHandlers = new ConcurrentHashMap[String, StateChangeHandler]().asScala
   private[zookeeper] val expiryScheduler = new KafkaScheduler(threads = 1, "zk-session-expiry-handler")
@@ -90,7 +94,7 @@ class ZooKeeperClient(connectString: String,
   info(s"Initializing a new session to $connectString.")
   // Fail-fast if there's an error during construction (so don't call initialize, which retries forever)
   // 如果在构造期间出现错误，则快速失败（因此不要调用initialize，永远重试）  //这里用zookeeper的包连接zookeeper集群
-  @volatile private var zooKeeper = new ZooKeeper(connectString, sessionTimeoutMs, ZooKeeperClientWatcher)
+  @volatile private var zooKeeper = new ZooKeeper(connectString, sessionTimeoutMs, ZooKeeperClientWatcher)// 监控所有被触发的事件
 
   newGauge("SessionState", new Gauge[String] {
     override def value: String = Option(connectionState.toString).getOrElse("DISCONNECTED")
@@ -421,12 +425,14 @@ class ZooKeeperClient(connectString: String,
   // Visibility for testing
   //zookeeper会话到期处理程序
   private[zookeeper] def scheduleSessionExpiryHandler(): Unit = {
+    //调度一次并且立即执行
     expiryScheduler.scheduleOnce("zk-session-expired", () => {
       info("Session expired.")
       reinitialize() //从新初始化
     })
   }
 
+  // 这里再注册zookeeper监听的
   // package level visibility for testing only
   private[zookeeper] object ZooKeeperClientWatcher extends Watcher {
     override def process(event: WatchedEvent): Unit = {
@@ -441,14 +447,18 @@ class ZooKeeperClient(connectString: String,
           if (state == KeeperState.AuthFailed) {
             error("Auth failed.")
             stateChangeHandlers.values.foreach(_.onAuthFailure())
-          } else if (state == KeeperState.Expired) {
+          } else if (state == KeeperState.Expired) {//zookeeper会话到期处理程序，重新连接
             scheduleSessionExpiryHandler()
           }
         case Some(path) =>
           (event.getType: @unchecked) match {
+              // 子节点变化
             case EventType.NodeChildrenChanged => zNodeChildChangeHandlers.get(path).foreach(_.handleChildChange())
+              // 节点创建
             case EventType.NodeCreated => zNodeChangeHandlers.get(path).foreach(_.handleCreation())
+              // 节点删除
             case EventType.NodeDeleted => zNodeChangeHandlers.get(path).foreach(_.handleDeletion())
+              // 节点数据改变
             case EventType.NodeDataChanged => zNodeChangeHandlers.get(path).foreach(_.handleDataChange())
           }
       }

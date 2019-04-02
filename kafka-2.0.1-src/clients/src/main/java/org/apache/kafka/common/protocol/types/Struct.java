@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 /**
  * A record that can be serialized and deserialized according to a pre-defined schema
+ * 可以根据预定义模式进行序列化和反序列化的记录
  */
 public class Struct {
     private final Schema schema;

@@ -571,8 +571,7 @@ sealed trait ZkAclChangeStore {
         handler.processNotification(decode(bytes))
     }
 
-    val aclChangeListener = new ZkNodeChangeNotificationListener(
-      zkClient, aclChangePath, ZkAclChangeStore.SequenceNumberPrefix, rawHandler)
+    val aclChangeListener = new ZkNodeChangeNotificationListener(zkClient, aclChangePath, ZkAclChangeStore.SequenceNumberPrefix, rawHandler)
 
     aclChangeListener.init()
 
@@ -700,7 +699,9 @@ object DelegationTokenChangeNotificationZNode {
 
 object DelegationTokenChangeNotificationSequenceZNode {
   val SequenceNumberPrefix = "token_change_"
+  // 创建路径 /delegation_token/token_changes/token_change_
   def createPath = s"${DelegationTokenChangeNotificationZNode.path}/$SequenceNumberPrefix"
+  // 删除路径 /delegation_token/token_changes/sequenceNode
   def deletePath(sequenceNode: String) = s"${DelegationTokenChangeNotificationZNode.path}/${sequenceNode}"
   def encode(tokenId : String): Array[Byte] = tokenId.getBytes(UTF_8)
   def decode(bytes: Array[Byte]): String = new String(bytes, UTF_8)

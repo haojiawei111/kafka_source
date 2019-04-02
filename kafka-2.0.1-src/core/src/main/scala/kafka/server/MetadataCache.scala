@@ -44,12 +44,17 @@ class MetadataCache(brokerId: Int) extends Logging {
   private val cache = mutable.Map[String, mutable.Map[Int, UpdateMetadataRequest.PartitionState]]()
 
   @volatile private var controllerId: Option[Int] = None
+
   private val aliveBrokers = mutable.Map[Int, Broker]()
   private val aliveNodes = mutable.Map[Int, collection.Map[ListenerName, Node]]()
 
   private val partitionMetadataLock = new ReentrantReadWriteLock()
+
   this.logIdent = s"[MetadataCache brokerId=$brokerId] "
+
+  // 状态改变的log是元数据缓存类打印的
   private val stateChangeLogger = new StateChangeLogger(brokerId, inControllerContext = false, None)
+
 
   // This method is the main hotspot when it comes to the performance of metadata requests,
   // we should be careful about adding additional logic here.
@@ -140,7 +145,7 @@ class MetadataCache(brokerId: Int) extends Logging {
       cache.keySet.toSet
     }
   }
-
+  // 遍历cache，返回Map<TopicPartition, UpdateMetadataRequest.PartitionState>
   def getAllPartitions(): Map[TopicPartition, UpdateMetadataRequest.PartitionState] = {
     inReadLock(partitionMetadataLock) {
       cache.flatMap { case (topic, partitionStates) =>
@@ -176,6 +181,7 @@ class MetadataCache(brokerId: Int) extends Logging {
     }
   }
 
+  // 从cache中拿到指定topic的指定partitionId的PartitionState
   def getPartitionInfo(topic: String, partitionId: Int): Option[UpdateMetadataRequest.PartitionState] = {
     inReadLock(partitionMetadataLock) {
       cache.get(topic).flatMap(_.get(partitionId))
@@ -188,6 +194,7 @@ class MetadataCache(brokerId: Int) extends Logging {
   def getPartitionLeaderEndpoint(topic: String, partitionId: Int, listenerName: ListenerName): Option[Node] = {
     inReadLock(partitionMetadataLock) {
       cache.get(topic).flatMap(_.get(partitionId)) map { partitionInfo =>
+
         val leaderId = partitionInfo.basePartitionState.leader
 
         aliveNodes.get(leaderId) match {
@@ -199,7 +206,7 @@ class MetadataCache(brokerId: Int) extends Logging {
       }
     }
   }
-
+  // 返回controllerId
   def getControllerId: Option[Int] = controllerId
 
   def getClusterMetadata(clusterId: String, listenerName: ListenerName): Cluster = {
@@ -214,8 +221,10 @@ class MetadataCache(brokerId: Int) extends Logging {
             state.basePartitionState.isr.asScala.map(node).toArray,
             state.offlineReplicas.asScala.map(node).toArray)
         }
+
       val unauthorizedTopics = Collections.emptySet[String]
       val internalTopics = getAllTopics().filter(Topic.isInternal).asJava
+
       new Cluster(clusterId, nodes.values.filter(_ != null).toList.asJava,
         partitions.toList.asJava,
         unauthorizedTopics, internalTopics,
@@ -223,40 +232,47 @@ class MetadataCache(brokerId: Int) extends Logging {
     }
   }
 
-  // This method returns the deleted TopicPartitions received from UpdateMetadataRequest
+  // 此方法返回从UpdateMetadataRequest接收的已删除的TopicPartitions
   def updateCache(correlationId: Int, updateMetadataRequest: UpdateMetadataRequest): Seq[TopicPartition] = {
     inWriteLock(partitionMetadataLock) {
+      // 更新controllerId
       controllerId = updateMetadataRequest.controllerId match {
           case id if id < 0 => None
           case id => Some(id)
         }
       aliveNodes.clear()
       aliveBrokers.clear()
+
       updateMetadataRequest.liveBrokers.asScala.foreach { broker =>
         // `aliveNodes` is a hot path for metadata requests for large clusters, so we use java.util.HashMap which
         // is a bit faster than scala.collection.mutable.HashMap. When we drop support for Scala 2.10, we could
         // move to `AnyRefMap`, which has comparable performance.
         val nodes = new java.util.HashMap[ListenerName, Node]
         val endPoints = new mutable.ArrayBuffer[EndPoint]
+
         broker.endPoints.asScala.foreach { ep =>
           endPoints += EndPoint(ep.host, ep.port, ep.listenerName, ep.securityProtocol)
           nodes.put(ep.listenerName, new Node(broker.id, ep.host, ep.port))
         }
+        // 一个broker.id对应一个Broker对象
         aliveBrokers(broker.id) = Broker(broker.id, endPoints, Option(broker.rack))
+        // 一个broker.id对应多个EndPoint对象
         aliveNodes(broker.id) = nodes.asScala
       }
+      // 这里的brokerId是本机的brokerId
       aliveNodes.get(brokerId).foreach { listenerMap =>
         val listeners = listenerMap.keySet
         if (!aliveNodes.values.forall(_.keySet == listeners))
-          error(s"Listeners are not identical across brokers: $aliveNodes")
+          error(s"Listeners are not identical across brokers 经纪人之间的听众并不相同: $aliveNodes")
       }
 
       val deletedPartitions = new mutable.ArrayBuffer[TopicPartition]
+
       updateMetadataRequest.partitionStates.asScala.foreach { case (tp, info) =>
         val controllerId = updateMetadataRequest.controllerId
         val controllerEpoch = updateMetadataRequest.controllerEpoch
         if (info.basePartitionState.leader == LeaderAndIsr.LeaderDuringDelete) {
-          removePartitionInfo(tp.topic, tp.partition)
+          removePartitionInfo(tp.topic, tp.partition) //从cache移除某一个topic的一个partition
           stateChangeLogger.trace(s"Deleted partition $tp from metadata cache in response to UpdateMetadata " +
             s"request sent by controller $controllerId epoch $controllerEpoch with correlation id $correlationId")
           deletedPartitions += tp
@@ -266,18 +282,22 @@ class MetadataCache(brokerId: Int) extends Logging {
             s"UpdateMetadata request sent by controller $controllerId epoch $controllerEpoch with correlation id $correlationId")
         }
       }
+
       deletedPartitions
     }
   }
 
+  // 缓存是否包含此topic
   def contains(topic: String): Boolean = {
     inReadLock(partitionMetadataLock) {
       cache.contains(topic)
     }
   }
 
-  def contains(tp: TopicPartition): Boolean = getPartitionInfo(tp.topic, tp.partition).isDefined
+  //cache中是否包含TopicPartition.topic和TopicPartition.partition
+  def contains(tp: TopicPartition): Boolean = getPartitionInfo(tp.topic, tp.partition).isDefined //如果可选值是 Some 的实例返回 true，否则返回 false。
 
+  //从cache中删除这个topic中的某个partitionId的PartitionState
   private def removePartitionInfo(topic: String, partitionId: Int): Boolean = {
     cache.get(topic).exists { infos =>
       infos.remove(partitionId)
