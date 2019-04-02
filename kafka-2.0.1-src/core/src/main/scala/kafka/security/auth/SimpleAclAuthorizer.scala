@@ -37,7 +37,7 @@ import scala.util.{Failure, Random, Success, Try}
 
 object SimpleAclAuthorizer {
   //optional override zookeeper cluster configuration where acls will be stored, if not specified acls will be stored in
-  //same zookeeper where all other kafka broker info is stored.
+  //same zookeeper where all other kafka broker info is stored.可选的覆盖zookeeper集群配置，其中将存储acls，如果未指定，则acls将存储在//同一zookeeper中，其中存储所有其他kafka代理信息。
   val ZkUrlProp = "authorizer.zookeeper.url"
   val ZkConnectionTimeOutProp = "authorizer.zookeeper.connection.timeout.ms"
   val ZkSessionTimeOutProp = "authorizer.zookeeper.session.timeout.ms"
@@ -51,7 +51,9 @@ object SimpleAclAuthorizer {
   case class VersionedAcls(acls: Set[Acl], zkVersion: Int) {
     def exists: Boolean = zkVersion != ZkVersion.UnknownVersion
   }
+
   val NoAcls = VersionedAcls(Set.empty, ZkVersion.UnknownVersion)
+
 }
 
 class SimpleAclAuthorizer extends Authorizer with Logging {
@@ -398,4 +400,5 @@ class SimpleAclAuthorizer extends Authorizer with Logging {
       }
     }
   }
+
 }

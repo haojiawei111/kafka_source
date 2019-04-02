@@ -26,6 +26,7 @@ import org.apache.kafka.common.security.scram.ScramCredential;
 /**
  * SCRAM Credential persistence utility functions. Implements format conversion used
  * for the credential store implemented in Kafka. Credentials are persisted as a comma-separated
+ * SCRAM凭据持久性实用程序功能。实现用于Kafka中实现的凭证存储的格式转换*。凭据以逗号分隔的形式保留
  * String of key-value pairs:
  * <pre>
  *   salt=<i>salt</i>,stored_key=<i>stored_key</i>,server_key=<i>server_key</i>,iterations=<i>iterations</i>

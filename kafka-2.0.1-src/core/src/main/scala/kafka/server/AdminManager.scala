@@ -48,18 +48,19 @@ class AdminManager(val config: KafkaConfig,
   this.logIdent = "[Admin Manager on Broker " + config.brokerId + "]: "
 
   private val topicPurgatory = DelayedOperationPurgatory[DelayedOperation]("topic", config.brokerId)
+
   private val adminZkClient = new AdminZkClient(zkClient)
 
-  private val createTopicPolicy =
-    Option(config.getConfiguredInstance(KafkaConfig.CreateTopicPolicyClassNameProp, classOf[CreateTopicPolicy]))
+  private val createTopicPolicy = Option(config.getConfiguredInstance(KafkaConfig.CreateTopicPolicyClassNameProp, classOf[CreateTopicPolicy])) //create.topic.policy.class.name
 
-  private val alterConfigPolicy =
-    Option(config.getConfiguredInstance(KafkaConfig.AlterConfigPolicyClassNameProp, classOf[AlterConfigPolicy]))
+  private val alterConfigPolicy = Option(config.getConfiguredInstance(KafkaConfig.AlterConfigPolicyClassNameProp, classOf[AlterConfigPolicy])) //alter.config.policy.class.name
 
+  //是否有延迟主题操作
   def hasDelayedTopicOperations = topicPurgatory.delayed != 0
 
   /**
     * Try to complete delayed topic operations with the request key
+    * 尝试使用请求密钥完成延迟的主题操作
     */
   def tryCompleteDelayedTopicOperations(topic: String) {
     val key = TopicKey(topic)
@@ -70,6 +71,7 @@ class AdminManager(val config: KafkaConfig,
   /**
     * Create topics and wait until the topics have been completely created.
     * The callback function will be triggered either when timeout, error or the topics are created.
+    * 创建主题并等待主题完全创建。当超时、错误或主题被创建时，将触发回调函数。
     */
   def createTopics(timeout: Int,
                    validateOnly: Boolean,
@@ -159,7 +161,9 @@ class AdminManager(val config: KafkaConfig,
 
   /**
     * Delete topics and wait until the topics have been completely deleted.
+    * 删除主题并等待主题完全删除。
     * The callback function will be triggered either when timeout, error or the topics are deleted.
+    * 当超时，错误或主题被删除时，将触发回调函数。
     */
   def deleteTopics(timeout: Int,
                    topics: Set[String],
@@ -281,6 +285,7 @@ class AdminManager(val config: KafkaConfig,
     }
   }
 
+
   def describeConfigs(resourceToConfigNames: Map[ConfigResource, Option[Set[String]]], includeSynonyms: Boolean): Map[ConfigResource, DescribeConfigsResponse.Config] = {
     resourceToConfigNames.map { case (resource, configNames) =>
 
@@ -338,6 +343,7 @@ class AdminManager(val config: KafkaConfig,
       }
     }.toMap
   }
+
 
   def alterConfigs(configs: Map[ConfigResource, AlterConfigsRequest.Config], validateOnly: Boolean): Map[ConfigResource, ApiError] = {
     configs.map { case (resource, config) =>
@@ -410,6 +416,7 @@ class AdminManager(val config: KafkaConfig,
       }
     }.toMap
   }
+
 
   def shutdown() {
     topicPurgatory.shutdown()

@@ -29,29 +29,37 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+//委托令牌缓存
 public class DelegationTokenCache {
 
     private CredentialCache credentialCache = new CredentialCache();
+
     //Cache to hold all the tokens
     private Map<String, TokenInformation> tokenCache = new ConcurrentHashMap<>();
+
     //Cache to hold hmac->tokenId mapping. This is required for renew, expire requests
     private Map<String, String> hmacIDCache = new ConcurrentHashMap<>();
 
+
     public DelegationTokenCache(Collection<String> scramMechanisms) {
-        //Create caches for scramMechanisms
+        //为scramMechanisms创建缓存
         ScramCredentialUtils.createCache(credentialCache, scramMechanisms);
     }
 
+
+    //从credentialCache中依据key1=mechanism，key2=tokenId，拿到ScramCredential
     public ScramCredential credential(String mechanism, String tokenId) {
         CredentialCache.Cache<ScramCredential> cache = credentialCache.cache(mechanism, ScramCredential.class);
         return cache == null ? null : cache.get(tokenId);
     }
 
+    //从tokenCache中依据tokenId拿到TokenInformation.owner().getName()
     public String owner(String tokenId) {
         TokenInformation tokenInfo = tokenCache.get(tokenId);
         return tokenInfo == null ? null : tokenInfo.owner().getName();
     }
 
+    // 更新缓存
     public void updateCache(DelegationToken token, Map<String, ScramCredential> scramCredentialMap) {
         //Update TokenCache
         String tokenId =  token.tokenInfo().tokenId();
@@ -63,21 +71,24 @@ public class DelegationTokenCache {
         hmacIDCache.put(hmac, tokenId);
     }
 
-
+    //
     public void removeCache(String tokenId) {
         removeToken(tokenId);
         updateCredentials(tokenId, new HashMap<String, ScramCredential>());
     }
 
+    //通过base64hmac从hmacIDCache查到tokenId，然后从tokenCache查到TokenInformation
     public TokenInformation tokenForHmac(String base64hmac) {
         String tokenId = hmacIDCache.get(base64hmac);
         return tokenId == null ? null : tokenCache.get(tokenId);
     }
 
+    // 往tokenCache中加入 key = tokenId，value = tokenInfo
     public TokenInformation addToken(String tokenId, TokenInformation tokenInfo) {
         return tokenCache.put(tokenId, tokenInfo);
     }
 
+    // 从tokenCache中移除key = tokenId的元素，同时移除hmacIDCache中的key = tokenInfo.tokenId()的元素
     public void removeToken(String tokenId) {
         TokenInformation tokenInfo = tokenCache.remove(tokenId);
         if (tokenInfo != null) {
@@ -85,18 +96,22 @@ public class DelegationTokenCache {
         }
     }
 
+    // 返回tokenCache的value
     public Collection<TokenInformation> tokens() {
         return tokenCache.values();
     }
 
+    // 返回tokenCache的key = tokenId的值
     public TokenInformation token(String tokenId) {
         return tokenCache.get(tokenId);
     }
 
+    // 从credentialCache中key = mechanism拿出 CredentialCache.Cache<ScramCredential>
     public CredentialCache.Cache<ScramCredential> credentialCache(String mechanism) {
         return credentialCache.cache(mechanism, ScramCredential.class);
     }
 
+    // 更新credentialCache
     private void updateCredentials(String tokenId, Map<String, ScramCredential> scramCredentialMap) {
         for (String mechanism : ScramMechanism.mechanismNames()) {
             CredentialCache.Cache<ScramCredential> cache = credentialCache.cache(mechanism, ScramCredential.class);

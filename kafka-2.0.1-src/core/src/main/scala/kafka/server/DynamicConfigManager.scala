@@ -168,6 +168,7 @@ class DynamicConfigManager(private val zkClient: KafkaZkClient,
 
   }
 
+  // 动态配置核心逻辑
   private val configChangeListener = new ZkNodeChangeNotificationListener(
     zkClient,
     ConfigEntityChangeNotificationZNode.path,// 监听zookeeper上/config/changes路径
@@ -178,11 +179,13 @@ class DynamicConfigManager(private val zkClient: KafkaZkClient,
    * 开始观察配置更改
    */
   def startup(): Unit = {
+
     configChangeListener.init()
 
     // Apply all existing client/user configs to the ClientIdConfigHandler/UserConfigHandler to bootstrap the overrides
     // 将所有现有客户端/用户配置应用于ClientIdConfigHandler / UserConfigHandler以引导覆盖
     configHandlers.foreach {
+
       case (ConfigType.User, handler) =>
         adminZkClient.fetchAllEntityConfigs(ConfigType.User).foreach {
           case (sanitizedUser, properties) => handler.processConfigChanges(sanitizedUser, properties)
@@ -190,10 +193,12 @@ class DynamicConfigManager(private val zkClient: KafkaZkClient,
         adminZkClient.fetchAllChildEntityConfigs(ConfigType.User, ConfigType.Client).foreach {
           case (sanitizedUserClientId, properties) => handler.processConfigChanges(sanitizedUserClientId, properties)
         }
+
       case (configType, handler) =>
         adminZkClient.fetchAllEntityConfigs(configType).foreach {
           case (entityName, properties) => handler.processConfigChanges(entityName, properties)
         }
+
     }
   }
 

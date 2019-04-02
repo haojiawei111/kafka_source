@@ -719,6 +719,7 @@ class KafkaApis(val requestChannel: RequestChannel,
 
 
 
+  //选择迭代器
   class SelectingIterator(val partitions: util.LinkedHashMap[TopicPartition, FetchResponse.PartitionData[Records]],val quota: ReplicationQuotaManager)
                           extends util.Iterator[util.Map.Entry[TopicPartition, FetchResponse.PartitionData[Records]]] {
     val iter = partitions.entrySet().iterator()

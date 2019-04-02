@@ -50,6 +50,7 @@ trait ConfigHandler {
   */
 class TopicConfigHandler(private val logManager: LogManager, kafkaConfig: KafkaConfig, val quotas: QuotaManagers) extends ConfigHandler with Logging  {
 
+  //程序配置更改
   def processConfigChanges(topic: String, topicConfig: Properties) {
     // Validate the configurations.
     val configNamesToExclude = excludedConfigs(topic, topicConfig)
@@ -106,11 +107,10 @@ class TopicConfigHandler(private val logManager: LogManager, kafkaConfig: KafkaC
   }
 }
 
-
 /**
- * Handles <client-id>, <user> or <user, client-id> quota config updates in ZK.
- * This implementation reports the overrides to the respective ClientQuotaManager objects
- */
+  * Handles <client-id>, <user> or <user, client-id> quota config updates in ZK.
+  * This implementation reports the overrides to the respective ClientQuotaManager objects
+  */
 class QuotaConfigHandler(private val quotaManagers: QuotaManagers) {
 
   def updateQuotaConfig(sanitizedUser: Option[String], sanitizedClientId: Option[String], config: Properties) {
@@ -136,10 +136,12 @@ class QuotaConfigHandler(private val quotaManagers: QuotaManagers) {
   }
 }
 
+
+
 /**
- * The ClientIdConfigHandler will process clientId config changes in ZK.
- * The callback provides the clientId and the full properties set read from ZK.
- */
+  * The ClientIdConfigHandler will process clientId config changes in ZK.
+  * The callback provides the clientId and the full properties set read from ZK.
+  */
 class ClientIdConfigHandler(private val quotaManagers: QuotaManagers) extends QuotaConfigHandler(quotaManagers) with ConfigHandler {
 
   def processConfigChanges(sanitizedClientId: String, clientConfig: Properties) {
@@ -147,11 +149,12 @@ class ClientIdConfigHandler(private val quotaManagers: QuotaManagers) extends Qu
   }
 }
 
+
 /**
- * The UserConfigHandler will process <user> and <user, client-id> quota changes in ZK.
- * The callback provides the node name containing sanitized user principal, sanitized client-id if this is
- * a <user, client-id> update and the full properties set read from ZK.
- */
+  * The UserConfigHandler will process <user> and <user, client-id> quota changes in ZK.
+  * The callback provides the node name containing sanitized user principal, sanitized client-id if this is
+  * a <user, client-id> update and the full properties set read from ZK.
+  */
 class UserConfigHandler(private val quotaManagers: QuotaManagers, val credentialProvider: CredentialProvider) extends QuotaConfigHandler(quotaManagers) with ConfigHandler {
 
   def processConfigChanges(quotaEntityPath: String, config: Properties) {
@@ -166,6 +169,8 @@ class UserConfigHandler(private val quotaManagers: QuotaManagers, val credential
       credentialProvider.updateCredentials(Sanitizer.desanitize(sanitizedUser), config)
   }
 }
+
+
 
 /**
   * The BrokerConfigHandler will process individual broker config changes in ZK.
@@ -182,7 +187,7 @@ class BrokerConfigHandler(private val brokerConfig: KafkaConfig,
       else
         DefaultReplicationThrottledRate
     }
-    if (brokerId == ConfigEntityName.Default)
+    if (brokerId == ConfigEntityName.Default)//<default>
       brokerConfig.dynamicConfig.updateDefaultConfig(properties)
     else if (brokerConfig.brokerId == brokerId.trim.toInt) {
       brokerConfig.dynamicConfig.updateBrokerConfig(brokerConfig.brokerId, properties)
@@ -193,17 +198,26 @@ class BrokerConfigHandler(private val brokerConfig: KafkaConfig,
   }
 }
 
+
+
+
+
+
+
 object ThrottledReplicaListValidator extends Validator {
+
   def ensureValidString(name: String, value: String): Unit =
+  // value都好切分
     ensureValid(name, value.split(",").map(_.trim).toSeq)
 
   override def ensureValid(name: String, value: Any): Unit = {
     def check(proposed: Seq[Any]): Unit = {
-      if (!(proposed.forall(_.toString.trim.matches("([0-9]+:[0-9]+)?"))
-        || proposed.headOption.exists(_.toString.trim.equals("*"))))
+      // forall 对集合中的元素进行某个判断，全部为true则返回true，反之返回false。
+      if (!(proposed.forall(_.toString.trim.matches("([0-9]+:[0-9]+)?")) || proposed.headOption.exists(_.toString.trim.equals("*"))))
         throw new ConfigException(name, value,
           s"$name must be the literal '*' or a list of replicas in the following format: [partitionId],[brokerId]:[partitionId],[brokerId]:...")
     }
+
     value match {
       case scalaSeq: Seq[_] => check(scalaSeq)
       case javaList: java.util.List[_] => check(javaList.asScala)

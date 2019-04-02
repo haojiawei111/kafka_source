@@ -491,12 +491,8 @@ class DelegationTokenManager(val config: KafkaConfig,
 
 }
 
-case class CreateTokenResult(issueTimestamp: Long,
-                             expiryTimestamp: Long,
-                             maxTimestamp: Long,
-                             tokenId: String,
-                             hmac: Array[Byte],
-                             error: Errors) {
+//样例类 javaBean
+case class CreateTokenResult(issueTimestamp: Long,expiryTimestamp: Long,maxTimestamp: Long,tokenId: String,hmac: Array[Byte],error: Errors) {
 
   override def equals(other: Any): Boolean = {
     other match {

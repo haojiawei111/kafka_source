@@ -18,16 +18,23 @@ package org.apache.kafka.common.security.authenticator;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+
+// 实际就是这个结构 map<string,map<string,c>>
+
 public class CredentialCache {
 
     private final ConcurrentHashMap<String, Cache<? extends Object>> cacheMap = new ConcurrentHashMap<>();
 
+    // 往cacheMap中放入mechanism，value的类中是credentialClass
     public <C> Cache<C> createCache(String mechanism, Class<C> credentialClass) {
         Cache<C> cache = new Cache<C>(credentialClass);
+
         Cache<C> oldCache = (Cache<C>) cacheMap.putIfAbsent(mechanism, cache);
+
         return oldCache == null ? cache : oldCache;
     }
 
+    // 从cacheMap中依据key=mechanism拿出Cache,如果Cache.credentialClass() == credentialClass才返回
     @SuppressWarnings("unchecked")
     public <C> Cache<C> cache(String mechanism, Class<C> credentialClass) {
         Cache<?> cache = cacheMap.get(mechanism);

@@ -55,18 +55,22 @@ object FetchSession {
 }
 
 /**
-  * A cached partition.
+  * A cached partition.缓存分区。
   *
   * The broker maintains a set of these objects for each incremental fetch session.
   * When an incremental fetch request is made, any partitions which are not explicitly
   * enumerated in the fetch request are loaded from the cache.  Similarly, when an
   * incremental fetch response is being prepared, any partitions that have not changed
   * are left out of the response.
+  * broker为每个增量fetch会话维护一组这些对象。 当进行增量fetch请求时，从fetch请求中未显式枚举的任何分区都从高速缓存加载。
+  * 类似地，当准备增量fetch响应时，任何未更改的分区都将被排除在响应之外。
   *
   * We store many of these objects, so it is important for them to be memory-efficient.
   * That is why we store topic and partition separately rather than storing a TopicPartition
   * object.  The TP object takes up more memory because it is a separate JVM object, and
   * because it stores the cached hash code in memory.
+  * 我们存储了许多这些对象，因此对它们来说，记忆效率非常重要。
+  * 这就是我们分别存储主题和分区而不是存储TopicPartition 对象的原因。 TP对象占用更多内存，因为它是一个单独的JVM对象，而因为它将缓存的哈希代码存储在内存中。
   *
   * Note that fetcherLogStartOffset is the LSO of the follower performing the fetch, whereas
   * localLogStartOffset is the log start offset of the partition on this broker.
@@ -179,10 +183,11 @@ class CachedPartition(val topic: String,
 }
 
 /**
-  * The fetch session.
+  * fetch会话。
   *
   * Each fetch session is protected by its own lock, which must be taken before mutable
   * fields are read or modified.  This includes modification of the session partition map.
+  * 每个提取会话都受其自身锁的保护，必须在读取或修改可变*字段之前进行锁定。这包括修改会话分区映射。
   *
   * @param id           The unique fetch session ID.
   * @param privileged   True if this session is privileged.  Sessions crated by followers
@@ -264,6 +269,7 @@ case class FetchSession(val id: Int,
       ", epoch=" + epoch + ")"
   }
 }
+
 
 trait FetchContext extends Logging {
   /**
@@ -387,6 +393,7 @@ class FullFetchContext(private val time: Time,
 
 /**
   * The fetch context for an incremental fetch request.
+  * 增量fetch请求的fetch上下文。
   *
   * @param time         The clock to use.
   * @param reqMetadata  The request metadata.
@@ -497,6 +504,7 @@ class IncrementalFetchContext(private val time: Time,
   }
 }
 
+
 case class LastUsedKey(val lastUsedMs: Long,
                        val id: Int) extends Comparable[LastUsedKey] {
   override def compareTo(other: LastUsedKey): Int =
@@ -523,8 +531,7 @@ case class EvictableKey(val privileged: Boolean,
   * @param maxEntries The maximum number of entries that can be in the cache.
   * @param evictionMs The minimum time that an entry must be unused in order to be evictable.
   */
-class FetchSessionCache(private val maxEntries: Int,
-                        private val evictionMs: Long) extends Logging with KafkaMetricsGroup {
+class FetchSessionCache(private val maxEntries: Int,private val evictionMs: Long) extends Logging with KafkaMetricsGroup {
   private var numPartitions: Long = 0
 
   // A map of session ID to FetchSession.
@@ -730,8 +737,8 @@ class FetchSessionCache(private val maxEntries: Int,
   }
 }
 
-class FetchManager(private val time: Time,
-                   private val cache: FetchSessionCache) extends Logging {
+class FetchManager(private val time: Time,private val cache: FetchSessionCache) extends Logging {
+
   def newContext(reqMetadata: JFetchMetadata,
                  fetchData: FetchSession.REQ_MAP,
                  toForget: util.List[TopicPartition],

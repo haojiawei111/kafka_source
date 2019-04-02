@@ -49,12 +49,11 @@ class KafkaRequestHandler(id: Int,brokerId: Int,val aggregateIdleMeter: Meter,va
       // 我们使用单个仪表作为线程池的聚合空闲百分比。
       // 由于meter计算为total_recorded_value / time_window并且
       // time_window与线程数无关，因此每个记录的空闲时间应该由＃个线程打折。
-      //开始选择时间
-      val startSelectTime = time.nanoseconds
-      //获取下一个请求或阻止，直到指定的时间过去
-      val req = requestChannel.receiveRequest(300)
-      val endTime = time.nanoseconds
 
+      val startSelectTime = time.nanoseconds
+      val req : RequestChannel.BaseRequest = requestChannel.receiveRequest(300)
+      val endTime = time.nanoseconds
+      // 计算空闲时间
       val idleTime = endTime - startSelectTime
 
       aggregateIdleMeter.mark(idleTime / totalHandlerThreads.get)
@@ -67,7 +66,7 @@ class KafkaRequestHandler(id: Int,brokerId: Int,val aggregateIdleMeter: Meter,va
 
         case request: RequestChannel.Request =>
           try {
-            //请求出队时间Nanos
+            //请求出队时间
             request.requestDequeueTimeNanos = endTime
             trace(s"Kafka request handler $id on broker $brokerId handling request $request")
             apis.handle(request)
@@ -114,7 +113,7 @@ class KafkaRequestHandlerPool(val brokerId: Int,val requestChannel: RequestChann
   for (i <- 0 until numThreads) {
     createHandler(i)
   }
-  //创建numThreads个KafkaRequestHandler
+  //创建numThreads个KafkaRequestHandler并开始
   def createHandler(id: Int): Unit = synchronized {
     runnables += new KafkaRequestHandler(id, brokerId, aggregateIdleMeter, threadPoolSize, requestChannel, apis, time)
     KafkaThread.daemon("kafka-request-handler-" + id, runnables(id)).start()
@@ -146,6 +145,8 @@ class KafkaRequestHandlerPool(val brokerId: Int,val requestChannel: RequestChann
     info("shut down completely")
   }
 }
+
+
 
 // Broker Topic监控
 class BrokerTopicMetrics(name: Option[String]) extends KafkaMetricsGroup {

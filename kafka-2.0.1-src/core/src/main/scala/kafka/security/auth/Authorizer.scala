@@ -25,12 +25,15 @@ import org.apache.kafka.common.security.auth.KafkaPrincipal
  * Top level interface that all pluggable authorizers must implement. Kafka will read the `authorizer.class.name` config
  * value at startup time, create an instance of the specified class using the default constructor, and call its
  * `configure` method.
+  * 所有可插拔授权者必须实现的顶级接口。 Kafka将在启动时读取`authorizer.class.name`的值，使用默认构造函数创建指定类的实例，并调用其*`configure`方法。
  *
  * From that point onwards, every client request will first be routed to the `authorize` method and the request will only
  * be authorized if the method returns true.
+  * 从那时起，每个客户端请求将首先被路由到`authorize`方法，并且只有在方法返回true时才会授权请求。
  *
  * If `authorizer.class.name` has no value specified, then no authorization will be performed, and all operations are
  * permitted.
+  * 如果`authorizer.class.name`没有指定值，则不会执行任何授权，并且允许所有操作。
  */
 trait Authorizer extends Configurable {
 

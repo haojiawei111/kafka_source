@@ -286,7 +286,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         // Now that the broker id is successfully registered, checkpoint it
         checkpointBrokerId(config.brokerId)
 
-        /* start token manager */
+        /* 令牌管理 */
         tokenManager = new DelegationTokenManager(config, tokenCache, time , zkClient)
         tokenManager.startup()
 
@@ -315,17 +315,21 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
           authZ
         }
 
+        // config.maxIncrementalFetchSessionCacheSlots = max.incremental.fetch.session.cache.slots
+        // KafkaServer.MIN_INCREMENTAL_FETCH_SESSION_EVICTION_MS = 120000
         val fetchManager = new FetchManager(Time.SYSTEM,new FetchSessionCache(config.maxIncrementalFetchSessionCacheSlots,KafkaServer.MIN_INCREMENTAL_FETCH_SESSION_EVICTION_MS))
 
-        /* start processing requests */
-        //生成用于对外对外提供服务的KafkaApis实例,并设置当前的broker的状态为运行状态.
+
+        //生成用于对外对外提供服务的KafkaApis实例
         apis = new KafkaApis(socketServer.requestChannel, replicaManager, adminManager, groupCoordinator, transactionCoordinator,kafkaController,
           zkClient, config.brokerId, config, metadataCache, metrics, authorizer, quotaManagers,
           fetchManager, brokerTopicStats, clusterId, time, tokenManager)
 
         requestHandlerPool = new KafkaRequestHandlerPool(config.brokerId, socketServer.requestChannel, apis, time,config.numIoThreads)//config.numIoThreads = num.io.threads
 
+        // 加载mx4j-tools
         Mx4jLoader.maybeLoad()
+
 
         /* Add all reconfigurables for config change notification before starting config handlers 在启动配置处理程序之前，为配置更改通知添加所有可重新配置*/
         config.dynamicConfig.addReconfigurables(this)
@@ -753,6 +757,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
 
 
   private def checkpointBrokerId(brokerId: Int) {
+
     var logDirsWithoutMetaProps: List[String] = List()
 
     for (logDir <- config.logDirs if logManager.isLogDirOnline(new File(logDir).getAbsolutePath)) {

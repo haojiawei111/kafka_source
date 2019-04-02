@@ -203,6 +203,7 @@ public class FetchRequest extends AbstractRequest {
     private final List<TopicPartition> toForget;
     private final FetchMetadata metadata;
 
+
     public static final class PartitionData {
         public final long fetchOffset;
         public final long logStartOffset;
@@ -234,6 +235,7 @@ public class FetchRequest extends AbstractRequest {
                 Objects.equals(maxBytes, that.maxBytes);
         }
     }
+
 
     static final class TopicAndPartitionData<T> {
         public final String topic;

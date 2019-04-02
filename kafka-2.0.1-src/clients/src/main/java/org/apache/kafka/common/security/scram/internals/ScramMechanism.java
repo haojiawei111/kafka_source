@@ -31,7 +31,7 @@ public enum ScramMechanism {
     private final String macAlgorithm;
     private final int minIterations;
 
-    private static final Map<String, ScramMechanism> MECHANISMS_MAP;
+    private static final Map<String, ScramMechanism> MECHANISMS_MAP;//这是个不可修改的map,这里面两个key  SCRAM-SHA-512和SCRAM-SHA-256
 
     static {
         Map<String, ScramMechanism> map = new HashMap<>();
@@ -74,4 +74,5 @@ public enum ScramMechanism {
     public static boolean isScram(String mechanismName) {
         return MECHANISMS_MAP.containsKey(mechanismName);
     }
+
 }
