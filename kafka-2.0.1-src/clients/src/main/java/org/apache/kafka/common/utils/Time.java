@@ -32,6 +32,7 @@ public interface Time {
 
     /**
      * Returns the value returned by `nanoseconds` converted into milliseconds.
+     * 返回由“nanoseconds”返回的值，转换为毫秒。
      */
     long hiResClockMs();
 

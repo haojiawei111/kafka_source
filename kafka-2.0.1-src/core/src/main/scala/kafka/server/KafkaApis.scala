@@ -264,6 +264,7 @@ class KafkaApis(val requestChannel: RequestChannel,
     // We can't have the ensureTopicExists check here since the controller sends it as an advisory to all brokers so they
     // stop serving data to clients for the topic being deleted
     val controlledShutdownRequest = request.body[ControlledShutdownRequest]
+    // 请求是否授权
     authorizeClusterAction(request)
 
     def controlledShutdownCallback(controlledShutdownResult: Try[Set[TopicPartition]]): Unit = {
@@ -276,6 +277,7 @@ class KafkaApis(val requestChannel: RequestChannel,
       }
       sendResponseExemptThrottle(request, response)
     }
+
     controller.controlledShutdown(controlledShutdownRequest.brokerId, controlledShutdownCallback)
   }
 
@@ -2421,8 +2423,8 @@ class KafkaApis(val requestChannel: RequestChannel,
 
 
 
-  // Throttle the channel if the request quota is enabled but has been violated. Regardless of throttling, send the
-  // response immediately.
+  // Throttle the channel if the request quota is enabled but has been violated. Regardless of throttling, send the response immediately.
+  // 如果请求配额已启用但已被违反，则会限制通道。无论节流如何，立即发送响应。
   private def sendResponseMaybeThrottle(request: RequestChannel.Request,createResponse: Int => AbstractResponse,onComplete: Option[Send => Unit] = None): Unit = {
     val throttleTimeMs = quotas.request.maybeRecordAndGetThrottleTimeMs(request)
     quotas.request.throttle(request, throttleTimeMs, sendResponse)

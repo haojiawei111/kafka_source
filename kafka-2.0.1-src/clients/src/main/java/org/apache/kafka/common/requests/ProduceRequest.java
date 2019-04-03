@@ -182,6 +182,8 @@ public class ProduceRequest extends AbstractRequest {
         }
     }
 
+
+
     private final short acks;
     private final int timeout;
     private final String transactionalId;
@@ -235,6 +237,7 @@ public class ProduceRequest extends AbstractRequest {
         transactionalId = struct.getOrElse(NULLABLE_TRANSACTIONAL_ID, null);
     }
 
+    //验证 Records
     private void validateRecords(short version, MemoryRecords records) {
         if (version >= 3) {
             Iterator<MutableRecordBatch> iterator = records.batches().iterator();

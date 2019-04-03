@@ -34,35 +34,38 @@ object TransactionCoordinator {
 
   def apply(config: KafkaConfig,
             replicaManager: ReplicaManager,
-            scheduler: Scheduler,
+            scheduler: Scheduler,//调度线程池，线程池大小为1
             zkClient: KafkaZkClient,
             metrics: Metrics,
             metadataCache: MetadataCache,
             time: Time): TransactionCoordinator = {
 
-    val txnConfig = TransactionConfig(config.transactionalIdExpirationMs,
-      config.transactionMaxTimeoutMs,
-      config.transactionTopicPartitions,
-      config.transactionTopicReplicationFactor,
-      config.transactionTopicSegmentBytes,
-      config.transactionsLoadBufferSize,
-      config.transactionTopicMinISR,
-      config.transactionAbortTimedOutTransactionCleanupIntervalMs,
-      config.transactionRemoveExpiredTransactionalIdCleanupIntervalMs,
-      config.requestTimeoutMs)
 
+    val txnConfig = TransactionConfig(config.transactionalIdExpirationMs, //transactional.id.expiration.ms
+      config.transactionMaxTimeoutMs,  //transaction.max.timeout.ms
+      config.transactionTopicPartitions,  //transaction.state.log.num.partitions
+      config.transactionTopicReplicationFactor, //transaction.state.log.replication.factor
+      config.transactionTopicSegmentBytes,  //transaction.state.log.segment.bytes
+      config.transactionsLoadBufferSize,  //transaction.state.log.load.buffer.size
+      config.transactionTopicMinISR,  //transaction.state.log.min.isr
+      config.transactionAbortTimedOutTransactionCleanupIntervalMs, //transaction.abort.timed.out.transaction.cleanup.interval.ms
+      config.transactionRemoveExpiredTransactionalIdCleanupIntervalMs,  //transaction.remove.expired.transaction.cleanup.interval.ms
+      config.requestTimeoutMs) //request.timeout.ms
+
+    //生产者ID管理
     val producerIdManager = new ProducerIdManager(config.brokerId, zkClient)
-    // we do not need to turn on reaper thread since no tasks will be expired and there are no completed tasks to be purged
-    val txnMarkerPurgatory = DelayedOperationPurgatory[DelayedTxnMarker]("txn-marker-purgatory", config.brokerId,
-      reaperEnabled = false, timerEnabled = false)
+
+    // we do not need to turn on reaper thread since no tasks will be expired and there are no completed tasks to be purged 延迟操作
+    val txnMarkerPurgatory = DelayedOperationPurgatory[DelayedTxnMarker]("txn-marker-purgatory", config.brokerId,reaperEnabled = false, timerEnabled = false)
+
+    // 事务状态管理
     val txnStateManager = new TransactionStateManager(config.brokerId, zkClient, scheduler, replicaManager, txnConfig, time)
 
     val logContext = new LogContext(s"[TransactionCoordinator id=${config.brokerId}] ")
-    val txnMarkerChannelManager = TransactionMarkerChannelManager(config, metrics, metadataCache, txnStateManager,
-      txnMarkerPurgatory, time, logContext)
 
-    new TransactionCoordinator(config.brokerId, txnConfig, scheduler, producerIdManager, txnStateManager, txnMarkerChannelManager,
-      time, logContext)
+    val txnMarkerChannelManager = TransactionMarkerChannelManager(config, metrics, metadataCache, txnStateManager,txnMarkerPurgatory, time, logContext)
+
+    new TransactionCoordinator(config.brokerId, txnConfig, scheduler, producerIdManager, txnStateManager, txnMarkerChannelManager,time, logContext)
   }
 
   private def initTransactionError(error: Errors): InitProducerIdResult = {
@@ -274,6 +277,7 @@ class TransactionCoordinator(brokerId: Int,
     }
   }
 
+
   def handleTxnImmigration(txnTopicPartitionId: Int, coordinatorEpoch: Int) {
     txnManager.loadTransactionsForTxnTopicPartition(txnTopicPartitionId, coordinatorEpoch, txnMarkerChannelManager.addTxnMarkersToSend)
   }
@@ -283,6 +287,7 @@ class TransactionCoordinator(brokerId: Int,
       txnMarkerChannelManager.removeMarkersForTxnTopicPartition(txnTopicPartitionId)
   }
 
+
   private def logInvalidStateTransitionAndReturnError(transactionalId: String,
                                                       transactionState: TransactionState,
                                                       transactionResult: TransactionResult) = {
@@ -290,6 +295,7 @@ class TransactionCoordinator(brokerId: Int,
       s"marker result to send: $transactionResult")
     Left(Errors.INVALID_TXN_STATE)
   }
+
 
   def handleEndTransaction(transactionalId: String,
                            producerId: Long,
@@ -443,6 +449,7 @@ class TransactionCoordinator(brokerId: Int,
 
   def partitionFor(transactionalId: String): Int = txnManager.partitionFor(transactionalId)
 
+  //中止超时事务
   private def abortTimedOutTransactions(): Unit = {
     txnManager.timedOutTransactions().foreach { txnIdAndPidEpoch =>
       txnManager.getTransactionState(txnIdAndPidEpoch.transactionalId).right.flatMap {
@@ -492,18 +499,25 @@ class TransactionCoordinator(brokerId: Int,
 
   /**
    * Startup logic executed at the same time when the server starts up.
+    * 启动逻辑在服务器启动的同时执行。
    */
   def startup(enableTransactionalIdExpiration: Boolean = true) {
     info("Starting up.")
+
     scheduler.startup()
+
     scheduler.schedule("transaction-abort",
       abortTimedOutTransactions,
       txnConfig.abortTimedOutTransactionsIntervalMs,
       txnConfig.abortTimedOutTransactionsIntervalMs
     )
-    if (enableTransactionalIdExpiration)
+
+    if (enableTransactionalIdExpiration) //这个默认是true
       txnManager.enableTransactionalIdExpiration()
+
+
     txnMarkerChannelManager.start()
+
     isActive.set(true)
 
     info("Startup complete.")

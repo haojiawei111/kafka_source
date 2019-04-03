@@ -24,8 +24,9 @@ import org.apache.kafka.common.utils.Time
 
 import scala.math._
 
+//双向链表
 @threadsafe
-private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
+private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed { //继承于java的Delayed，说明这个对象应该是要被放入javar的DelayQueue，
 
   // TimerTaskList forms a doubly linked cyclic list using a dummy root entry
   // root.next points to the head
@@ -34,7 +35,7 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
   root.next = root
   root.prev = root
 
-  private[this] val expiration = new AtomicLong(-1L)
+  private[this] val expiration = new AtomicLong(-1L) //到期时间
 
   // Set the bucket's expiration time
   // Returns true if the expiration time is changed
@@ -42,12 +43,12 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
     expiration.getAndSet(expirationMs) != expirationMs
   }
 
-  // Get the bucket's expiration time
+  // Get the bucket's expiration time 获取存储桶的到期时间
   def getExpiration(): Long = {
     expiration.get()
   }
 
-  // Apply the supplied function to each of tasks in this list
+  // Apply the supplied function to each of tasks in this list 将提供的函数应用于此列表中的每个任务
   def foreach(f: (TimerTask)=>Unit): Unit = {
     synchronized {
       var entry = root.next
@@ -61,7 +62,7 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
     }
   }
 
-  // Add a timer task entry to this list
+  // Add a timer task entry to this list 将计时器任务条目添加到此列表中
   def add(timerTaskEntry: TimerTaskEntry): Unit = {
     var done = false
     while (!done) {
@@ -89,6 +90,7 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
   }
 
   // Remove the specified timer task entry from this list
+  // 从此列表中删除指定的计时器任务条目
   def remove(timerTaskEntry: TimerTaskEntry): Unit = {
     synchronized {
       timerTaskEntry.synchronized {
@@ -105,11 +107,13 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
   }
 
   // Remove all task entries and apply the supplied function to each of them
+  //在链表的每个元素上应用给定的函数,并清空整个链表, 同时超时时间也设置为-1;
   def flush(f: (TimerTaskEntry)=>Unit): Unit = {
     synchronized {
       var head = root.next
-      while (head ne root) {
+      while (head ne root) {//这里魂环遍历整个双向列表
         remove(head)
+        // 执行传入的函数
         f(head)
         head = root.next
       }
@@ -117,10 +121,14 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
     }
   }
 
+
+  //获得延迟时间   用到期时间-当前时间
+  //当一个元素的 getDelay(TimeUnit.NANOSECONDS) 方法返回一个小于等于 0 的值时，将发生到期
   def getDelay(unit: TimeUnit): Long = {
     unit.convert(max(getExpiration - Time.SYSTEM.hiResClockMs, 0), TimeUnit.MILLISECONDS)
   }
 
+  //用于延迟队列内部比较排序   到期时间排序
   def compareTo(d: Delayed): Int = {
 
     val other = d.asInstanceOf[TimerTaskList]
@@ -139,12 +147,19 @@ private[timer] class TimerTaskEntry(val timerTask: TimerTask, val expirationMs: 
 
   @volatile
   var list: TimerTaskList = null
-  var next: TimerTaskEntry = null
-  var prev: TimerTaskEntry = null
+  var next: TimerTaskEntry = null  //指向其后一个元素
+  var prev: TimerTaskEntry = null //指向其前一个元素
 
+
+
+  /*********************************************************************************************************************/
   // if this timerTask is already held by an existing timer task entry,
   // setTimerTaskEntry will remove it.
+  // 这里把this设置到timerTask里面去
   if (timerTask != null) timerTask.setTimerTaskEntry(this)
+  /*********************************************************************************************************************/
+
+
 
   def cancelled: Boolean = {
     timerTask.getTimerTaskEntry != this
@@ -161,6 +176,7 @@ private[timer] class TimerTaskEntry(val timerTask: TimerTask, val expirationMs: 
     }
   }
 
+  // 根据expirationMs排序
   override def compare(that: TimerTaskEntry): Int = {
     this.expirationMs compare that.expirationMs
   }

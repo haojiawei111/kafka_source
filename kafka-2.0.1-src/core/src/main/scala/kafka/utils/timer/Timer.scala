@@ -28,6 +28,7 @@ trait Timer {
     * Add a new task to this executor. It will be executed after the task's delay
     * (beginning from the time of submission)
     * 向此执行程序添加新任务。它将在任务延迟之后执行（从提交时开始）
+    * //由外部调用添加任务add
     * @param timerTask the task to add
     */
   def add(timerTask: TimerTask): Unit
@@ -36,6 +37,7 @@ trait Timer {
     * Advance the internal clock, executing any tasks whose expiration has been
     * reached within the duration of the passed timeout.
     * 提前内部时钟，执行在传递的超时持续时间内达到到期的任何任务。
+    * 外部驱动时间轮轮转（advanceClock）
     * @param timeoutMs
     * @return whether or not any tasks were executed
     */
@@ -57,8 +59,8 @@ trait Timer {
 
 
 // wheelSize: Int 当前时间轮的大小也就是总的时间格数量
-// startMs：Long 当期时间轮的创建时间
 // tickMs：Long 当前时间轮中一个时间格表示的时间跨度
+// startMs：Long 当期时间轮的创建时间
 @threadsafe
 class SystemTimer(executorName: String, tickMs: Long = 1, wheelSize: Int = 20, startMs: Long = Time.SYSTEM.hiResClockMs) extends Timer {
 
@@ -68,8 +70,12 @@ class SystemTimer(executorName: String, tickMs: Long = 1, wheelSize: Int = 20, s
       KafkaThread.nonDaemon("executor-"+executorName, runnable)
   })
 
+
   //delayQueue:DelayQueue[TimerTaskList] 整个层级的时间轮公用一个任务队列，其元素类型是TimerTaskList
+  //DelayQueue 是 Delayed 元素的一个无界阻塞队列，只有在延迟期满时才能从中提取元素。该队列的头部 是延迟期满后保存时间最长的 Delayed 元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null。
+  // 当一个元素的 getDelay(TimeUnit.NANOSECONDS) 方法返回一个小于等于 0 的值时，将发生到期。即使无法使用 take 或 poll 移除未到期的元素，也不会将这些元素作为正常元素对待。
   private[this] val delayQueue = new DelayQueue[TimerTaskList]()
+
   //taskCounter：AtomicInteger 各层级时间轮中任务的总数
   private[this] val taskCounter = new AtomicInteger(0)
 
@@ -86,36 +92,42 @@ class SystemTimer(executorName: String, tickMs: Long = 1, wheelSize: Int = 20, s
   private[this] val readLock = readWriteLock.readLock()
   private[this] val writeLock = readWriteLock.writeLock()
 
+
+  //由外部调用添加任务add
   def add(timerTask: TimerTask): Unit = {
     readLock.lock()
     try {
-      addTimerTaskEntry(new TimerTaskEntry(timerTask, timerTask.delayMs + Time.SYSTEM.hiResClockMs))
+      addTimerTaskEntry(new TimerTaskEntry(timerTask, timerTask.delayMs + Time.SYSTEM.hiResClockMs))//到期时间 = 延迟时间 + 现在时间
     } finally {
       readLock.unlock()
     }
   }
 
-  // 往时间轮中添加任务
+  // 往时间轮中添加timerTaskEntry
   private def addTimerTaskEntry(timerTaskEntry: TimerTaskEntry): Unit = {
     if (!timingWheel.add(timerTaskEntry)) {
       // Already expired or cancelled 已经过期或取消
       if (!timerTaskEntry.cancelled)
         taskExecutor.submit(timerTaskEntry.timerTask)
     }
+
   }
 
+  // 超时任务要执行的函数
   private[this] val reinsert = (timerTaskEntry: TimerTaskEntry) => addTimerTaskEntry(timerTaskEntry)
 
   /*
-   * Advances the clock if there is an expired bucket. If there isn't any expired bucket when called,
-   * waits up to timeoutMs before giving up.
+   * Advances the clock if there is an expired bucket. If there isn't any expired bucket when called, waits up to timeoutMs before giving up.
+   * 如果存在过期的存储桶，则提前计时。如果在调用时没有任何过期的存储桶，则在放弃之前等待timeoutMs。
    */
   def advanceClock(timeoutMs: Long): Boolean = {
+
     var bucket = delayQueue.poll(timeoutMs, TimeUnit.MILLISECONDS)
     if (bucket != null) {
       writeLock.lock()
       try {
         while (bucket != null) {
+          // 推进时钟
           timingWheel.advanceClock(bucket.getExpiration())
           bucket.flush(reinsert)
           bucket = delayQueue.poll()

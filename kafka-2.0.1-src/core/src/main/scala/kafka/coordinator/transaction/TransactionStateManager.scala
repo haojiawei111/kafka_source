@@ -43,7 +43,7 @@ import scala.collection.JavaConverters._
 
 
 object TransactionStateManager {
-  // default transaction management config values
+  // 默认事务管理配置值
   val DefaultTransactionsMaxTimeoutMs: Int = TimeUnit.MINUTES.toMillis(15).toInt
   val DefaultTransactionalIdExpirationMs: Int = TimeUnit.DAYS.toMillis(7).toInt
   val DefaultAbortTimedOutTransactionsIntervalMs: Int = TimeUnit.MINUTES.toMillis(1).toInt
@@ -76,24 +76,25 @@ class TransactionStateManager(brokerId: Int,
 
   this.logIdent = "[Transaction State Manager " + brokerId + "]: "
 
+  // 回调
   type SendTxnMarkersCallback = (String, Int, TransactionResult, TransactionMetadata, TxnTransitMetadata) => Unit
 
-  /** shutting down flag */
+  /** 关闭标志 */
   private val shuttingDown = new AtomicBoolean(false)
 
-  /** lock protecting access to the transactional metadata cache, including loading and leaving partition sets */
+  /** 锁定保护对事务元数据高速缓存的访问，包括加载和离开分区集 */
   private val stateLock = new ReentrantReadWriteLock()
 
-  /** partitions of transaction topic that are being loaded, state lock should be called BEFORE accessing this set */
+  /** 正在加载的事务主题的分区，应在访问此集之前调用状态锁 */
   private val loadingPartitions: mutable.Set[TransactionPartitionAndLeaderEpoch] = mutable.Set()
 
-  /** partitions of transaction topic that are being removed, state lock should be called BEFORE accessing this set */
+  /** 要删除的事务主题的分区，应在访问此集之前调用状态锁 */
   private val leavingPartitions: mutable.Set[TransactionPartitionAndLeaderEpoch] = mutable.Set()
 
-  /** transaction metadata cache indexed by assigned transaction topic partition ids */
+  /** 由分配的事务主题分区ID索引的事务元数据缓存 */
   private val transactionMetadataCache: mutable.Map[Int, TxnMetadataCacheEntry] = mutable.Map()
 
-  /** number of partitions for the transaction log topic */
+  /** 事务日志主题的分区数 */
   private val transactionTopicPartitionCount = getTransactionTopicPartitionCount
 
   // visible for testing only
@@ -105,6 +106,7 @@ class TransactionStateManager(brokerId: Int,
       loadingPartitions.add(partitionAndLeaderEpoch)
     }
   }
+
   private[transaction] def stateReadLock = stateLock.readLock
 
   // this is best-effort expiration of an ongoing transaction which has been open for more than its
@@ -134,6 +136,7 @@ class TransactionStateManager(brokerId: Int,
     }
   }
 
+  //在线程池启动一个线程
   def enableTransactionalIdExpiration() {
     scheduler.schedule("transactionalId-expiration", () => {
       val now = time.milliseconds()
