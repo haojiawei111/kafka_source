@@ -22,6 +22,8 @@ import kafka.server.DelayedOperation
 /**
  * Delayed heartbeat operations that are added to the purgatory for session timeout checking.
  * Heartbeats are paused during rebalance.
+  * 延迟心跳操作，添加到炼狱以进行会话超时检查。
+  * 重新平衡期间心跳暂停。
  */
 private[group] class DelayedHeartbeat(coordinator: GroupCoordinator,
                                       group: GroupMetadata,

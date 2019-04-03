@@ -21,6 +21,7 @@ import org.apache.kafka.common.TopicPartition
 
 /**
  * Keys used for delayed operation metrics recording
+  * 用于延迟操作指标记录
  */
 trait DelayedOperationKey {
   def keyLabel: String
@@ -30,7 +31,7 @@ object DelayedOperationKey {
   val globalLabel = "All"
 }
 
-/* used by delayed-produce and delayed-fetch operations */
+/* used by delayed-produce and delayed-fetch operations 延迟produce和延迟fetch操作使用 */
 case class TopicPartitionOperationKey(topic: String, partition: Int) extends DelayedOperationKey {
 
   def this(topicPartition: TopicPartition) = this(topicPartition.topic, topicPartition.partition)
@@ -38,19 +39,23 @@ case class TopicPartitionOperationKey(topic: String, partition: Int) extends Del
   override def keyLabel = "%s-%d".format(topic, partition)
 }
 
-/* used by delayed-join-group operations */
+
+/* used by delayed-join-group operations延迟加入组操作使用 */
 case class MemberKey(groupId: String, consumerId: String) extends DelayedOperationKey {
 
   override def keyLabel = "%s-%s".format(groupId, consumerId)
 }
 
-/* used by delayed-rebalance operations */
+
+/* used by delayed-rebalance operations 延迟再平衡操作使用 */
 case class GroupKey(groupId: String) extends DelayedOperationKey {
 
   override def keyLabel = groupId
 }
 
-/* used by delayed-topic operations */
+
+
+/* 延迟主题操作使用 */
 case class TopicKey(topic: String) extends DelayedOperationKey {
 
   override def keyLabel = topic

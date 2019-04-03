@@ -34,8 +34,7 @@ case class CreatePartitionsMetadata(topic: String, replicaAssignments: Map[Int, 
 class DelayedCreatePartitions(delayMs: Long,
                               createMetadata: Seq[CreatePartitionsMetadata],
                               adminManager: AdminManager,
-                              responseCallback: Map[String, ApiError] => Unit)
-  extends DelayedOperation(delayMs) {
+                              responseCallback: Map[String, ApiError] => Unit) extends DelayedOperation(delayMs) {
 
   /**
     * The operation can be completed if all of the topics that do not have an error exist and every partition has a

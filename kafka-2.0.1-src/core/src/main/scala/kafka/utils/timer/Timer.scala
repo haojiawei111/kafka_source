@@ -103,7 +103,7 @@ class SystemTimer(executorName: String, tickMs: Long = 1, wheelSize: Int = 20, s
     }
   }
 
-  // 往时间轮中添加timerTaskEntry
+
   private def addTimerTaskEntry(timerTaskEntry: TimerTaskEntry): Unit = {
     if (!timingWheel.add(timerTaskEntry)) {
       // Already expired or cancelled 已经过期或取消

@@ -46,25 +46,28 @@ import scala.collection.mutable.ListBuffer
 abstract class DelayedOperation(override val delayMs: Long,lockOpt: Option[Lock] = None) extends TimerTask with Logging {
 
   private val completed = new AtomicBoolean(false)
+
   private val tryCompletePending = new AtomicBoolean(false)
   // Visible for testing
   private[server] val lock: Lock = lockOpt.getOrElse(new ReentrantLock)
 
   /*
    * Force completing the delayed operation, if not already completed.
+   * 强制完成延迟操作（如果尚未完成）。
    * This function can be triggered when
    *
-   * 1. The operation has been verified to be completable inside tryComplete()
-   * 2. The operation has expired and hence needs to be completed right now
+   * 1. The operation has been verified to be completable inside tryComplete()已经验证该操作在tryComplete（）内是可完成的
+   * 2. The operation has expired and hence needs to be completed right now该操作已过期，因此需要立即完成
    *
    * Return true iff the operation is completed by the caller: note that
    * concurrent threads can try to complete the same operation, but only
    * the first thread will succeed in completing the operation and return
    * true, others will still return false
+   * 如果调用者完成操作，则返回true：请注意并发线程可以尝试完成相同的操作，但只有第一个线程将成功完成操作并返回true，其他线程仍将返回false
    */
   def forceComplete(): Boolean = {
     if (completed.compareAndSet(false, true)) {
-      // cancel the timeout timer
+      // cancel the timeout timer取消超时计时器
       cancel()
       onComplete()
       true
@@ -80,12 +83,14 @@ abstract class DelayedOperation(override val delayMs: Long,lockOpt: Option[Lock]
 
   /**
    * Call-back to execute when a delayed operation gets expired and hence forced to complete.
+    * 当延迟操作过期并因此强制完成时，回调执行。
+    * 这是到期需要执行的函数
    */
   def onExpiration(): Unit
 
   /**
-   * Process for completing an operation; This function needs to be defined
-   * in subclasses and will be called exactly once in forceComplete()
+   * Process for completing an operation; This function needs to be defined in subclasses and will be called exactly once in forceComplete()
+    * 完成操作的过程;这个函数需要在子类中定义，并且在forceComplete（）中只调用一次
    */
   def onComplete(): Unit
 
@@ -145,13 +150,19 @@ abstract class DelayedOperation(override val delayMs: Long,lockOpt: Option[Lock]
   }
 }
 
+
+
+
+
+
+
+
 object DelayedOperationPurgatory {
 
   def apply[T <: DelayedOperation](purgatoryName: String,brokerId: Int = 0,purgeInterval: Int = 1000,reaperEnabled: Boolean = true,timerEnabled: Boolean = true): DelayedOperationPurgatory[T] = {
     val timer = new SystemTimer(purgatoryName)
     new DelayedOperationPurgatory[T](purgatoryName, timer, brokerId, purgeInterval, reaperEnabled, timerEnabled)
   }
-
 }
 
 /**

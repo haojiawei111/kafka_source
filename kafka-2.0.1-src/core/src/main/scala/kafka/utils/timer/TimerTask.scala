@@ -18,7 +18,7 @@ package kafka.utils.timer
 
 trait TimerTask extends Runnable {
 
-  val delayMs: Long // 时间戳以毫秒为单位
+  val delayMs: Long // 时间戳以毫秒为单位   这个是此任务的延时时间
 
   private[this] var timerTaskEntry: TimerTaskEntry = null
 
