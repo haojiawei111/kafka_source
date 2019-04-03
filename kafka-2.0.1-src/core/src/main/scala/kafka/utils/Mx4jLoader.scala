@@ -47,6 +47,8 @@ object Mx4jLoader extends Logging {
       // 反射拿到mx4j.tools.adaptor.http.HttpAdaptor类
       val httpAdaptorClass = Class.forName("mx4j.tools.adaptor.http.HttpAdaptor")
       val httpAdaptor = httpAdaptorClass.newInstance()
+
+
       httpAdaptorClass.getMethod("setHost", classOf[String]).invoke(httpAdaptor, address.asInstanceOf[AnyRef])
       httpAdaptorClass.getMethod("setPort", Integer.TYPE).invoke(httpAdaptor, port.asInstanceOf[AnyRef])
 

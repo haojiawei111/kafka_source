@@ -453,7 +453,7 @@ public class KafkaStreams {
             // StreamThreads first
             if (thread instanceof StreamThread) {
                 StreamThread.State newState = (StreamThread.State) abstractNewState;
-                threadState.put(thread.getId(),  );
+                threadState.put(thread.getId(),newState);
 
                 if (newState == StreamThread.State.PARTITIONS_REVOKED && state != State.REBALANCING) {
                     setState(State.REBALANCING);
@@ -631,6 +631,7 @@ public class KafkaStreams {
         this(internalTopologyBuilder, config, clientSupplier, Time.SYSTEM);
     }
 
+
     private KafkaStreams(final InternalTopologyBuilder internalTopologyBuilder,
                          final StreamsConfig config,
                          final KafkaClientSupplier clientSupplier,
@@ -638,7 +639,7 @@ public class KafkaStreams {
         this.config = config;
         this.time = time;
 
-        // adjust the topology if optimization is turned on.
+        // adjust the topology if optimization is turned on. 如果打开优化，则调整拓扑。
         // TODO: to be removed post 2.0
         internalTopologyBuilder.adjust(config);
 

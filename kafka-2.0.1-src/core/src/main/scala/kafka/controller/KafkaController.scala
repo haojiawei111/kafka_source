@@ -81,12 +81,14 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
   val replicaStateMachine = new ReplicaStateMachine(config, stateChangeLogger, controllerContext, topicDeletionManager, zkClient, mutable.Map.empty, new ControllerBrokerRequestBatch(this, stateChangeLogger))
   val partitionStateMachine = new PartitionStateMachine(config, stateChangeLogger, controllerContext, topicDeletionManager, zkClient, mutable.Map.empty, new ControllerBrokerRequestBatch(this, stateChangeLogger))
 
+  // 这些处理方法都会注册到zookeeper的watch上
   private val controllerChangeHandler = new ControllerChangeHandler(this, eventManager)
   private val brokerChangeHandler = new BrokerChangeHandler(this, eventManager)
   private val brokerModificationsHandlers: mutable.Map[Int, BrokerModificationsHandler] = mutable.Map.empty
   private val topicChangeHandler = new TopicChangeHandler(this, eventManager)
   private val topicDeletionHandler = new TopicDeletionHandler(this, eventManager)
   private val partitionModificationsHandlers: mutable.Map[String, PartitionModificationsHandler] = mutable.Map.empty
+
   private val partitionReassignmentHandler = new PartitionReassignmentHandler(this, eventManager)
   private val preferredReplicaElectionHandler = new PreferredReplicaElectionHandler(this, eventManager)
   private val isrChangeNotificationHandler = new IsrChangeNotificationHandler(this, eventManager)
@@ -238,7 +240,8 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     // before reading source of truth from zookeeper, register the listeners to get broker/topic callbacks
     val childChangeHandlers = Seq(brokerChangeHandler, topicChangeHandler, topicDeletionHandler, logDirEventNotificationHandler,
       isrChangeNotificationHandler)
-    childChangeHandlers.foreach(zkClient.registerZNodeChildChangeHandler)
+    childChangeHandlers.foreach(zkClient.registerZNodeChildChangeHandler) // 这里注册zookeeper
+
     val nodeChangeHandlers = Seq(preferredReplicaElectionHandler, partitionReassignmentHandler)
     nodeChangeHandlers.foreach(zkClient.registerZNodeChangeHandlerAndCheckExistence)
 
@@ -1036,6 +1039,8 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     }
   }
 
+
+
   case class ControlledShutdown(id: Int, controlledShutdownCallback: Try[Set[TopicPartition]] => Unit) extends ControllerEvent {
 
     def state = ControllerState.ControlledShutdown
@@ -1091,6 +1096,10 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     }
   }
 
+
+
+
+
   case class LeaderAndIsrResponseReceived(LeaderAndIsrResponseObj: AbstractResponse, brokerId: Int) extends ControllerEvent {
 
     def state = ControllerState.LeaderAndIsrResponseReceived
@@ -1122,6 +1131,9 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
       }
     }
   }
+
+
+
 
   case class TopicDeletionStopReplicaResponseReceived(stopReplicaResponseObj: AbstractResponse, replicaId: Int) extends ControllerEvent {
 
@@ -1157,6 +1169,9 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     }
 
   }
+
+
+
 
   private def updateMetrics(): Unit = {
     offlinePartitionCount =
@@ -1236,6 +1251,8 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     }
   }
 
+
+
   case object BrokerChange extends ControllerEvent {
     override def state: ControllerState = ControllerState.BrokerChange
 
@@ -1263,6 +1280,9 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     }
   }
 
+
+
+
   case class BrokerModifications(brokerId: Int) extends ControllerEvent {
     override def state: ControllerState = ControllerState.BrokerChange
 
@@ -1279,6 +1299,8 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
       }
     }
   }
+
+
 
   case object TopicChange extends ControllerEvent {
     override def state: ControllerState = ControllerState.TopicChange
@@ -1302,6 +1324,8 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
         onNewPartitionCreation(addedPartitionReplicaAssignment.keySet)
     }
   }
+
+
 
   case object LogDirEventNotification extends ControllerEvent {
     override def state: ControllerState = ControllerState.LogDirChange
@@ -1418,6 +1442,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     }
   }
 
+
   case class PartitionReassignmentIsrChange(partition: TopicPartition) extends ControllerEvent {
     override def state: ControllerState = ControllerState.PartitionReassignment
 
@@ -1507,6 +1532,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
   }
 
   case object Reelect extends ControllerEvent {
+
     override def state = ControllerState.ControllerChange
 
     override def process(): Unit = {
@@ -1519,6 +1545,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
       elect()
     }
   }
+
 
   case object RegisterBrokerAndReelect extends ControllerEvent {
     override def state: ControllerState = ControllerState.ControllerChange
@@ -1547,8 +1574,23 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
 
 }
 
+
+
+// Controller事件接口
+sealed trait ControllerEvent {
+  val enqueueTimeMs: Long = Time.SYSTEM.milliseconds()
+
+  def state: ControllerState
+  def process(): Unit
+}
+
+
+
+
+
+
 class BrokerChangeHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChildChangeHandler {
-  //   /brokers/ids
+  //   /brokers/ids 子节点改变处理
   override val path: String = BrokerIdsZNode.path
 
   override def handleChildChange(): Unit = {
@@ -1590,12 +1632,14 @@ class PartitionModificationsHandler(controller: KafkaController, eventManager: C
   override def handleDataChange(): Unit = eventManager.put(controller.PartitionModifications(topic))
 }
 
+
 class TopicDeletionHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChildChangeHandler {
   //         /admin/delete_topics
   override val path: String = DeleteTopicsZNode.path
 
   override def handleChildChange(): Unit = eventManager.put(controller.TopicDeletion)
 }
+
 
 class PartitionReassignmentHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChangeHandler {
   //      /admin/reassign_partitions
@@ -1641,6 +1685,10 @@ class ControllerChangeHandler(controller: KafkaController, eventManager: Control
   override def handleDataChange(): Unit = eventManager.put(controller.ControllerChange)
 }
 
+
+
+
+
 case class ReassignedPartitionsContext(var newReplicas: Seq[Int] = Seq.empty,val reassignIsrChangeHandler: PartitionReassignmentIsrChangeHandler) {
 
   def registerReassignIsrChangeHandler(zkClient: KafkaZkClient): Unit =
@@ -1651,6 +1699,8 @@ case class ReassignedPartitionsContext(var newReplicas: Seq[Int] = Seq.empty,val
 
 }
 
+
+
 case class PartitionAndReplica(topicPartition: TopicPartition, replica: Int) {
   def topic: String = topicPartition.topic
   def partition: Int = topicPartition.partition
@@ -1659,6 +1709,8 @@ case class PartitionAndReplica(topicPartition: TopicPartition, replica: Int) {
     s"[Topic=$topic,Partition=$partition,Replica=$replica]"
   }
 }
+
+
 
 case class LeaderIsrAndControllerEpoch(leaderAndIsr: LeaderAndIsr, controllerEpoch: Int) {
   // {"controller_epoch":179,"leader":0,"version":1,"leader_epoch":0,"isr":[0,2]}
@@ -1672,6 +1724,7 @@ case class LeaderIsrAndControllerEpoch(leaderAndIsr: LeaderAndIsr, controllerEpo
   }
 }
 
+
 private[controller] class ControllerStats extends KafkaMetricsGroup {
   val uncleanLeaderElectionRate = newMeter("UncleanLeaderElectionsPerSec", "elections", TimeUnit.SECONDS)
 
@@ -1683,9 +1736,3 @@ private[controller] class ControllerStats extends KafkaMetricsGroup {
 
 }
 
-sealed trait ControllerEvent {
-  val enqueueTimeMs: Long = Time.SYSTEM.milliseconds()
-
-  def state: ControllerState
-  def process(): Unit
-}
