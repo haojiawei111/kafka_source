@@ -26,7 +26,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StateSerdes;
 
 import java.util.List;
-
+// 和ChangeLoggingKeyValueBytesStore基本一样，这里提供了泛型
 public class InMemoryKeyValueLoggedStore<K, V> extends WrappedStateStore.AbstractStateStore implements KeyValueStore<K, V> {
 
     private final KeyValueStore<K, V> inner;

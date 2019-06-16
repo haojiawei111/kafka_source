@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>kafka.serializer.Decoder</OriginalElement>
+  <nodes>
+    <node x="159.0" y="80.0">kafka.serializer.IntegerDecoder</node>
+    <node x="0.0" y="80.0">kafka.serializer.DefaultDecoder</node>
+    <node x="256.75" y="0.0">kafka.serializer.Decoder</node>
+    <node x="319.0" y="80.0">kafka.serializer.LongDecoder</node>
+    <node x="466.0" y="80.0">kafka.serializer.StringDecoder</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="kafka.serializer.StringDecoder" target="kafka.serializer.Decoder">
+      <point x="0.0" y="-15.0" />
+      <point x="532.0" y="50.0" />
+      <point x="342.5" y="50.0" />
+      <point x="36.75" y="15.0" />
+    </edge>
+    <edge source="kafka.serializer.DefaultDecoder" target="kafka.serializer.Decoder">
+      <point x="0.0" y="-15.0" />
+      <point x="69.5" y="50.0" />
+      <point x="269.0" y="50.0" />
+      <point x="-36.75" y="15.0" />
+    </edge>
+    <edge source="kafka.serializer.LongDecoder" target="kafka.serializer.Decoder">
+      <point x="0.0" y="-15.0" />
+      <point x="382.5" y="60.0" />
+      <point x="318.0" y="60.0" />
+      <point x="12.25" y="15.0" />
+    </edge>
+    <edge source="kafka.serializer.IntegerDecoder" target="kafka.serializer.Decoder">
+      <point x="0.0" y="-15.0" />
+      <point x="229.0" y="60.0" />
+      <point x="293.5" y="60.0" />
+      <point x="-12.25" y="15.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="299.0" y="55.0" />
+  <SelectedNodes />
+  <Categories />
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

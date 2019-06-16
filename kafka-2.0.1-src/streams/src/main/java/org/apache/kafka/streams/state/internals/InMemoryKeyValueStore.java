@@ -37,8 +37,8 @@ public class InMemoryKeyValueStore<K, V> implements KeyValueStore<K, V> {
     private final String name;
     private final Serde<K> keySerde;
     private final Serde<V> valueSerde;
-    private final NavigableMap<K, V> map;
-    private volatile boolean open = false;
+    private final NavigableMap<K, V> map; //TreeMap
+    private volatile boolean open = false; //标记是否准备好
 
     private StateSerdes<K, V> serdes;
 
@@ -61,6 +61,7 @@ public class InMemoryKeyValueStore<K, V> implements KeyValueStore<K, V> {
         return this.name;
     }
 
+    // 初始化
     @Override
     @SuppressWarnings("unchecked")
     public void init(final ProcessorContext context, final StateStore root) {

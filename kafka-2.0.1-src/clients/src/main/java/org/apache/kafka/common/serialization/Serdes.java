@@ -23,6 +23,7 @@ import java.util.Map;
 
 /**
  * Factory for creating serializers / deserializers.
+ * 用于创建序列化器/反序列化器的工厂类
  */
 public class Serdes {
 

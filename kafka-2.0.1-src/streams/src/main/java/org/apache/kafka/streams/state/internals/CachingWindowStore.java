@@ -36,10 +36,10 @@ import java.util.List;
 class CachingWindowStore<K, V> extends WrappedStateStore.AbstractStateStore implements WindowStore<Bytes, byte[]>, CachedStateStore<Windowed<K>, V> {
 
     private final WindowStore<Bytes, byte[]> underlying;
+    private final SegmentedBytesStore.KeySchema keySchema = new WindowKeySchema();
     private final Serde<K> keySerde;
     private final Serde<V> valueSerde;
     private final long windowSize;
-    private final SegmentedBytesStore.KeySchema keySchema = new WindowKeySchema();
 
 
     private String name;

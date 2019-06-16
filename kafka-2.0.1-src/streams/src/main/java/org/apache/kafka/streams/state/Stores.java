@@ -71,6 +71,10 @@ import java.util.Objects;
  * topology.addStateStore(storeBuilder, "processorName");
  * }</pre>
  */
+
+/**
+ * 工厂类 用来构建StoreSupplier或者StoreBuilder
+ */
 @InterfaceStability.Evolving
 public class Stores {
 

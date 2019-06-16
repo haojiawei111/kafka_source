@@ -38,6 +38,7 @@ import java.util.List;
  * @param <K>
  * @param <V>
  */
+// 和MeteredKeyValueStore没啥区别，这里提供了泛型
 public class MeteredKeyValueBytesStore<K, V> extends WrappedStateStore.AbstractStateStore implements KeyValueStore<K, V> {
 
     private final Serde<K> keySerde;

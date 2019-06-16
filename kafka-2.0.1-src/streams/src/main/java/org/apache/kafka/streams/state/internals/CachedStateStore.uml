@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>org.apache.kafka.streams.state.internals.CachedStateStore</OriginalElement>
+  <nodes>
+    <node x="326.0" y="91.5">org.apache.kafka.streams.state.internals.CachingSessionStore</node>
+    <node x="738.0" y="80.0">org.apache.kafka.streams.state.internals.CachingWindowStore</node>
+    <node x="0.0" y="103.0">org.apache.kafka.streams.state.internals.CachingKeyValueStore</node>
+    <node x="446.5" y="0.0">org.apache.kafka.streams.state.internals.CachedStateStore</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="org.apache.kafka.streams.state.internals.CachingWindowStore" target="org.apache.kafka.streams.state.internals.CachedStateStore">
+      <point x="0.0" y="-164.5" />
+      <point x="925.0" y="55.0" />
+      <point x="572.3333333333334" y="55.0" />
+      <point x="50.33333333333337" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingSessionStore" target="org.apache.kafka.streams.state.internals.CachedStateStore">
+      <point x="0.0" y="-153.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingKeyValueStore" target="org.apache.kafka.streams.state.internals.CachedStateStore">
+      <point x="0.0" y="-141.5" />
+      <point x="153.0" y="55.0" />
+      <point x="471.66666666666663" y="55.0" />
+      <point x="-50.33333333333337" y="15.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="556.0" y="204.5" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Inner Classes</Category>
+    <Category>Fields</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

@@ -26,6 +26,8 @@ import kafka.utils.VerifiableProperties
  * A decoder is a method of turning byte arrays into objects.
  * An implementation is required to provide a constructor that
  * takes a VerifiableProperties instance.
+  * 解码器是一种将字节数组转换为对象的方法。 *需要一个实现来提供*采用VerifiableProperties实例的构造函数。
+  *
  */
 trait Decoder[T] {
   def fromBytes(bytes: Array[Byte]): T
@@ -33,6 +35,7 @@ trait Decoder[T] {
 
 /**
  * The default implementation does nothing, just returns the same byte array it takes in.
+  *   Array[Byte] -》 Array[Byte]
  */
 class DefaultDecoder(props: VerifiableProperties = null) extends Decoder[Array[Byte]] {
   def fromBytes(bytes: Array[Byte]): Array[Byte] = bytes
@@ -41,6 +44,7 @@ class DefaultDecoder(props: VerifiableProperties = null) extends Decoder[Array[B
 /**
  * The string decoder translates bytes into strings. It uses UTF8 by default but takes
  * an optional property serializer.encoding to control this.
+  * Array[Byte] -》 String
  */
 class StringDecoder(props: VerifiableProperties = null) extends Decoder[String] {
   val encoding =
@@ -56,6 +60,7 @@ class StringDecoder(props: VerifiableProperties = null) extends Decoder[String] 
 
 /**
   * The long decoder translates bytes into longs.
+  * Array[Byte] -》 Long
   */
 class LongDecoder(props: VerifiableProperties = null) extends Decoder[Long] {
   def fromBytes(bytes: Array[Byte]): Long = {
@@ -65,6 +70,7 @@ class LongDecoder(props: VerifiableProperties = null) extends Decoder[Long] {
 
 /**
   * The integer decoder translates bytes into integers.
+  * Array[Byte] -》 Integer
   */
 class IntegerDecoder(props: VerifiableProperties = null) extends Decoder[Integer] {
   def fromBytes(bytes: Array[Byte]): Integer = {

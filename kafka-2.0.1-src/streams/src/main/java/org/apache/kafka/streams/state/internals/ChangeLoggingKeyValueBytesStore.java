@@ -27,7 +27,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StateSerdes;
 
 import java.util.List;
-
+// 和InMemoryKeyValueLoggedStore基本一样，这里的kry必须是Bytes，value必须是byte[]
 public class ChangeLoggingKeyValueBytesStore extends WrappedStateStore.AbstractStateStore implements KeyValueStore<Bytes, byte[]> {
     private final KeyValueStore<Bytes, byte[]> inner;
     private StoreChangeLogger<Bytes, byte[]> changeLogger;

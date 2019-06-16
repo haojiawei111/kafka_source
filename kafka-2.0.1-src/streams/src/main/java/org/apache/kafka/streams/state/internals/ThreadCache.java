@@ -42,7 +42,7 @@ public class ThreadCache {
     private final StreamsMetricsImpl metrics;
     private final Map<String, NamedCache> caches = new HashMap<>();
 
-    // internal stats
+    // internal stats 内部统计
     private long numPuts = 0;
     private long numGets = 0;
     private long numEvicts = 0;

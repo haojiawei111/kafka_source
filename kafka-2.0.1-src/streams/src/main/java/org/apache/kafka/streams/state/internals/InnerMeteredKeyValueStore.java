@@ -31,6 +31,8 @@ import java.util.List;
 /**
  * Metered {@link KeyValueStore} wrapper is used for recording operation metrics, and hence its
  * inner KeyValueStore implementation do not need to provide its own metrics collecting functionality.
+ * 内部计量
+ * Metered {@link KeyValueStore}包装器用于记录操作指标，因此其*内部KeyValueStore实现不需要提供自己的指标收集功能。
  *
  * @param <K>
  * @param <V>

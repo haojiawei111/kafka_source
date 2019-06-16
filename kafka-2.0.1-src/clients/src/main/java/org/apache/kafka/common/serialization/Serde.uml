@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>org.apache.kafka.common.serialization.Serde</OriginalElement>
+  <nodes>
+    <node x="3901.0" y="390.0">org.apache.kafka.common.serialization.Serdes.ShortSerde</node>
+    <node x="2363.0" y="390.0">org.apache.kafka.common.serialization.Serdes.BytesSerde</node>
+    <node x="5383.5" y="280.0">org.apache.kafka.streams.kstream.SessionWindowedSerializer</node>
+    <node x="2045.0" y="280.0">org.apache.kafka.common.serialization.ExtendedDeserializer</node>
+    <node x="2175.0" y="390.0">org.apache.kafka.streams.kstream.internals.ChangedDeserializer</node>
+    <node x="3078.0" y="280.0">org.apache.kafka.common.serialization.Serdes.WrapperSerde</node>
+    <node x="3079.0" y="0.0">java.lang.AutoCloseable</node>
+    <node x="4871.5" y="280.0">org.apache.kafka.common.serialization.BytesSerializer</node>
+    <node x="2929.0" y="390.0">org.apache.kafka.common.serialization.Serdes.FloatSerde</node>
+    <node x="1129.0" y="280.0">org.apache.kafka.common.serialization.StringDeserializer</node>
+    <node x="4387.5" y="280.0">org.apache.kafka.common.serialization.ByteArraySerializer</node>
+    <node x="192.0" y="280.0">org.apache.kafka.common.serialization.ShortDeserializer</node>
+    <node x="3104.0" y="160.0">org.apache.kafka.common.serialization.Serde</node>
+    <node x="3549.0" y="390.0">org.apache.kafka.common.serialization.Serdes.DoubleSerde</node>
+    <node x="5923.5" y="280.0">org.apache.kafka.common.serialization.IntegerSerializer</node>
+    <node x="4716.5" y="280.0">org.apache.kafka.common.serialization.StringSerializer</node>
+    <node x="5234.5" y="280.0">org.apache.kafka.common.serialization.FloatSerializer</node>
+    <node x="1054.5" y="160.0">org.apache.kafka.common.serialization.Deserializer</node>
+    <node x="3693.0" y="390.0">org.apache.kafka.streams.kstream.WindowedSerdes.SessionWindowedSerde</node>
+    <node x="3387.0" y="390.0">org.apache.kafka.common.serialization.Serdes.ByteBufferSerde</node>
+    <node x="4034.0" y="390.0">org.apache.kafka.common.serialization.ExtendedSerializer.Wrapper</node>
+    <node x="1641.0" y="280.0">org.apache.kafka.streams.kstream.TimeWindowedDeserializer</node>
+    <node x="0.0" y="280.0">org.apache.kafka.common.serialization.ByteArrayDeserializer</node>
+    <node x="4564.5" y="280.0">org.apache.kafka.common.serialization.ShortSerializer</node>
+    <node x="5760.5" y="280.0">org.apache.kafka.common.serialization.DoubleSerializer</node>
+    <node x="691.0" y="280.0">org.apache.kafka.streams.kstream.SessionWindowedDeserializer</node>
+    <node x="2496.0" y="390.0">org.apache.kafka.common.serialization.Serdes.IntegerSerde</node>
+    <node x="526.0" y="280.0">org.apache.kafka.common.serialization.LongDeserializer</node>
+    <node x="933.0" y="280.0">org.apache.kafka.common.serialization.ByteBufferDeserializer</node>
+    <node x="1299.0" y="280.0">org.apache.kafka.common.serialization.FloatDeserializer</node>
+    <node x="5610.5" y="280.0">org.apache.kafka.common.serialization.LongSerializer</node>
+    <node x="4031.5" y="280.0">org.apache.kafka.common.serialization.ExtendedSerializer</node>
+    <node x="1463.0" y="280.0">org.apache.kafka.common.serialization.DoubleDeserializer</node>
+    <node x="2640.0" y="390.0">org.apache.kafka.common.serialization.Serdes.LongSerde</node>
+    <node x="4154.0" y="390.0">org.apache.kafka.streams.kstream.internals.ChangedSerializer</node>
+    <node x="4977.75" y="160.0">org.apache.kafka.common.serialization.Serializer</node>
+    <node x="2771.0" y="390.0">org.apache.kafka.common.serialization.Serdes.ByteArraySerde</node>
+    <node x="3092.5" y="80.0">java.io.Closeable</node>
+    <node x="5023.5" y="280.0">org.apache.kafka.streams.kstream.TimeWindowedSerializer</node>
+    <node x="359.0" y="280.0">org.apache.kafka.common.serialization.BytesDeserializer</node>
+    <node x="4206.5" y="280.0">org.apache.kafka.common.serialization.ByteBufferSerializer</node>
+    <node x="1867.0" y="280.0">org.apache.kafka.common.serialization.IntegerDeserializer</node>
+    <node x="3059.0" y="390.0">org.apache.kafka.streams.kstream.WindowedSerdes.TimeWindowedSerde</node>
+    <node x="2055.0" y="390.0">org.apache.kafka.common.serialization.ExtendedDeserializer.Wrapper</node>
+    <node x="3251.0" y="390.0">org.apache.kafka.common.serialization.Serdes.StringSerde</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="org.apache.kafka.common.serialization.Deserializer" target="java.io.Closeable">
+      <point x="0.0" y="-15.0" />
+      <point x="1112.5" y="135.0" />
+      <point x="3110.0" y="135.0" />
+      <point x="-35.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.ByteBufferSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="3458.0" y="360.0" />
+      <point x="3169.3636363636365" y="360.0" />
+      <point x="24.363636363636488" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.ShortSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="3957.5" y="330.0" />
+      <point x="3205.909090909091" y="330.0" />
+      <point x="60.90909090909099" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.BytesSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="2419.5" y="330.0" />
+      <point x="3084.090909090909" y="330.0" />
+      <point x="-60.90909090909099" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ExtendedSerializer.Wrapper" target="org.apache.kafka.common.serialization.ExtendedSerializer">
+      <point x="25.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ByteArraySerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="4466.0" y="230.0" />
+      <point x="4998.791666666667" y="230.0" />
+      <point x="-29.45833333333303" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.FloatSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="5299.0" y="250.0" />
+      <point x="5040.875" y="250.0" />
+      <point x="12.625" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.LongDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="598.5" y="240.0" />
+      <point x="1088.3333333333333" y="240.0" />
+      <point x="-24.166666666666742" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.LongSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="2695.5" y="350.0" />
+      <point x="3108.4545454545455" y="350.0" />
+      <point x="-36.545454545454504" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.DoubleSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="5832.0" y="220.0" />
+      <point x="5066.125" y="220.0" />
+      <point x="37.875" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serializer" target="java.io.Closeable">
+      <point x="0.0" y="-15.0" />
+      <point x="5028.25" y="135.0" />
+      <point x="3180.0" y="135.0" />
+      <point x="35.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.IntegerSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="5995.0" y="210.0" />
+      <point x="5074.541666666667" y="210.0" />
+      <point x="46.29166666666697" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.WindowedSerdes.SessionWindowedSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="3787.0" y="340.0" />
+      <point x="3193.727272727273" y="340.0" />
+      <point x="48.727272727272975" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.BytesSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="4937.5" y="260.0" />
+      <point x="5024.041666666667" y="260.0" />
+      <point x="-4.20833333333303" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serde" target="java.io.Closeable">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.SessionWindowedSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="5487.0" y="240.0" />
+      <point x="5049.291666666667" y="240.0" />
+      <point x="21.04166666666697" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.IntegerSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="2558.0" y="340.0" />
+      <point x="3096.2727272727275" y="340.0" />
+      <point x="-48.72727272727252" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ByteArrayDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="86.0" y="210.0" />
+      <point x="1059.3333333333335" y="210.0" />
+      <point x="-53.16666666666674" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ShortSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="4630.5" y="240.0" />
+      <point x="5007.208333333333" y="240.0" />
+      <point x="-21.04166666666697" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ShortDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="265.5" y="220.0" />
+      <point x="1069.0" y="220.0" />
+      <point x="-43.5" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ExtendedSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="4109.0" y="210.0" />
+      <point x="4981.958333333333" y="210.0" />
+      <point x="-46.29166666666697" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ByteBufferSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="4287.0" y="220.0" />
+      <point x="4990.375" y="220.0" />
+      <point x="-37.875" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.TimeWindowedSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="5119.0" y="260.0" />
+      <point x="5032.458333333333" y="260.0" />
+      <point x="4.20833333333303" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.WrapperSerde" target="org.apache.kafka.common.serialization.Serde">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.LongSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="5675.5" y="230.0" />
+      <point x="5057.708333333333" y="230.0" />
+      <point x="29.45833333333303" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.DoubleSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="3611.0" y="350.0" />
+      <point x="3181.5454545454545" y="350.0" />
+      <point x="36.545454545454504" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.internals.ChangedDeserializer" target="org.apache.kafka.common.serialization.ExtendedDeserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="2259.0" y="370.0" />
+      <point x="2186.6666666666665" y="370.0" />
+      <point x="56.66666666666663" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.WindowedSerdes.TimeWindowedSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.ByteArraySerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="2840.0" y="360.0" />
+      <point x="3120.6363636363635" y="360.0" />
+      <point x="-24.363636363636488" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.FloatDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="1371.0" y="250.0" />
+      <point x="1127.0" y="250.0" />
+      <point x="14.5" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.StringDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="1204.0" y="260.0" />
+      <point x="1117.3333333333333" y="260.0" />
+      <point x="4.8333333333332575" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.TimeWindowedDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="1744.0" y="230.0" />
+      <point x="1146.3333333333333" y="230.0" />
+      <point x="33.83333333333326" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.FloatSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="2984.0" y="370.0" />
+      <point x="3132.818181818182" y="370.0" />
+      <point x="-12.181818181818016" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.Serdes.StringSerde" target="org.apache.kafka.common.serialization.Serdes.WrapperSerde">
+      <point x="0.0" y="-15.0" />
+      <point x="3309.0" y="370.0" />
+      <point x="3157.181818181818" y="370.0" />
+      <point x="12.181818181818016" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ExtendedDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="2130.0" y="210.0" />
+      <point x="1165.6666666666665" y="210.0" />
+      <point x="53.166666666666515" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ByteBufferDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="1021.0" y="260.0" />
+      <point x="1107.6666666666667" y="260.0" />
+      <point x="-4.8333333333332575" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.DoubleDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="1542.0" y="240.0" />
+      <point x="1136.6666666666667" y="240.0" />
+      <point x="24.166666666666742" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.StringSerializer" target="org.apache.kafka.common.serialization.Serializer">
+      <point x="0.0" y="-15.0" />
+      <point x="4784.0" y="250.0" />
+      <point x="5015.625" y="250.0" />
+      <point x="-12.625" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.SessionWindowedDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="802.0" y="250.0" />
+      <point x="1098.0" y="250.0" />
+      <point x="-14.5" y="15.0" />
+    </edge>
+    <edge source="java.io.Closeable" target="java.lang.AutoCloseable">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.kstream.internals.ChangedSerializer" target="org.apache.kafka.common.serialization.ExtendedSerializer">
+      <point x="0.0" y="-15.0" />
+      <point x="4230.5" y="370.0" />
+      <point x="4160.666666666666" y="370.0" />
+      <point x="51.666666666666515" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.BytesDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="432.5" y="230.0" />
+      <point x="1078.6666666666667" y="230.0" />
+      <point x="-33.83333333333326" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.IntegerDeserializer" target="org.apache.kafka.common.serialization.Deserializer">
+      <point x="0.0" y="-15.0" />
+      <point x="1946.0" y="220.0" />
+      <point x="1156.0" y="220.0" />
+      <point x="43.5" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.serialization.ExtendedDeserializer.Wrapper" target="org.apache.kafka.common.serialization.ExtendedDeserializer">
+      <point x="-25.0" y="-15.0" />
+      <point x="2080.0" y="370.0" />
+      <point x="2073.333333333333" y="370.0" />
+      <point x="-56.66666666666666" y="15.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.8967010309278348" x="3296.3856058864108" y="469.98567242299737" />
+  <SelectedNodes>
+    <node>org.apache.kafka.streams.kstream.internals.ChangedSerializer</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>Inner Classes</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+
