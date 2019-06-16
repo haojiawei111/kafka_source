@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>org.apache.kafka.streams.state.WindowStore</OriginalElement>
+  <nodes>
+    <node x="186.97159090909088" y="0.0">org.apache.kafka.streams.state.ReadOnlyWindowStore</node>
+    <node x="563.5625" y="0.0">org.apache.kafka.streams.processor.StateStore</node>
+    <node x="803.0625" y="168.0">org.apache.kafka.streams.state.internals.MeteredWindowStore</node>
+    <node x="376.0625" y="168.0">org.apache.kafka.streams.state.internals.RocksDBWindowStore</node>
+    <node x="0.0" y="89.0">org.apache.kafka.streams.state.internals.CompositeReadOnlyWindowStore</node>
+    <node x="558.0625" y="168.0">org.apache.kafka.streams.state.internals.ChangeLoggingWindowBytesStore</node>
+    <node x="197.0625" y="168.0">org.apache.kafka.streams.state.internals.CachingWindowStore</node>
+    <node x="412.8125" y="89.0">org.apache.kafka.streams.state.WindowStore</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="org.apache.kafka.streams.state.WindowStore" target="org.apache.kafka.streams.state.ReadOnlyWindowStore">
+      <point x="-29.5" y="-14.5" />
+      <point x="442.3125" y="49.0" />
+      <point x="312.9715909090909" y="49.0" />
+      <point x="42.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingWindowStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="39.75" y="-14.5" />
+      <point x="316.3125" y="148.0" />
+      <point x="427.5625" y="148.0" />
+      <point x="-44.25" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.WindowStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="29.5" y="-14.5" />
+      <point x="501.3125" y="69.0" />
+      <point x="601.4375" y="69.0" />
+      <point x="-12.625" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingWindowStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="-39.75" y="-14.5" />
+      <point x="236.8125" y="59.0" />
+      <point x="576.1875" y="59.0" />
+      <point x="-37.875" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingWindowBytesStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="56.25" y="-14.5" />
+      <point x="726.8125" y="69.0" />
+      <point x="626.6875" y="69.0" />
+      <point x="12.625" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredWindowStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="40.5" y="-14.5" />
+      <point x="924.5625" y="59.0" />
+      <point x="651.9375" y="59.0" />
+      <point x="37.875" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredWindowStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="-40.5" y="-14.5" />
+      <point x="843.5625" y="138.0" />
+      <point x="516.0625" y="138.0" />
+      <point x="44.25" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingWindowBytesStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="-56.25" y="-14.5" />
+      <point x="614.3125" y="148.0" />
+      <point x="486.5625" y="148.0" />
+      <point x="14.75" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.RocksDBWindowStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="0.0" y="-14.5" />
+      <point x="-14.75" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CompositeReadOnlyWindowStore" target="org.apache.kafka.streams.state.ReadOnlyWindowStore">
+      <point x="0.0" y="-14.5" />
+      <point x="111.0" y="69.0" />
+      <point x="228.97159090909088" y="69.0" />
+      <point x="-42.0" y="14.5" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="384.0" y="104.0" />
+  <SelectedNodes />
+  <Categories />
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+
