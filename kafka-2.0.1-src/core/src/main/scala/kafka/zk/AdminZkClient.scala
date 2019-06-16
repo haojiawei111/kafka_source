@@ -82,6 +82,7 @@ class AdminZkClient(zkClient: KafkaZkClient) extends Logging {
 
   /**
    * Creates or Updates the partition assignment for a given topic
+    * 创建或更新给定主题的分区分配
    * @param topic
    * @param partitionReplicaAssignment
    * @param config
@@ -104,6 +105,7 @@ class AdminZkClient(zkClient: KafkaZkClient) extends Logging {
 
   /**
    * Validate method to use before the topic creation or update
+    * 验证在主题创建或更新之前使用的方法
    * @param topic
    * @param partitionReplicaAssignment
    * @param config
@@ -166,6 +168,7 @@ class AdminZkClient(zkClient: KafkaZkClient) extends Logging {
 
   /**
    * Creates a delete path for a given topic
+    * 为给定主题创建删除路径
    * @param topic
    */
   def deleteTopic(topic: String) {
@@ -184,6 +187,7 @@ class AdminZkClient(zkClient: KafkaZkClient) extends Logging {
 
   /**
   * Add partitions to existing topic with optional replica assignment
+    * 使用可选的副本分配将分区添加到现有主题
   *
   * @param topic Topic for adding partitions to
   * @param existingAssignment A map from partition id to its assigned replicas
@@ -278,6 +282,7 @@ class AdminZkClient(zkClient: KafkaZkClient) extends Logging {
 
   /**
    * Change the configs for a given entityType and entityName
+    * 更改给定entityType和entityName的配置
    * @param entityType
    * @param entityName
    * @param configs

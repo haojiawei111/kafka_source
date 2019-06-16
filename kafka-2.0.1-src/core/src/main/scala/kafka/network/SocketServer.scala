@@ -66,6 +66,8 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
   // max.connections.per.ip.overrides
   private val maxConnectionsPerIpOverrides = config.maxConnectionsPerIpOverrides
 
+
+
   private val logContext = new LogContext(s"[SocketServer brokerId=${config.brokerId}] ")
   this.logIdent = logContext.logPrefix
 
@@ -81,6 +83,8 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
 
   // 创建RequestChannel请求处理管道
   val requestChannel = new RequestChannel(maxQueuedRequests)
+
+
   // int和Processor的映射
   private val processors = new ConcurrentHashMap[Int, Processor]()
   // EndPoint和Acceptor的映射
@@ -164,6 +168,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
 
     val sendBufferSize = config.socketSendBufferBytes
     val recvBufferSize = config.socketReceiveBufferBytes
+
     val brokerId = config.brokerId
     //根据配置的若干endpoint创建相应的Acceptor及相关联的一组Processor线程
     endpoints.foreach { endpoint =>
@@ -171,6 +176,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
       val securityProtocol = endpoint.securityProtocol
 
       val acceptor = new Acceptor(endpoint, sendBufferSize, recvBufferSize, brokerId, connectionQuotas)
+
       addProcessors(acceptor, endpoint, processorsPerListener)
       //启动Acceptor线程
       KafkaThread.nonDaemon(s"kafka-socket-acceptor-$listenerName-$securityProtocol-${endpoint.port}", acceptor).start()
@@ -365,6 +371,7 @@ private[kafka] abstract class AbstractServerThread(connectionQuotas: ConnectionQ
 /**
   * Kafka网络层头号马仔:Acceptor类
   * Acceptor 作两件事: 创建一堆worker线程；接受新连接, 将新的socket指派给某个 worker线程;
+  * Acceptor只负责接收新连接
  * Thread that accepts and configures new connections. There is one of these per endpoint.
  */
 private[kafka] class Acceptor(val endPoint: EndPoint,val sendBufferSize: Int,val recvBufferSize: Int,brokerId: Int,connectionQuotas: ConnectionQuotas) extends AbstractServerThread(connectionQuotas) with KafkaMetricsGroup {
@@ -452,8 +459,8 @@ private[kafka] class Acceptor(val endPoint: EndPoint,val sendBufferSize: Int,val
             val iter = keys.iterator()
             while (iter.hasNext && isRunning) {
               try {
-                val key = iter.next
-                iter.remove()
+                val key : SelectionKey = iter.next
+                iter.remove() //取消通道的注册
                 if (key.isAcceptable) {
                   // ServerSocketChannel接受了连接。
                   val processor = synchronized {
@@ -659,6 +666,12 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
   //下一个连接索引
   private var nextConnectionIndex = 0
 
+  // 设置新连接
+  // 如果有Response尝试写回
+  // 带timeout的poll一次
+  // 接收Request
+  // 处理已经发送成功的Response
+  // 处理已经断开的连接
   // Processor核心处理逻辑
   override def run() {
     startupComplete()
@@ -716,7 +729,7 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
     */
   private def configureNewConnections() {
     while (!newConnections.isEmpty) {
-      val channel = newConnections.poll()
+      val channel : SocketChannel = newConnections.poll()
       try {
         debug(s"Processor $id listening to new connection from ${channel.socket.getRemoteSocketAddress}")
         // 把channel注册到选择器中去
@@ -733,6 +746,7 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
   }
 
 
+  //处理新的响应
   private def processNewResponses() {
 
     var currentResponse: RequestChannel.Response = null
@@ -765,6 +779,7 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
             trace("Closing socket connection actively according to the response code.")
             close(channelId)
 
+            // 两个限速响应
           case _: StartThrottlingResponse =>
             handleChannelMuteEvent(channelId, ChannelMuteEvent.THROTTLE_STARTED)
 
@@ -803,17 +818,18 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
       try {
         openOrClosingChannel(receive.source) match {
           case Some(channel) =>
-            val header = RequestHeader.parse(receive.payload)
+            val header = RequestHeader.parse(receive.payload)//receive.payload就是从channel读取的数据
             val connectionId = receive.source
-            val context = new RequestContext(header, connectionId, channel.socketAddress,
-              channel.principal, listenerName, securityProtocol)
-            val req = new RequestChannel.Request(processor = id, context = context,
-              startTimeNanos = time.nanoseconds, memoryPool, receive.payload, requestChannel.metrics)
+            val context = new RequestContext(header, connectionId, channel.socketAddress, channel.principal, listenerName, securityProtocol)
+
+            val req = new RequestChannel.Request(processor = id, context = context,startTimeNanos = time.nanoseconds, memoryPool, receive.payload, requestChannel.metrics)
+
             requestChannel.sendRequest(req)
+
             selector.mute(connectionId)
             handleChannelMuteEvent(connectionId, ChannelMuteEvent.REQUEST_RECEIVED)
           case None =>
-            // This should never happen since completed receives are processed immediately after `poll()`
+            // This should never happen since completed receives are processed immediately after `poll()`这应该永远不会发生，因为在`poll（）`之后立即处理完成的接收
             throw new IllegalStateException(s"Channel ${receive.source} removed from selector before processing completed receive")
         }
       } catch {

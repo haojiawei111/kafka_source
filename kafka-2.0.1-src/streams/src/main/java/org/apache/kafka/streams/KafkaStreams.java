@@ -398,7 +398,7 @@ public class KafkaStreams {
     }
 
     /**
-     * Class that handles stream thread transitions
+     * Class that handles stream thread transitions处理流线程转换的类
      */
     final class StreamStateListener implements StreamThread.StateListener {
         private final Map<Long, StreamThread.State> threadState;
@@ -645,8 +645,8 @@ public class KafkaStreams {
 
         // The application ID is a required config and hence should always have value
         processId = UUID.randomUUID();
-        final String userClientId = config.getString(StreamsConfig.CLIENT_ID_CONFIG);
-        final String applicationId = config.getString(StreamsConfig.APPLICATION_ID_CONFIG);
+        final String userClientId = config.getString(StreamsConfig.CLIENT_ID_CONFIG); // client.id
+        final String applicationId = config.getString(StreamsConfig.APPLICATION_ID_CONFIG);  // application.id
         if (userClientId.length() <= 0) {
             clientId = applicationId + "-" + processId;
         } else {
@@ -674,22 +674,25 @@ public class KafkaStreams {
         internalTopologyBuilder.setApplicationId(applicationId);
 
         // sanity check to fail-fast in case we cannot build a ProcessorTopology due to an exception
+        // 如果由于异常导致我们无法构建ProcessorTopology，则可以快速检查以快速失败
         internalTopologyBuilder.build();
 
         streamsMetadataState = new StreamsMetadataState(
                 internalTopologyBuilder,
-                parseHostInfo(config.getString(StreamsConfig.APPLICATION_SERVER_CONFIG)));
+                parseHostInfo(config.getString(StreamsConfig.APPLICATION_SERVER_CONFIG))); // application.server
 
         // create the stream thread, global update thread, and cleanup thread
-        threads = new StreamThread[config.getInt(StreamsConfig.NUM_STREAM_THREADS_CONFIG)];
+        // 创建流线程，全局更新线程和清理线程
+        threads = new StreamThread[config.getInt(StreamsConfig.NUM_STREAM_THREADS_CONFIG)]; //num.stream.threads
 
-        long totalCacheSize = config.getLong(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG);
+        long totalCacheSize = config.getLong(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG); // cache.max.bytes.buffering
         if (totalCacheSize < 0) {
             totalCacheSize = 0;
-            log.warn("Negative cache size passed in. Reverting to cache size of 0 bytes.");
+            log.warn("Negative cache size passed in. Reverting to cache size of 0 bytes.传入负缓存大小。恢复为0字节的缓存大小。");
         }
+        // 构建全局拓扑
         final ProcessorTopology globalTaskTopology = internalTopologyBuilder.buildGlobalStateTopology();
-        final long cacheSizePerThread = totalCacheSize / (threads.length + (globalTaskTopology == null ? 0 : 1));
+        final long cacheSizePerThread = totalCacheSize / (threads.length + (globalTaskTopology == null ? 0 : 1)); //每线程缓存大小
 
         final StateRestoreListener delegatingStateRestoreListener = new DelegatingStateRestoreListener();
         GlobalStreamThread.State globalThreadState = null;
@@ -697,7 +700,7 @@ public class KafkaStreams {
             final String globalThreadId = clientId + "-GlobalStreamThread";
             globalStreamThread = new GlobalStreamThread(globalTaskTopology,
                                                         config,
-                                                        clientSupplier.getGlobalConsumer(config.getGlobalConsumerConfigs(clientId)),
+                                                        clientSupplier.getGlobalConsumer(config.getGlobalConsumerConfigs(clientId)),// 这里创建了全局状态恢复的消费线程
                                                         stateDirectory,
                                                         cacheSizePerThread,
                                                         metrics,
@@ -708,11 +711,14 @@ public class KafkaStreams {
         }
 
         // use client id instead of thread client id since this admin client may be shared among threads
+        // 使用客户端ID而不是线程客户端ID，因为此管理客户端可以在线程之间共享
         adminClient = clientSupplier.getAdminClient(config.getAdminConfigs(clientId));
 
         final Map<Long, StreamThread.State> threadState = new HashMap<>(threads.length);
         final ArrayList<StateStoreProvider> storeProviders = new ArrayList<>();
+
         for (int i = 0; i < threads.length; i++) {
+            // 创建流线程
             threads[i] = StreamThread.create(internalTopologyBuilder,
                                              config,
                                              clientSupplier,
@@ -726,8 +732,10 @@ public class KafkaStreams {
                                              stateDirectory,
                                              delegatingStateRestoreListener);
             threadState.put(threads[i].getId(), threads[i].state());
+            //流线程状态存储提供程序
             storeProviders.add(new StreamThreadStateStoreProvider(threads[i]));
         }
+
 
         final StreamStateListener streamStateListener = new StreamStateListener(threadState, globalThreadState);
         if (globalTaskTopology != null) {
@@ -738,6 +746,7 @@ public class KafkaStreams {
         }
 
         final GlobalStateStoreProvider globalStateStoreProvider = new GlobalStateStoreProvider(internalTopologyBuilder.globalStateStores());
+
         queryableStoreProvider = new QueryableStoreProvider(storeProviders, globalStateStoreProvider);
 
         stateDirCleaner = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
@@ -788,6 +797,7 @@ public class KafkaStreams {
 
         // first set state to RUNNING before kicking off the threads,
         // making sure the state will always transit to RUNNING before REBALANCING
+        // 在开始线程之前首先将状态设置为RUNNING，确保状态将在REBALANCING之前始终转换为RUNNING
         if (setRunningFromCreated()) {
             if (globalStreamThread != null) {
                 globalStreamThread.start();
@@ -798,6 +808,7 @@ public class KafkaStreams {
             }
 
             final Long cleanupDelay = config.getLong(StreamsConfig.STATE_CLEANUP_DELAY_MS_CONFIG);
+            // 启动定时调度任务
             stateDirCleaner.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -819,6 +830,7 @@ public class KafkaStreams {
     /**
      * Shutdown this {@code KafkaStreams} instance by signaling all the threads to stop, and then wait for them to join.
      * This will block until all threads have stopped.
+     * 关闭此{@code KafkaStreams}实例，通过发信号通知所有线程停止，然后等待它们加入。 *这将阻止所有线程停止。
      */
     public void close() {
         close(DEFAULT_CLOSE_TIMEOUT, TimeUnit.SECONDS);
@@ -841,7 +853,7 @@ public class KafkaStreams {
         if (!setState(State.PENDING_SHUTDOWN)) {
             // if transition failed, it means it was either in PENDING_SHUTDOWN
             // or NOT_RUNNING already; just check that all threads have been stopped
-            log.info("Already in the pending shutdown state, wait to complete shutdown");
+            log.info("Already in the pending shutdown state, wait to complete shutdown已经处于挂起关闭状态，等待完成关闭");
         } else {
             stateDirCleaner.shutdownNow();
 

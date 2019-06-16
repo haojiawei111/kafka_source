@@ -24,6 +24,7 @@ import java.io.IOException;
 
 /**
  * Authentication for Channel
+ * Channel验证
  */
 public interface Authenticator extends Closeable {
     /**

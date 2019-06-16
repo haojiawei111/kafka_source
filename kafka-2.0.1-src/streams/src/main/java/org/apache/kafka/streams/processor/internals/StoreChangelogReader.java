@@ -75,6 +75,7 @@ public class StoreChangelogReader implements ChangelogReader {
         needsInitializing.add(restorer.partition());
     }
 
+    // 恢复状态
     public Collection<TopicPartition> restore(final RestoringTasks active) {
         if (!needsInitializing.isEmpty()) {
             initialize(active);

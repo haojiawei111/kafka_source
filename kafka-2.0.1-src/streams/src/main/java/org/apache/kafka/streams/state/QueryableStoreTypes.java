@@ -26,11 +26,21 @@ import org.apache.kafka.streams.state.internals.StateStoreProvider;
  * Provides access to the {@link QueryableStoreType}s provided with KafkaStreams. These
  * can be used with {@link org.apache.kafka.streams.KafkaStreams#store(String, QueryableStoreType)}
  * To access and query the {@link StateStore}s that are part of a Topology
+ * 提供对KafkaStreams提供的{@link QueryableStoreType}的访问。
+ * 这些可以与{@link org.apache.kafka.streams.KafkaStreams #store（String，QueryableStoreType）}一起使用访问和查询作为拓扑一部分的{@link StateStore}
+ *
+ * 三个静态方法创建不同的 KeyValueStoreType WindowStoreType SessionStoreType
+ * 通过KeyValueStoreType WindowStoreType SessionStoreType可以创建出CompositeReadOnlyKeyValueStore CompositeReadOnlyWindowStore CompositeReadOnlySessionStore
+ * 通过CompositeReadOnlyKeyValueStore CompositeReadOnlyWindowStore CompositeReadOnlySessionStore里面包装的状态提供者可以对状态进行只读查询
+ *
  */
 public class QueryableStoreTypes {
 
     /**
      * A {@link QueryableStoreType} that accepts {@link ReadOnlyKeyValueStore}
+     *
+     * 创建一个KeyValueStoreType类型对象
+     *
      * @param <K>   key type of the store
      * @param <V>   value type of the store
      * @return  {@link QueryableStoreTypes.KeyValueStoreType}
@@ -41,6 +51,9 @@ public class QueryableStoreTypes {
 
     /**
      * A {@link QueryableStoreType} that accepts {@link ReadOnlyWindowStore}
+     *
+     * 创建一个WindowStoreType类型对象
+     *
      * @param <K>   key type of the store
      * @param <V>   value type of the store
      * @return  {@link QueryableStoreTypes.WindowStoreType}
@@ -51,6 +64,10 @@ public class QueryableStoreTypes {
 
     /**
      * A {@link QueryableStoreType} that accepts {@link ReadOnlySessionStore}
+     *
+     * 创建一个SessionStoreType类型对象
+     *
+     *
      * @param <K>   key type of the store
      * @param <V>   value type of the store
      * @return  {@link QueryableStoreTypes.SessionStoreType}
@@ -67,6 +84,8 @@ public class QueryableStoreTypes {
             this.matchTo = matchTo;
         }
 
+        // 是用来判断一个类Class1和另一个类Class2是否相同或是另一个类的超类或接口。
+        // 检查StateStore是否是matchTo的子类，如果是就返回true，否则返回false
         @SuppressWarnings("unchecked")
         @Override
         public boolean accepts(final StateStore stateStore) {
@@ -79,6 +98,7 @@ public class QueryableStoreTypes {
             super(ReadOnlyKeyValueStore.class);
         }
 
+        // 创建CompositeReadOnlyKeyValueStore，赋值StateStoreProvider和storeName
         @Override
         public ReadOnlyKeyValueStore<K, V> create(final StateStoreProvider storeProvider,
                                                   final String storeName) {
@@ -92,6 +112,7 @@ public class QueryableStoreTypes {
             super(ReadOnlyWindowStore.class);
         }
 
+        // 创建CompositeReadOnlyWindowStore，赋值StateStoreProvider和storeName
         @Override
         public ReadOnlyWindowStore<K, V> create(final StateStoreProvider storeProvider,
                                                 final String storeName) {
@@ -103,6 +124,7 @@ public class QueryableStoreTypes {
         SessionStoreType() {
             super(ReadOnlySessionStore.class);
         }
+        // 创建CompositeReadOnlySessionStore，赋值StateStoreProvider和storeName
         @Override
         public ReadOnlySessionStore<K, V> create(final StateStoreProvider storeProvider, final String storeName) {
             return new CompositeReadOnlySessionStore<>(storeProvider, this, storeName);

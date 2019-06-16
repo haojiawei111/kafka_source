@@ -81,9 +81,12 @@ public class KafkaChannel {
     // The values are read and reset after each response is sent.
     private long networkThreadTimeNanos;
     private final int maxReceiveSize;
+
+
     private final MemoryPool memoryPool;
     private NetworkReceive receive;
     private Send send;
+
     // Track connection and mute state of channels to enable outstanding requests on channels to be
     // processed after the channel is disconnected.
     private boolean disconnected;
@@ -95,11 +98,11 @@ public class KafkaChannel {
         this.transportLayer = transportLayer;
         this.authenticator = authenticator;
         this.networkThreadTimeNanos = 0L;
-        this.maxReceiveSize = maxReceiveSize;
-        this.memoryPool = memoryPool;
-        this.disconnected = false;
-        this.muteState = ChannelMuteState.NOT_MUTED;
-        this.state = ChannelState.NOT_CONNECTED;
+        this.maxReceiveSize = maxReceiveSize;  //最大接收大小
+        this.memoryPool = memoryPool;   //内存池
+        this.disconnected = false;  //连接断开标识
+        this.muteState = ChannelMuteState.NOT_MUTED;  //状态
+        this.state = ChannelState.NOT_CONNECTED;   //状态
     }
 
     public void close() throws IOException {
@@ -178,6 +181,7 @@ public class KafkaChannel {
     }
 
     /**
+     * 取消静音通道。
      * Unmute the channel. The channel can be unmuted only if it is in the MUTED state. For other muted states
      * (MUTED_AND_*), this is a no-op.
      *
@@ -344,7 +348,7 @@ public class KafkaChannel {
     }
 
     /**
-     * @return true if underlying transport has bytes remaining to be read from any underlying intermediate buffers.
+     * @return true if underlying transport has bytes remaining to be read from any underlying intermediate buffers.如果底层传输还有剩余字节要从任何底层中间缓冲区读取，则为true。
      */
     public boolean hasBytesBuffered() {
         return transportLayer.hasBytesBuffered();

@@ -27,6 +27,7 @@ import java.util.List;
  * as part of the {@link org.apache.kafka.streams.processor.internals.ProcessorTopology}.
  * To get access to custom stores developers should implement {@link QueryableStoreType}.
  * @see QueryableStoreTypes
+ * 状态提供者接口，封装中间状态对外提供查询操作
  */
 public interface StateStoreProvider {
 

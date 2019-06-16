@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 
 /*
  * Transport layer for SSL communication
+ * 用于SSL通信的传输层
  */
 public class SslTransportLayer implements TransportLayer {
     private enum State {

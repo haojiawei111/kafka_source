@@ -265,22 +265,22 @@ object RequestChannel extends Logging {
     override def toString: String =
       s"Response(type=Send, request=$request, send=$responseSend, asString=$responseAsString)"
   }
-
+  //不用响应
   class NoOpResponse(request: Request) extends Response(request) {
     override def toString: String =
       s"Response(type=NoOp, request=$request)"
   }
-
+  // 关闭连接的响应
   class CloseConnectionResponse(request: Request) extends Response(request) {
     override def toString: String =
       s"Response(type=CloseConnection, request=$request)"
   }
-
+  //开始限制的响应
   class StartThrottlingResponse(request: Request) extends Response(request) {
     override def toString: String =
       s"Response(type=StartThrottling, request=$request)"
   }
-
+  // 结束限制的响应
   class EndThrottlingResponse(request: Request) extends Response(request) {
     override def toString: String =
       s"Response(type=EndThrottling, request=$request)"

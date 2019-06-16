@@ -22,6 +22,9 @@ package org.apache.kafka.common.network;
  * and other network Channel implementations.
  * As NetworkClient replaces BlockingChannel and other implementations we will be using KafkaChannel as
  * a network I/O channel.
+ * 底层通信的传输层。
+ * 在非常基础的层面上它是SocketChannel的包装，可以替代SocketChannel 和其他网络通道实现。
+ * 当NetworkClient取代BlockingChannel和其他实现时，我们将使用KafkaChannel作为*网络I / O通道。
  */
 import java.io.IOException;
 import java.nio.channels.FileChannel;

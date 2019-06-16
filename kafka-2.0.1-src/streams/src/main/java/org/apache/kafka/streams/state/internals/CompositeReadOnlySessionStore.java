@@ -28,8 +28,12 @@ import java.util.Objects;
 /**
  * Wrapper over the underlying {@link ReadOnlySessionStore}s found in a {@link
  * org.apache.kafka.streams.processor.internals.ProcessorTopology}
+ *
+ * 只读的SessionStore
+ *
  */
 public class CompositeReadOnlySessionStore<K, V> implements ReadOnlySessionStore<K, V> {
+    // 状态提供者
     private final StateStoreProvider storeProvider;
     private final QueryableStoreType<ReadOnlySessionStore<K, V>> queryableStoreType;
     private final String storeName;
@@ -43,12 +47,14 @@ public class CompositeReadOnlySessionStore<K, V> implements ReadOnlySessionStore
     }
 
 
+    // 从状态提供者中拿到一个迭代器
     @Override
     public KeyValueIterator<Windowed<K>, V> fetch(final K key) {
         Objects.requireNonNull(key, "key can't be null");
         final List<ReadOnlySessionStore<K, V>> stores = storeProvider.stores(storeName, queryableStoreType);
         for (final ReadOnlySessionStore<K, V> store : stores) {
             try {
+                // 这里可以拿出多个ReadOnlySessionStore状态，但是只要有一个找到就返回
                 final KeyValueIterator<Windowed<K>, V> result = store.fetch(key);
                 if (!result.hasNext()) {
                     result.close();
@@ -64,6 +70,7 @@ public class CompositeReadOnlySessionStore<K, V> implements ReadOnlySessionStore
         return KeyValueIterators.emptyIterator();
     }
 
+    // 从状态提供者中拿到一定范围的迭代器
     @Override
     public KeyValueIterator<Windowed<K>, V> fetch(final K from, final K to) {
         Objects.requireNonNull(from, "from can't be null");

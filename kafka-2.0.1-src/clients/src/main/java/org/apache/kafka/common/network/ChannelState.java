@@ -55,13 +55,13 @@ import org.apache.kafka.common.errors.AuthenticationException;
  */
 public class ChannelState {
     public enum State {
-        NOT_CONNECTED,
-        AUTHENTICATE,
-        READY,
-        EXPIRED,
-        FAILED_SEND,
-        AUTHENTICATION_FAILED,
-        LOCAL_CLOSE
+        NOT_CONNECTED, // 未连接
+        AUTHENTICATE,//认证
+        READY,//准备
+        EXPIRED,//过期
+        FAILED_SEND,//失败的发送
+        AUTHENTICATION_FAILED,//认证失败
+        LOCAL_CLOSE //本地关闭
     };
     // AUTHENTICATION_FAILED has a custom exception. For other states,
     // create a reusable `ChannelState` instance per-state.

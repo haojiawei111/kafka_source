@@ -152,6 +152,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * @return CreateResponse
    */
   def createControllerEpochRaw(epoch: Int): CreateResponse = {
+    //  /controller_epoch
     val createRequest = CreateRequest(ControllerEpochZNode.path, ControllerEpochZNode.encode(epoch),
       acls(ControllerEpochZNode.path), CreateMode.PERSISTENT)
     retryRequestUntilConnected(createRequest)
@@ -1227,12 +1228,14 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
   /**
    * This registers a ZNodeChangeHandler and attempts to register a watcher with an ExistsRequest, which allows data
    * watcher registrations on paths which might not even exist.
+    * 这会注册一个ZNodeChangeHandler并尝试使用ExistsRequest注册一个观察者，它允许在甚至可能不存在的路径上注册数据观察者。
    *
    * @param zNodeChangeHandler
-   * @return `true` if the path exists or `false` if it does not
+   * @return `true` if the path exists or `false` if it does not 如果路径存在则为“true”;如果不存在则为“false”
    * @throws KeeperException if an error is returned by ZooKeeper
    */
   def registerZNodeChangeHandlerAndCheckExistence(zNodeChangeHandler: ZNodeChangeHandler): Boolean = {
+    // 监控节点
     zooKeeperClient.registerZNodeChangeHandler(zNodeChangeHandler)
     val existsResponse = retryRequestUntilConnected(ExistsRequest(zNodeChangeHandler.path))
     existsResponse.resultCode match {

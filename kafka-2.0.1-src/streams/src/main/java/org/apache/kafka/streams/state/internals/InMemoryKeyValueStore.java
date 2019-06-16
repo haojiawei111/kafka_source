@@ -72,6 +72,7 @@ public class InMemoryKeyValueStore<K, V> implements KeyValueStore<K, V> {
 
         if (root != null) {
             // register the store
+            // 往context中注册恢复map的逻辑
             context.register(root, new StateRestoreCallback() {
                 @Override
                 public void restore(byte[] key, byte[] value) {
@@ -84,7 +85,7 @@ public class InMemoryKeyValueStore<K, V> implements KeyValueStore<K, V> {
                 }
             });
         }
-
+        // 初始化成功后open就变成true
         this.open = true;
     }
 

@@ -854,6 +854,7 @@ public class InternalTopologyBuilder {
 
     /**
      * Builds the topology for any global state stores
+     * 为任何全局状态存储构建拓扑
      * @return ProcessorTopology
      */
     public synchronized ProcessorTopology buildGlobalStateTopology() {

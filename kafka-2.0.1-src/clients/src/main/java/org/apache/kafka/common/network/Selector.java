@@ -102,19 +102,26 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     private final Logger log;
-    private final java.nio.channels.Selector nioSelector;
-    private final Map<String, KafkaChannel> channels;
+    private final java.nio.channels.Selector nioSelector;     // java原生的nioSelector的包装类
+    private final Map<String, KafkaChannel> channels;      // 有正在连接以及连接成功的channel
     private final Set<KafkaChannel> explicitlyMutedChannels;
     private boolean outOfMemory;
-    private final List<Send> completedSends;
-    private final List<NetworkReceive> completedReceives;
-    private final Map<KafkaChannel, Deque<NetworkReceive>> stagedReceives;
-    private final Set<SelectionKey> immediatelyConnectedKeys;
-    private final Map<String, KafkaChannel> closingChannels;
+
+    private final List<Send> completedSends;  //已发送完的请求
+    private final List<NetworkReceive> completedReceives;//已接收完成的请求。注意，这个集合并没有包括所有已接收完成的响应，stagedReceives集合也包括了一些接收完成的响应
+
+    private final Map<KafkaChannel, Deque<NetworkReceive>> stagedReceives;//已接收完成，但还没有暴露给用户的响应
+
+    private final Set<SelectionKey> immediatelyConnectedKeys;//在调用SocketChannel#connect方法时立即完成的SelectionKey.为什么保存的是SelectionKey呢？
     private Set<SelectionKey> keysWithBufferedRead;
-    private final Map<String, ChannelState> disconnected;
-    private final List<String> connected;
-    private final List<String> failedSends;
+
+    private final Map<String, KafkaChannel> closingChannels;
+
+
+    private final Map<String, ChannelState> disconnected;//已断开连接的节点
+
+    private final List<String> connected;//新连接成功的节点
+    private final List<String> failedSends; //发送失败的节点，但并不是由于IO异常导致的失败，而是由于SelectionKey被cancel引起的失败，比如对一个已关闭的channel设置interestOps
     private final Time time;
     private final SelectorMetrics sensors;
     private final ChannelBuilder channelBuilder;
@@ -125,6 +132,8 @@ public class Selector implements Selectable, AutoCloseable {
     private final long lowMemThreshold;
     //indicates if the previous call to poll was able to make progress in reading already-buffered data.
     //this is used to prevent tight loops when memory is not available to read any more data
+    // 指示先前的轮询调用是否能够在读取已缓冲的数据方面取得进展。
+    // 当内存不可用于读取更多数据时，这用于防止紧密循环
     private boolean madeReadProgressLastPoll = true;
 
     /**
@@ -210,7 +219,7 @@ public class Selector implements Selectable, AutoCloseable {
      */
     @Override
     public void connect(String id, InetSocketAddress address, int sendBufferSize, int receiveBufferSize) throws IOException {
-        ensureNotRegistered(id);
+        ensureNotRegistered(id);//判断连接是否注册
         SocketChannel socketChannel = SocketChannel.open();
         try {
             configureSocketChannel(socketChannel, sendBufferSize, receiveBufferSize);
@@ -266,8 +275,8 @@ public class Selector implements Selectable, AutoCloseable {
      * </p>
      */
     public void register(String id, SocketChannel socketChannel) throws IOException {
-        ensureNotRegistered(id);
-        registerChannel(id, socketChannel, SelectionKey.OP_READ);
+        ensureNotRegistered(id); //判断id是否已经注册
+        registerChannel(id, socketChannel, SelectionKey.OP_READ);//关注是否可读
         this.sensors.connectionCreated.record();
     }
 
@@ -280,9 +289,12 @@ public class Selector implements Selectable, AutoCloseable {
 
     private SelectionKey registerChannel(String id, SocketChannel socketChannel, int interestedOps) throws IOException {
         SelectionKey key = socketChannel.register(nioSelector, interestedOps);
+
         KafkaChannel channel = buildAndAttachKafkaChannel(socketChannel, id, key);
+
         this.channels.put(id, channel);
         if (idleExpiryManager != null)
+            // 更新这个连接的过期时间
             idleExpiryManager.update(channel.id(), time.nanoseconds());
         return key;
     }
@@ -290,6 +302,8 @@ public class Selector implements Selectable, AutoCloseable {
     private KafkaChannel buildAndAttachKafkaChannel(SocketChannel socketChannel, String id, SelectionKey key) throws IOException {
         try {
             KafkaChannel channel = channelBuilder.buildChannel(id, key, maxReceiveSize, memoryPool);
+            // nio最大的特点在于不阻塞，但是如果要写入一个很大的文件，缓冲区满了，所以，程序还是会阻塞。解决的办法是一次只写一小块，这么做的话，就要把每次写的进度保存下来。
+            // 我们可以利用SelectionKey.attach()方法，把一个selectionKey和一个对象“绑定”起来。
             key.attach(channel);
             return channel;
         } catch (Exception e) {
@@ -304,6 +318,7 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * Interrupt the nioSelector if it is blocked waiting to do I/O.
+     * 如果阻塞等待进行I / O，则中断nioSelector。
      */
     @Override
     public void wakeup() {
@@ -312,6 +327,7 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * Close this selector and all associated connections
+     * 关闭此选择器和所有关联的连接
      */
     @Override
     public void close() {
@@ -330,11 +346,13 @@ public class Selector implements Selectable, AutoCloseable {
     /**
      * Queue the given request for sending in the subsequent {@link #poll(long)} calls
      * @param send The request to send
+     *             在随后的{@link #poll（long）}调用中排队给定的发送请求* @param send发送请求
      */
     public void send(Send send) {
-        String connectionId = send.destination();
+        String connectionId = send.destination(); //目的地
         KafkaChannel channel = openOrClosingChannelOrFail(connectionId);
         if (closingChannels.containsKey(connectionId)) {
+            // 这个连接已经关闭，把id添加到failedSends
             // ensure notification via `disconnected`, leave channel in the state in which closing was triggered
             this.failedSends.add(connectionId);
         } else {
@@ -392,7 +410,8 @@ public class Selector implements Selectable, AutoCloseable {
             throw new IllegalArgumentException("timeout should be >= 0");
 
         boolean madeReadProgressLastCall = madeReadProgressLastPoll;
-        //note: Step1 清除相关记录 clear() 方法是在每次 poll() 执行的第一步，它作用的就是清理上一次 poll 过程产生的部分缓存。
+        //note: Step1
+        // 清除相关记录 clear() 方法是在每次 poll() 执行的第一步，它作用的就是清理上一次 poll 过程产生的部分缓存。
         clear();
 
         boolean dataInBuffers = !keysWithBufferedRead.isEmpty();
@@ -413,14 +432,16 @@ public class Selector implements Selectable, AutoCloseable {
 
         /* check ready keys */
         long startSelect = time.nanoseconds();
+        // 这里会取出可读的channle数量
         int numReadyKeys = select(timeout);
         long endSelect = time.nanoseconds();
         this.sensors.selectTime.record(endSelect - startSelect, time.milliseconds());
 
         if (numReadyKeys > 0 || !immediatelyConnectedKeys.isEmpty() || dataInBuffers) {
+
             Set<SelectionKey> readyKeys = this.nioSelector.selectedKeys();
 
-            // Poll from channels that have buffered data (but nothing more from the underlying socket)
+            // Poll from channels that have buffered data (but nothing more from the underlying socket)从具有缓冲数据的通道轮询（但不再是来自底层套接字的通道）
             if (dataInBuffers) {
                 keysWithBufferedRead.removeAll(readyKeys); //so no channel gets polled twice
                 Set<SelectionKey> toPoll = keysWithBufferedRead;
@@ -452,12 +473,12 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     /**
-     * handle any ready I/O on a set of selection keys
+     * handle any ready I/O on a set of selection keys处理一组选择键上的任何就绪I / O.
      * @param selectionKeys set of keys to handle
      * @param isImmediatelyConnected true if running over a set of keys for just-connected sockets
      * @param currentTimeNanos time at which set of keys was determined
      */
-    // package-private for testing
+    // 轮询SelectionKeys
     void pollSelectionKeys(Set<SelectionKey> selectionKeys,
                            boolean isImmediatelyConnected,
                            long currentTimeNanos) {
@@ -466,7 +487,7 @@ public class Selector implements Selectable, AutoCloseable {
             long channelStartTimeNanos = recordTimePerConnection ? time.nanoseconds() : 0;
 
             // register all per-connection metrics at once
-            sensors.maybeRegisterConnectionMetrics(channel.id());
+            sensors.maybeRegisterConnectionMetrics(channel.id()); //立即注册所有每个连接指标
             if (idleExpiryManager != null)
                 idleExpiryManager.update(channel.id(), currentTimeNanos);
 
@@ -488,7 +509,7 @@ public class Selector implements Selectable, AutoCloseable {
                         continue;
                 }
 
-                /* if channel is not ready finish prepare */
+                /* if channel is not ready finish prepare 如果channel没准备完成准备*/
                 if (channel.isConnected() && !channel.ready()) {
                     try {
                         channel.prepare();
@@ -499,7 +520,7 @@ public class Selector implements Selectable, AutoCloseable {
                     if (channel.ready())
                         sensors.successfulAuthentication.record();
                 }
-
+                // 这一步开始从channel中读取数据
                 attemptRead(key, channel);
 
                 if (channel.hasBytesBuffered()) {
@@ -512,7 +533,8 @@ public class Selector implements Selectable, AutoCloseable {
                     keysWithBufferedRead.add(key);
                 }
 
-                /* if channel is ready write to any sockets that have space in their buffer and for which we have data */
+                // 发送数据
+                /* if channel is ready write to any sockets that have space in their buffer and for which we have data 如果通道准备好，则写入任何在缓冲区中有空间且我们有数据的套接字 */
                 if (channel.ready() && key.isWritable()) {
                     Send send = null;
                     try {
@@ -527,7 +549,7 @@ public class Selector implements Selectable, AutoCloseable {
                     }
                 }
 
-                /* cancel any defunct sockets */
+                /* cancel any defunct sockets 取消任何已解散的套接字 */
                 if (!key.isValid())
                     close(channel, CloseMode.GRACEFUL);
 
@@ -546,23 +568,27 @@ public class Selector implements Selectable, AutoCloseable {
         }
     }
 
+    //确定处理订单
     private Collection<SelectionKey> determineHandlingOrder(Set<SelectionKey> selectionKeys) {
         //it is possible that the iteration order over selectionKeys is the same every invocation.
         //this may cause starvation of reads when memory is low. to address this we shuffle the keys if memory is low.
+        // 每次调用时，selectionKeys上的迭代顺序可能是相同的。
+        // 当内存不足时，这可能会导致读取不足。为了解决这个问题，如果内存不足，我们会对selectionKeys进行洗牌。
         if (!outOfMemory && memoryPool.availableMemory() < lowMemThreshold) {
             List<SelectionKey> shuffledKeys = new ArrayList<>(selectionKeys);
-            Collections.shuffle(shuffledKeys);
+            Collections.shuffle(shuffledKeys); // 使用默认随机源对列表进行置换，所有置换发生的可能性都是大致相等的
             return shuffledKeys;
         } else {
             return selectionKeys;
         }
     }
 
+
+    // 尝试读数据
     private void attemptRead(SelectionKey key, KafkaChannel channel) throws IOException {
         //if channel is ready and has bytes to read from socket or buffer, and has no
         //previous receive(s) already staged or otherwise in progress then read from it
-        if (channel.ready() && (key.isReadable() || channel.hasBytesBuffered()) && !hasStagedReceive(channel)
-            && !explicitlyMutedChannels.contains(channel)) {
+        if (channel.ready() && (key.isReadable() || channel.hasBytesBuffered()) && !hasStagedReceive(channel) && !explicitlyMutedChannels.contains(channel)) {
             NetworkReceive networkReceive;
             while ((networkReceive = channel.read()) != null) {
                 madeReadProgressLastPoll = true;
@@ -677,7 +703,8 @@ public class Selector implements Selectable, AutoCloseable {
                 it.remove();
             }
         }
-        // 失败的channel
+
+        // 上一次失败的发送
         for (String channel : this.failedSends)
             this.disconnected.put(channel, ChannelState.FAILED_SEND);
         this.failedSends.clear();
@@ -702,6 +729,7 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * Close the connection identified by the given id
+     * 根据id关闭连接
      */
     public void close(String id) {
         KafkaChannel channel = this.channels.get(id);
@@ -754,6 +782,7 @@ public class Selector implements Selectable, AutoCloseable {
             idleExpiryManager.remove(channel.id());
     }
 
+    // 关闭this.closingChannels中的channel
     private void doClose(KafkaChannel channel, boolean notifyDisconnect) {
         SelectionKey key = channel.selectionKey();
         try {
@@ -775,6 +804,7 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * check if channel is ready
+     * 检查channel是否准备就绪
      */
     @Override
     public boolean isChannelReady(String id) {
@@ -782,6 +812,7 @@ public class Selector implements Selectable, AutoCloseable {
         return channel != null && channel.ready();
     }
 
+    //从this.channels或者this.closingChannels中根据id拿到kafkaChannel对象，如果没有抛出异常
     private KafkaChannel openOrClosingChannelOrFail(String id) {
         KafkaChannel channel = this.channels.get(id);
         if (channel == null)
@@ -816,6 +847,7 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * Get the channel associated with selectionKey
+     * 获取与selectionKey关联的频道
      */
     private KafkaChannel channel(SelectionKey key) {
         return (KafkaChannel) key.attachment();
@@ -823,13 +855,14 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * Check if given channel has a staged receive
+     * 检查给定channel是否有分阶段接收
      */
     private boolean hasStagedReceive(KafkaChannel channel) {
         return stagedReceives.containsKey(channel);
     }
 
     /**
-     * check if stagedReceives have unmuted channel
+     * check if stagedReceives have unmuted channel 检查stagedReceives是否具有取消静音通道
      */
     private boolean hasStagedReceives() {
         for (KafkaChannel channel : this.stagedReceives.keySet()) {
@@ -842,6 +875,7 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * adds a receive to staged receives
+     * 为分阶段接收添加接收
      */
     private void addToStagedReceives(KafkaChannel channel, NetworkReceive receive) {
         if (!stagedReceives.containsKey(channel))
@@ -886,6 +920,7 @@ public class Selector implements Selectable, AutoCloseable {
         Deque<NetworkReceive> deque = stagedReceives.get(channel);
         return deque == null ? 0 : deque.size();
     }
+
 
     private class SelectorMetrics {
         private final Metrics metrics;
@@ -1077,9 +1112,9 @@ public class Selector implements Selectable, AutoCloseable {
 
     // helper class for tracking least recently used connections to enable idle connection closing
     private static class IdleExpiryManager {
-        private final Map<String, Long> lruConnections;
+        private final Map<String, Long> lruConnections; //存储连接ID -》 当前时间
         private final long connectionsMaxIdleNanos;
-        private long nextIdleCloseCheckTime;
+        private long nextIdleCloseCheckTime; //下一次关闭检查时间
 
         public IdleExpiryManager(Time time, long connectionsMaxIdleMs) {
             this.connectionsMaxIdleNanos = connectionsMaxIdleMs * 1000 * 1000;
@@ -1092,6 +1127,7 @@ public class Selector implements Selectable, AutoCloseable {
             lruConnections.put(connectionId, currentTimeNanos);
         }
 
+        // 轮询过期连接
         public Map.Entry<String, Long> pollExpiredConnection(long currentTimeNanos) {
             if (currentTimeNanos <= nextIdleCloseCheckTime)
                 return null;

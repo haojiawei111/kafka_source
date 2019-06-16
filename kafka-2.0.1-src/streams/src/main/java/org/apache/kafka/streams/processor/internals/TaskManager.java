@@ -307,6 +307,8 @@ public class TaskManager {
     }
 
     /**
+     * 更新新任务和恢复任务
+     *
      * @throws IllegalStateException If store gets registered after initialized is already finished
      * @throws StreamsException if the store's change log does not contain the partition
      */

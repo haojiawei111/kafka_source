@@ -64,7 +64,7 @@ public class Schema extends Type {
     }
 
     /**
-     * Read a struct from the buffer
+     * Read a struct from the buffer从缓冲区中读取结构
      */
     @Override
     public Struct read(ByteBuffer buffer) {

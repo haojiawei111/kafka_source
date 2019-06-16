@@ -74,8 +74,8 @@ public class StreamThread extends Thread {
     private final static AtomicInteger STREAM_THREAD_ID_SEQUENCE = new AtomicInteger(1);
 
     /**
-     * Stream thread states are the possible states that a stream thread can be in.
-     * A thread must only be in one state at a time
+     * Stream thread states are the possible states that a stream thread can be in. A thread must only be in one state at a time
+     * 流线程状态是流线程可以处于的可能状态。线程一次只能处于一种状态
      * The expected state transitions with the following defined states is:
      *
      * <pre>
@@ -600,14 +600,14 @@ public class StreamThread extends Thread {
         final LogContext logContext = new LogContext(logPrefix);
         final Logger log = logContext.logger(StreamThread.class);
 
-        log.info("Creating restore consumer client");
+        log.info("Creating restore consumer client创建还原使用者客户端");
         final Map<String, Object> restoreConsumerConfigs = config.getRestoreConsumerConfigs(threadClientId);
-        final Consumer<byte[], byte[]> restoreConsumer = clientSupplier.getRestoreConsumer(restoreConsumerConfigs);
+        final Consumer<byte[], byte[]> restoreConsumer = clientSupplier.getRestoreConsumer(restoreConsumerConfigs);// 这里创建了StreamThread恢复状态的消费线程，从主题中拉取数据恢复状态
         final Duration pollTime = Duration.ofMillis(config.getLong(StreamsConfig.POLL_MS_CONFIG));
         final StoreChangelogReader changelogReader = new StoreChangelogReader(restoreConsumer, pollTime, userStateRestoreListener, logContext);
 
         Producer<byte[], byte[]> threadProducer = null;
-        final boolean eosEnabled = StreamsConfig.EXACTLY_ONCE.equals(config.getString(StreamsConfig.PROCESSING_GUARANTEE_CONFIG));
+        final boolean eosEnabled = StreamsConfig.EXACTLY_ONCE.equals(config.getString(StreamsConfig.PROCESSING_GUARANTEE_CONFIG)); //exactly_once = processing.guarantee
         if (!eosEnabled) {
             final Map<String, Object> producerConfigs = config.getProducerConfigs(threadClientId);
             log.info("Creating shared producer client");
@@ -664,7 +664,7 @@ public class StreamThread extends Thread {
             originalReset = (String) consumerConfigs.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG);
             consumerConfigs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "none");
         }
-        final Consumer<byte[], byte[]> consumer = clientSupplier.getConsumer(consumerConfigs);
+        final Consumer<byte[], byte[]> consumer = clientSupplier.getConsumer(consumerConfigs); // 这里创建了StreamThread的消费线程，用于从topic中拉数据
         taskManager.setConsumer(consumer);
 
         return new StreamThread(
@@ -760,8 +760,8 @@ public class StreamThread extends Thread {
      * @throws StreamsException      if the store's change log does not contain the partition
      */
     private void runLoop() {
-        long recordsProcessedBeforeCommit = UNLIMITED_RECORDS;
-        consumer.subscribe(builder.sourceTopicPattern(), rebalanceListener);
+        long recordsProcessedBeforeCommit = UNLIMITED_RECORDS;// 无限记录
+        consumer.subscribe(builder.sourceTopicPattern(), rebalanceListener); // 订阅主题
 
         while (isRunning()) {
             try {
@@ -821,6 +821,7 @@ public class StreamThread extends Thread {
 
         // only try to initialize the assigned tasks
         // if the state is still in PARTITION_ASSIGNED after the poll call
+        // 如果在轮询调用后状态仍处于PARTITION_ASSIGNED状态，则仅尝试初始化分配的任务
         if (state == State.PARTITIONS_ASSIGNED) {
             if (taskManager.updateNewAndRestoringTasks()) {
                 setState(State.RUNNING);

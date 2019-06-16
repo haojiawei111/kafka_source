@@ -31,6 +31,7 @@ abstract public class AbstractStoreBuilder<K, V, T extends StateStore> implement
     final Serde<K> keySerde;
     final Serde<V> valueSerde;
     final Time time;
+    // 默认是false
     boolean enableCaching;
     boolean enableLogging = true;
 
@@ -81,4 +82,5 @@ abstract public class AbstractStoreBuilder<K, V, T extends StateStore> implement
     public String name() {
         return name;
     }
+
 }

@@ -18,6 +18,7 @@ package org.apache.kafka.common.network;
 
 /*
  * Transport layer for PLAINTEXT communication
+ * 用于PLAINTEXT通信的传输层
  */
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ import org.apache.kafka.common.security.auth.KafkaPrincipal;
 public class PlaintextTransportLayer implements TransportLayer {
     private final SelectionKey key;
     private final SocketChannel socketChannel;
+
     private final Principal principal = KafkaPrincipal.ANONYMOUS;
 
     public PlaintextTransportLayer(SelectionKey key) throws IOException {
@@ -186,6 +188,7 @@ public class PlaintextTransportLayer implements TransportLayer {
 
     /**
      * Adds the interestOps to selectionKey.
+     * 将interestOps添加到selectionKey。
      */
     @Override
     public void addInterestOps(int ops) {
@@ -195,6 +198,7 @@ public class PlaintextTransportLayer implements TransportLayer {
 
     /**
      * Removes the interestOps from selectionKey.
+     * 从selectionKey中删除interestOps。
      */
     @Override
     public void removeInterestOps(int ops) {

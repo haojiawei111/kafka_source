@@ -29,7 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * An extension of SimpleMemoryPool that tracks allocated buffers and logs an error when they "leak"
  * (when they are garbage-collected without having been release()ed).
+ * SimpleMemoryPool的扩展，它跟踪分配的缓冲区并在它们“泄漏”时记录错误*（当它们被垃圾收集而没有被释放（）时）
  * THIS IMPLEMENTATION IS A DEVELOPMENT/DEBUGGING AID AND IS NOT MEANT PRO PRODUCTION USE.
+ * 这项实施是一项开发/调试援助，并不适合生产使用。
  */
 public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements AutoCloseable {//AutoCloseable 自动释放资源
 

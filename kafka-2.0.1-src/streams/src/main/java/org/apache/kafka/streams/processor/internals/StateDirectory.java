@@ -40,6 +40,7 @@ import java.util.HashMap;
  * Manages the directories where the state of Tasks owned by a {@link StreamThread} are
  * stored. Handles creation/locking/unlocking/cleaning of the Task Directories. This class is not
  * thread-safe.
+ * 管理存储{@link StreamThread}所拥有的任务状态的目录。处理任务目录的创建/锁定/解锁/清理。这个类不是*线程安全的。
  */
 public class StateDirectory {
 
@@ -88,6 +89,7 @@ public class StateDirectory {
 
     /**
      * Get or create the directory for the provided {@link TaskId}.
+     * 获取或创建所提供的{@link TaskId}的目录。
      * @return directory for the {@link TaskId}
      * @throws ProcessorStateException if the task directory does not exists and could not be created
      */
@@ -102,6 +104,7 @@ public class StateDirectory {
 
     /**
      * Get or create the directory for the global stores.
+     * 获取或创建全局存储的目录。
      * @return directory for the global stores
      * @throws ProcessorStateException if the global store directory does not exists and could not be created
      */
@@ -242,8 +245,10 @@ public class StateDirectory {
      * Remove the directories for any {@link TaskId}s that are no-longer
      * owned by this {@link StreamThread} and aren't locked by either
      * another process or another {@link StreamThread}
+     * 删除此{@link StreamThread}不再拥有的任何{@link TaskId}的目录，并且不被*另一个进程或其他进程锁定{@link StreamThread}
      * @param cleanupDelayMs only remove directories if they haven't been modified for at least
      *                       this amount of time (milliseconds)
+     *                       只删除目录，如果它们至少没有被修改过*这段时间（毫秒）
      */
     public synchronized void cleanRemovedTasks(final long cleanupDelayMs) {
         try {

@@ -64,6 +64,7 @@ class CachingKeyValueStore<K, V> extends WrappedStateStore.AbstractStateStore im
         underlying.init(context, root);
         // save the stream thread as we only ever want to trigger a flush
         // when the stream thread is the current thread.
+        // 拿到执行这点代码的线程
         streamThread = Thread.currentThread();
     }
 
@@ -174,6 +175,7 @@ class CachingKeyValueStore<K, V> extends WrappedStateStore.AbstractStateStore im
             }
             // only update the cache if this call is on the streamThread
             // as we don't want other threads to trigger an eviction/flush
+            // 仅当此调用位于streamthread上时更新缓存，因为我们不希望其他线程触发逐出/刷新
             if (Thread.currentThread().equals(streamThread)) {
                 cache.put(cacheName, key, new LRUCacheEntry(rawValue));
             }

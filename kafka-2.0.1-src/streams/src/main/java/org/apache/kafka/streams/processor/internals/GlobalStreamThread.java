@@ -123,6 +123,7 @@ public class GlobalStreamThread extends Thread {
     /**
      * Set the {@link StreamThread.StateListener} to be notified when state changes. Note this API is internal to
      * Kafka Streams and is not intended to be used by an external application.
+     * 设置{@link StreamThread.StateListener}以在状态更改时得到通知。请注意，此API是* Kafka Streams的内部API，不应由外部应用程序使用。
      */
     public void setStateListener(final StreamThread.StateListener listener) {
         stateListener = listener;

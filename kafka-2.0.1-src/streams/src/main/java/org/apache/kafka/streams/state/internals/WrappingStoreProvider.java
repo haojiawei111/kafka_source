@@ -25,6 +25,10 @@ import java.util.List;
 
 /**
  * Provides a wrapper over multiple underlying {@link StateStoreProvider}s
+ * 提供多个底层{@link StateStoreProvider}的包装器
+ *
+ * 这个类可以包装多个StateStoreProvider，比如一个WrappingStoreProvider可以包装StreamThreadStateStoreProvider和GlobalStateStoreProvider
+ *
  */
 public class WrappingStoreProvider implements StateStoreProvider {
 

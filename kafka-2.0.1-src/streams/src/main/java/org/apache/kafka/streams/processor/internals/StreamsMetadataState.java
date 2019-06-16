@@ -43,7 +43,7 @@ import java.util.Set;
  * 提供对KafkaStreams应用程序中{@link StreamsMetadata}的访问。这可用于*在KafkaStreams应用程序中发现{@link org.apache.kafka.streams.processor.StateStore} s *的位置
  */
 public class StreamsMetadataState {
-    public static final HostInfo UNKNOWN_HOST = new HostInfo("unknown", -1);
+    public static final HostInfo UNKNOWN_HOST = new HostInfo("unknown", -1);// 默认IP，端口
     private final InternalTopologyBuilder builder;
     private final List<StreamsMetadata> allMetadata = new ArrayList<>();
     private final Set<String> globalStores;

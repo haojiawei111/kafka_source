@@ -150,6 +150,7 @@ class InnerMeteredKeyValueStore<K, IK, V, IV> extends WrappedStateStore.Abstract
                                                                               tagKey, taskName);
 
         // register and possibly restore the state from the logs
+        // 注册并可能从日志中恢复状态
         if (restoreTime.shouldRecord()) {
             measureLatency(new Action<V>() {
                 @Override

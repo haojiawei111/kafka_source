@@ -160,6 +160,7 @@ public class SimpleBenchmark {
 
     private void run() {
         switch (testName) {
+
             // loading phases
             case "load-one":
                 produce(LOADING_PRODUCER_CLIENT_ID, SOURCE_TOPIC_ONE, numRecords, keySkew, valueSize);
@@ -225,6 +226,7 @@ public class SimpleBenchmark {
         int valueSize = Integer.parseInt(args[4]);
 
         final Properties props = Utils.loadProps(propFileName);
+        // 取出kafka连接地址
         final String kafka = props.getProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG);
 
         if (kafka == null) {
@@ -516,6 +518,7 @@ public class SimpleBenchmark {
      * Measure the performance of a simple aggregate like count.
      * Counts the occurrence of numbers (note that normally people count words, this
      * example counts numbers)
+     * 测量像count这样的简单聚合的性能。 *计算数字的出现（请注意，通常人们计算单词，此*示例计算数字）
      */
     private void countStreamsNonWindowed(final String sourceTopic) {
         final CountDownLatch latch = new CountDownLatch(1);

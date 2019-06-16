@@ -48,7 +48,7 @@ public class ChangeLoggingKeyValueBytesStore extends WrappedStateStore.AbstractS
             ((MemoryLRUCache<Bytes, byte[]>) inner).whenEldestRemoved(new MemoryLRUCache.EldestEntryRemovalListener<Bytes, byte[]>() {
                 @Override
                 public void apply(Bytes key, byte[] value) {
-                    // pass null to indicate removal
+                    // pass null to indicate removal 传递null表示删除
                     changeLogger.logChange(key, null);
                 }
             });

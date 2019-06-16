@@ -22,6 +22,10 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 /**
  * Production exception handler that always instructs streams to continue when an exception
  * happens while attempting to produce result records.
+ *
+ * 生产异常处理程序，在尝试生成结果记录时发生异常*时始终指示流继续。
+ *
+ * 生产出错但是日志记录错误仍然继续
  */
 public class AlwaysContinueProductionExceptionHandler implements ProductionExceptionHandler {
     @Override

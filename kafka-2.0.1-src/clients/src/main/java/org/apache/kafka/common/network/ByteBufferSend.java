@@ -23,12 +23,13 @@ import java.nio.channels.GatheringByteChannel;
 
 /**
  * A send backed by an array of byte buffers
+ * 由字节缓冲区数组支持的发送
  */
 public class ByteBufferSend implements Send {
 
     private final String destination;
     private final int size;
-    protected final ByteBuffer[] buffers;
+    protected final ByteBuffer[] buffers;  //两个ByteBuffer，第一个是后面一个ByteBuffer的大小
     private int remaining;
     private boolean pending = false;
 

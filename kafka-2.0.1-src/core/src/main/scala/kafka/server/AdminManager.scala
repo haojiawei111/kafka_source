@@ -51,9 +51,10 @@ class AdminManager(val config: KafkaConfig,
 
   private val adminZkClient = new AdminZkClient(zkClient)
 
-  private val createTopicPolicy = Option(config.getConfiguredInstance(KafkaConfig.CreateTopicPolicyClassNameProp, classOf[CreateTopicPolicy])) //create.topic.policy.class.name
-
-  private val alterConfigPolicy = Option(config.getConfiguredInstance(KafkaConfig.AlterConfigPolicyClassNameProp, classOf[AlterConfigPolicy])) //alter.config.policy.class.name
+  //create.topic.policy.class.name
+  private val createTopicPolicy = Option(config.getConfiguredInstance(KafkaConfig.CreateTopicPolicyClassNameProp, classOf[CreateTopicPolicy]))
+  //alter.config.policy.class.name
+  private val alterConfigPolicy = Option(config.getConfiguredInstance(KafkaConfig.AlterConfigPolicyClassNameProp, classOf[AlterConfigPolicy]))
 
   //是否有延迟主题操作
   def hasDelayedTopicOperations = topicPurgatory.delayed != 0

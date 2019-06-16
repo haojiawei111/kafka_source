@@ -24,6 +24,7 @@ import java.util.Map;
 
 /**
  * Interface for maintaining global state stores. see {@link GlobalStateUpdateTask}
+ * 全局状态更新任务
  */
 interface GlobalStateMaintainer {
 

@@ -38,6 +38,7 @@ class ControllerEventManager(controllerId: Int, rateAndTimeMetrics: Map[Controll
   private val putLock = new ReentrantLock()
   // 阻塞队列
   private val queue = new LinkedBlockingQueue[ControllerEvent]
+  // 创建controller-event-thread 事件线程
   private val thread = new ControllerEventThread(ControllerEventManager.ControllerEventThreadName)
   private val time = Time.SYSTEM
 
@@ -62,6 +63,7 @@ class ControllerEventManager(controllerId: Int, rateAndTimeMetrics: Map[Controll
     thread.awaitShutdown()
   }
 
+  // 清空queue并向queue加入一个event
   def clearAndPut(event: ControllerEvent): Unit = inLock(putLock) {
     queue.clear()
     put(event)
@@ -87,12 +89,13 @@ class ControllerEventManager(controllerId: Int, rateAndTimeMetrics: Map[Controll
 
           try {
             rateAndTimeMetrics(state).time {
-              controllerEvent.process()
-            }
-          } catch {
+          // 执行事件的程序
+          controllerEvent.process()
+        }
+      } catch {
             case e: Throwable => error(s"Error processing event $controllerEvent", e)
           }
-
+          // 更新监控指标
           try eventProcessedListener(controllerEvent)
           catch {
             case e: Throwable => error(s"Error while invoking listener for processed event $controllerEvent", e)

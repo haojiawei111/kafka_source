@@ -28,6 +28,7 @@ public interface RocksDBConfigSetter {
 
     /**
      * Set the rocks db options for the provided storeName.
+     * 为提供的storeName设置rocks db选项。
      * 
      * @param storeName     the name of the store being configured
      * @param options       the Rocks DB options

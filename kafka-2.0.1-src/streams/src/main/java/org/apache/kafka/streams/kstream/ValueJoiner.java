@@ -23,6 +23,11 @@ package org.apache.kafka.streams.kstream;
  * record-pair of a {@link KStream}-{@link KStream}, {@link KStream}-{@link KTable}, or {@link KTable}-{@link KTable}
  * join.
  *
+ * {@code ValueJoiner}接口，用于将两个值连接成任意类型的新值。
+ * 这是一个无状态操作，即{@link #apply（Object，Object）}为{@link KStream}的每个加入记录对单独调用
+ * {@link KStream}-{@link KStream} - {@link KTable}或{@link KTable}  -  {@link KTable} 加入
+ *            这个接口用来做join
+ *
  * @param <V1> first value type
  * @param <V2> second value type
  * @param <VR> joined value type

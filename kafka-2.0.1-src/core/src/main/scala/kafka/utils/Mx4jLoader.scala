@@ -26,7 +26,7 @@ import javax.management.ObjectName
  * 如果mx4j-tools在类路径中调用maybeLoad来加载mx4j的HTTP接口。
  * The default port is 8082. To override that provide e.g. -Dmx4jport=8083
  * The default listen address is 0.0.0.0. To override that provide -Dmx4jaddress=127.0.0.1
- * This feature must be enabled with -Dmx4jenable=true
+ * This feature must be enabled with -Dkafka_mx4jenable=true
  *
  * This is a Scala port of org.apache.cassandra.utils.Mx4jTool written by Ran Tavory for CASSANDRA-1068
  * */

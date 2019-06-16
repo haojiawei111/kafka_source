@@ -115,7 +115,10 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
   val brokerState: BrokerState = new BrokerState
 
   var apis: KafkaApis = null
+
   var authorizer: Option[Authorizer] = None
+
+
   var socketServer: SocketServer = null
   var requestHandlerPool: KafkaRequestHandlerPool = null
 
@@ -751,6 +754,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
       //config.brokerIdGenerationEnable  brokerId自动生成
     else if (brokerIdSet.isEmpty && brokerId < 0 && config.brokerIdGenerationEnable) // 从Zookeeper生成一个新的brokerId
       brokerId = generateBrokerId
+
     else if (brokerIdSet.size == 1) // 从meta.properties中拿到broker.id
       brokerId = brokerIdSet.last
 

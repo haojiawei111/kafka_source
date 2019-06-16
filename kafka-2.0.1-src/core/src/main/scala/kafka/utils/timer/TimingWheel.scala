@@ -118,6 +118,7 @@ private[timer] class TimingWheel(tickMs: Long, wheelSize: Int, startMs: Long, ta
   /***************************当前时间轮只能处理时间范围在currentTime~currentTime+tickMs*WheelSize之间的定时任务，超过这个范围则需要添加任务到上层时间轮*************************************/
   // interval：Long 当前时间轮的时间跨度即tickMs * wheelSize,
   private[this] val interval = tickMs * wheelSize
+
   //开始时间取整
   private[this] var currentTime = startMs - (startMs % tickMs) // rounding down to multiple of tickMs 四舍五入到多个tickMs
   /******************************************************************************************************************************************************************************/
@@ -166,12 +167,12 @@ private[timer] class TimingWheel(tickMs: Long, wheelSize: Int, startMs: Long, ta
 
       // Set the bucket expiration time 设置存储桶到期时间
       if (bucket.setExpiration(virtualId * tickMs)) {
-        // The bucket needs to be enqueued because it was an expired bucket
-        // We only need to enqueue the bucket when its expiration time has changed, i.e. the wheel has advanced
-        // and the previous buckets gets reused; further calls to set the expiration within the same wheel cycle
-        // will pass in the same value and hence return false, thus the bucket with the same expiration will not
-        // be enqueued multiple times.
-        queue.offer(bucket)
+          // The bucket needs to be enqueued because it was an expired bucket
+          // We only need to enqueue the bucket when its expiration time has changed, i.e. the wheel has advanced
+          // and the previous buckets gets reused; further calls to set the expiration within the same wheel cycle
+          // will pass in the same value and hence return false, thus the bucket with the same expiration will not
+          // be enqueued multiple times.
+          queue.offer(bucket)
       }
       true
     } else {
@@ -192,4 +193,5 @@ private[timer] class TimingWheel(tickMs: Long, wheelSize: Int, startMs: Long, ta
       if (overflowWheel != null) overflowWheel.advanceClock(currentTime)
     }
   }
+
 }

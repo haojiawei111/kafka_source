@@ -54,6 +54,7 @@ public class SystemTestUtilTest {
     public void shouldThrowExceptionIfNotCorrectKeyValueSeparator() {
         final String badString = "foo:bar,baz:boo";
         SystemTestUtil.parseConfigs(badString);
+        System.out.println();
     }
 
     @Test(expected = IllegalStateException.class)

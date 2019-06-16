@@ -33,6 +33,7 @@ import kafka.utils.{CommandLineUtils , Exit, Logging}
 
 /**
   * A program for reading JMX metrics from a given endpoint.
+  * 用于从给定端点读取JMX度量标准的程序。
   *
   * This tool only works reliably if the JmxServer is fully initialized prior to invoking the tool. See KAFKA-4620 for
   * details.

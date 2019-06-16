@@ -37,7 +37,7 @@ public class SimpleMemoryPool implements MemoryPool {
     protected final long sizeBytes;
     protected final boolean strict;
     protected final AtomicLong availableMemory;
-    protected final int maxSingleAllocationSize;
+    protected final int maxSingleAllocationSize; //最大单一分配大小
     protected final AtomicLong startOfNoMemPeriod = new AtomicLong(); //纳秒
     protected volatile Sensor oomTimeSensor;
 
@@ -52,6 +52,13 @@ public class SimpleMemoryPool implements MemoryPool {
         this.oomTimeSensor = oomPeriodSensor;
     }
 
+
+    /**
+     * //尝试分配内存
+     *
+     * @param sizeBytes 需要分配内纯的大小
+     * @return
+     */
     @Override
     public ByteBuffer tryAllocate(int sizeBytes) {
         if (sizeBytes < 1)
@@ -64,10 +71,12 @@ public class SimpleMemoryPool implements MemoryPool {
         //in strict mode we will only allocate memory if we have at least the size required.
         //in non-strict mode we will allocate memory if we have _any_ memory available (so available memory
         //can dip into the negative and max allocated memory would be sizeBytes + maxSingleAllocationSize)
-        //在严格模式下，我们只会在至少需要大小时才分配内存。
-        //在非严格模式下，如果我们有_._memory可用，我们将分配内存
+        //在严格模式下，我们只会在至少有sizeBytes大小内存的时候才分配内存。
+        //在非严格模式下，如果我们有memory可用，我们就将分配内存
         //（因此可用内存可以取负值，而最大分配内存将是sizeBytes+maxSingleAllocationSize）
         long threshold = strict ? sizeBytes : 1;
+
+        // 如果是非严格模式，threshold = 1，如果availableMemory.get()一直是大于1的数就一直循环，等待有内存是时候才会break循环
         while ((available = availableMemory.get()) >= threshold) {
             success = availableMemory.compareAndSet(available, available - sizeBytes);
             if (success)
@@ -80,35 +89,39 @@ public class SimpleMemoryPool implements MemoryPool {
             if (oomTimeSensor != null) {
                 startOfNoMemPeriod.compareAndSet(0, System.nanoTime());
             }
-            log.trace("refused to allocate buffer of size {}", sizeBytes);
+            log.trace("拒绝分配大小的缓冲区 refused to allocate buffer of size {}", sizeBytes);
             return null;
         }
 
+        // 这里分配了内存
         ByteBuffer allocated = ByteBuffer.allocate(sizeBytes);
         bufferToBeReturned(allocated); //打日志，显示分配了多大
         return allocated;
     }
 
+    // 释放空间
     @Override
     public void release(ByteBuffer previouslyAllocated) {
         if (previouslyAllocated == null)
             throw new IllegalArgumentException("provided null buffer");
 
         bufferToBeReleased(previouslyAllocated);
-        availableMemory.addAndGet(previouslyAllocated.capacity());
+        availableMemory.addAndGet(previouslyAllocated.capacity()); //previouslyAllocated.capacity()缓冲区容量
         maybeRecordEndOfDrySpell();
     }
 
+    // 内存池大小
     @Override
     public long size() {
         return sizeBytes;
     }
 
+    // 内存池可用内存大小
     @Override
     public long availableMemory() {
         return availableMemory.get();
     }
-
+    // 内存池是否没空间了
     @Override
     public boolean isOutOfMemory() {
         return availableMemory.get() <= 0;
@@ -126,7 +139,7 @@ public class SimpleMemoryPool implements MemoryPool {
 
     @Override
     public String toString() {
-        long allocated = sizeBytes - availableMemory.get();
+        long allocated = sizeBytes - availableMemory.get(); // 用掉了多少空间
         return "SimpleMemoryPool{" + Utils.formatBytes(allocated) + "/" + Utils.formatBytes(sizeBytes) + " used}";
     }
 

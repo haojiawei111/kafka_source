@@ -404,6 +404,7 @@ class ZooKeeperClient(connectString: String,
     reinitialize()
   }
 
+  //在初始化会话之前调用 zookeeper连接重置的时候调用
   private def callBeforeInitializingSession(handler: StateChangeHandler): Unit = {
     try {
       handler.beforeInitializingSession()
@@ -412,7 +413,7 @@ class ZooKeeperClient(connectString: String,
         error(s"Uncaught error in handler ${handler.name}", t)
     }
   }
-
+  //在初始化会话之后调用 zookeeper连接重置的时候调用
   private def callAfterInitializingSession(handler: StateChangeHandler): Unit = {
     try {
       handler.afterInitializingSession()

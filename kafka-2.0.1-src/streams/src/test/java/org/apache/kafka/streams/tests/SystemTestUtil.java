@@ -24,6 +24,10 @@ import java.util.Objects;
 /**
  * Class for common convenience methods for working on
  * System tests
+ *
+ * // 用来解析 foo=foo1,bar=bar1,baz=baz1 ---》》 map
+ *
+ *
  */
 
 public class SystemTestUtil {
@@ -40,6 +44,7 @@ public class SystemTestUtil {
      * @param formattedConfigs the formatted config string
      * @return HashMap with keys and values inserted
      */
+    // 用来解析 foo=foo1,bar=bar1,baz=baz1 ---》》 map
     public static Map<String, String> parseConfigs(final String formattedConfigs) {
         Objects.requireNonNull(formattedConfigs, "Formatted config String can't be null");
 
