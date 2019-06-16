@@ -28,6 +28,9 @@ import java.util.Map;
  * {@code KafkaClientSupplier} can be used to provide custom Kafka clients to a {@link KafkaStreams} instance.
  *
  * @see KafkaStreams#KafkaStreams(Topology, java.util.Properties, KafkaClientSupplier)
+ *
+ * 只有一个是实现类DefaultKafkaClientSupplier
+ * 为整个kstream框架提供生产者和消费者
  */
 public interface KafkaClientSupplier {
     /**

@@ -108,6 +108,7 @@ public interface TopologyDescription {
 
     /**
      * A source node of a topology.
+     * 拓扑的source节点。
      */
     interface Source extends Node {
         /**
@@ -119,6 +120,7 @@ public interface TopologyDescription {
 
     /**
      * A processor node of a topology.
+     * 拓扑的处理器节点。
      */
     interface Processor extends Node {
         /**
@@ -130,6 +132,7 @@ public interface TopologyDescription {
 
     /**
      * A sink node of a topology.
+     * 拓扑的sink节点。
      */
     interface Sink extends Node {
         /**

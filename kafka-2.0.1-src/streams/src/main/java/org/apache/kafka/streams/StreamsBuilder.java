@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 
 /**
  * {@code StreamsBuilder} provide the high-level Kafka Streams DSL to specify a Kafka Streams topology.
+ *  {@code StreamsBuilder}提供高级Kafka Streams DSL以指定Kafka Streams拓扑。
  *
  * @see Topology
  * @see KStream

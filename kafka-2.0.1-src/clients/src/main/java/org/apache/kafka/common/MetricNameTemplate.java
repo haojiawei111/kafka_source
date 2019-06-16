@@ -28,7 +28,9 @@ import org.apache.kafka.common.utils.Utils;
  * well as all the tags that will be used to create the mBean name. Tag values
  * are omitted from the template, but are filled in at runtime with their
  * specified values. The order of the tags is maintained, if an ordered set
- * is provided, so that the mBean names can be compared and sorted lexicographically.
+ * is provided, so that the mBean names can be compared and sorted lexicographically.、
+ * MetricName的模板。它包含名称，组和描述，以及将用于创建mBean名称的所有标记。标签值*在模板中省略，
+ * 但在运行时使用其*指定值填充。如果提供了有序集*，则保持标记的顺序，以便可以按字典顺序对mBean名称进行比较和排序。
  */
 public class MetricNameTemplate {
     private final String name;

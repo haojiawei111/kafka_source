@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>org.apache.kafka.streams.StreamsMetrics</OriginalElement>
+  <nodes>
+    <node x="931.5495169082126" y="1012.0">org.apache.kafka.common.metrics.stats.Max</node>
+    <node x="1535.2995169082124" y="831.5">org.apache.kafka.common.metrics.CompoundStat</node>
+    <node x="25.0" y="1592.0">org.apache.kafka.common.metrics.Sensor.RecordingLevel</node>
+    <node x="159.0" y="808.5">org.apache.kafka.common.metrics.stats.Rate</node>
+    <node x="1114.5495169082126" y="989.0">org.apache.kafka.common.metrics.stats.Frequencies</node>
+    <node x="1265.9245169082126" y="1149.5">org.apache.kafka.common.metrics.stats.Percentiles.HistogramSample</node>
+    <node x="295.54951690821247" y="1012.0">org.apache.kafka.common.metrics.stats.Rate.SampledTotal</node>
+    <node x="635.5495169082126" y="966.0">org.apache.kafka.common.metrics.stats.SampledStat.Sample</node>
+    <node x="953.4245169082126" y="637.0">org.apache.kafka.common.metrics.Stat</node>
+    <node x="1477.9245169082124" y="1138.0">org.apache.kafka.common.metrics.stats.Percentiles.BucketSizing</node>
+    <node x="729.0" y="1259.0">org.apache.kafka.common.MetricName</node>
+    <node x="476.0" y="1259.0">org.apache.kafka.common.Metric</node>
+    <node x="0.0" y="160.0">org.apache.kafka.streams.processor.internals.metrics.StreamsMetricsImpl</node>
+    <node x="59.5" y="424.0">org.apache.kafka.streams.processor.internals.StreamThread.StreamsMetricsThreadImpl</node>
+    <node x="0.0" y="820.0">org.apache.kafka.common.metrics.stats.Total</node>
+    <node x="487.7995169082125" y="820.0">org.apache.kafka.common.metrics.stats.Value</node>
+    <node x="744.2240338164252" y="1149.5">org.apache.kafka.common.metrics.stats.Frequencies.HistogramSample</node>
+    <node x="0.0" y="1259.0">org.apache.kafka.common.metrics.Sensor</node>
+    <node x="130.0" y="0.0">org.apache.kafka.common.annotation.InterfaceStability.Evolving</node>
+    <node x="838.5495169082126" y="1012.0">org.apache.kafka.common.metrics.stats.Sum</node>
+    <node x="1593.6745169082124" y="989.0">org.apache.kafka.common.metrics.CompoundStat.NamedMeasurable</node>
+    <node x="991.0" y="1259.0">org.apache.kafka.common.MetricNameTemplate</node>
+    <node x="402.54951690821247" y="717.0">org.apache.kafka.common.metrics.MeasurableStat</node>
+    <node x="131.25" y="1012.0">org.apache.kafka.common.metrics.stats.SimpleRate</node>
+    <node x="443.5495169082125" y="1012.0">org.apache.kafka.common.metrics.stats.Min</node>
+    <node x="1024.5495169082126" y="1012.0">org.apache.kafka.common.metrics.stats.Avg</node>
+    <node x="533.5495169082126" y="1012.0">org.apache.kafka.common.metrics.stats.Count</node>
+    <node x="353.0" y="1339.0">org.apache.kafka.common.metrics.KafkaMetric</node>
+    <node x="1789.6745169082124" y="966.0">org.apache.kafka.common.metrics.stats.Meter</node>
+    <node x="1374.6745169082124" y="977.5">org.apache.kafka.common.metrics.stats.Percentiles</node>
+    <node x="109.0" y="80.0">org.apache.kafka.streams.StreamsMetrics</node>
+    <node x="775.0495169082126" y="797.0">org.apache.kafka.common.metrics.stats.SampledStat</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="org.apache.kafka.common.metrics.CompoundStat" target="org.apache.kafka.common.metrics.Stat">
+      <point x="0.0" y="-15.0" />
+      <point x="1602.7995169082124" y="692.0" />
+      <point x="1005.9245169082126" y="692.0" />
+      <point x="17.5" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Total" target="org.apache.kafka.common.metrics.MeasurableStat">
+      <point x="0.0" y="-26.5" />
+      <point x="69.5" y="767.0" />
+      <point x="419.92451690821247" y="767.0" />
+      <point x="-52.125" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.StreamsMetrics" target="org.apache.kafka.common.annotation.InterfaceStability.Evolving">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Percentiles.BucketSizing" target="org.apache.kafka.common.metrics.stats.Percentiles">
+      <point x="0.0" y="-38.0" />
+      <point x="1538.4245169082124" y="1118.0" />
+      <point x="1523.9245169082124" y="1118.0" />
+      <point x="49.75" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Frequencies.HistogramSample" target="org.apache.kafka.common.metrics.stats.Frequencies">
+      <point x="48.0" y="-26.5" />
+      <point x="888.2240338164252" y="1118.0" />
+      <point x="1217.5495169082126" y="1118.0" />
+      <point x="0.0" y="38.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Percentiles" target="org.apache.kafka.common.metrics.CompoundStat">
+      <point x="49.75" y="-49.5" />
+      <point x="1523.9245169082124" y="946.0" />
+      <point x="1585.9245169082124" y="946.0" />
+      <point x="-16.875" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Rate" target="org.apache.kafka.common.metrics.MeasurableStat">
+      <point x="0.0" y="-38.0" />
+      <point x="242.0" y="777.0" />
+      <point x="454.67451690821247" y="777.0" />
+      <point x="-17.375" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.CompoundStat.NamedMeasurable" target="org.apache.kafka.common.metrics.CompoundStat">
+      <point x="0.0" y="-38.0" />
+      <point x="1681.6745169082124" y="946.0" />
+      <point x="1619.6745169082124" y="946.0" />
+      <point x="16.875" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Value" target="org.apache.kafka.common.metrics.MeasurableStat">
+      <point x="0.0" y="-26.5" />
+      <point x="559.2995169082126" y="777.0" />
+      <point x="489.42451690821247" y="777.0" />
+      <point x="17.375" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Rate.SampledTotal" target="org.apache.kafka.common.metrics.stats.Rate">
+      <point x="-32.0" y="-15.0" />
+      <point x="327.54951690821247" y="946.0" />
+      <point x="283.5" y="946.0" />
+      <point x="41.5" y="38.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.KafkaMetric" target="org.apache.kafka.common.Metric">
+      <point x="0.0" y="-72.5" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Frequencies" target="org.apache.kafka.common.metrics.CompoundStat">
+      <point x="51.5" y="-38.0" />
+      <point x="1269.0495169082126" y="936.0" />
+      <point x="1552.1745169082124" y="936.0" />
+      <point x="-50.625" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.processor.internals.metrics.StreamsMetricsImpl" target="org.apache.kafka.streams.StreamsMetrics">
+      <point x="0.0" y="-107.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.Sensor.RecordingLevel" target="org.apache.kafka.common.metrics.Sensor">
+      <point x="0.0" y="-95.5" />
+      <point x="0.0" y="141.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Rate.SampledTotal" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="32.0" y="-15.0" />
+      <point x="391.54951690821247" y="916.0" />
+      <point x="786.1606280193237" y="916.0" />
+      <point x="-88.88888888888891" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Max" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="0.0" y="-15.0" />
+      <point x="968.0495169082126" y="946.0" />
+      <point x="897.2717391304348" y="946.0" />
+      <point x="22.22222222222217" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Percentiles" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="-49.75" y="-49.5" />
+      <point x="1424.4245169082124" y="916.0" />
+      <point x="963.9384057971015" y="916.0" />
+      <point x="88.88888888888891" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Frequencies" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="-51.5" y="-38.0" />
+      <point x="1166.0495169082126" y="926.0" />
+      <point x="941.7161835748793" y="926.0" />
+      <point x="66.66666666666674" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Count" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="0.0" y="-15.0" />
+      <point x="574.5495169082126" y="936.0" />
+      <point x="830.6050724637682" y="936.0" />
+      <point x="-44.44444444444434" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Percentiles.HistogramSample" target="org.apache.kafka.common.metrics.stats.Percentiles">
+      <point x="48.0" y="-26.5" />
+      <point x="1409.9245169082126" y="1118.0" />
+      <point x="1424.4245169082124" y="1118.0" />
+      <point x="-49.75" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Percentiles.HistogramSample" target="org.apache.kafka.common.metrics.stats.SampledStat.Sample">
+      <point x="-48.0" y="-26.5" />
+      <point x="1313.9245169082126" y="1108.0" />
+      <point x="772.7995169082126" y="1108.0" />
+      <point x="45.75" y="61.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Frequencies.HistogramSample" target="org.apache.kafka.common.metrics.stats.SampledStat.Sample">
+      <point x="-48.0" y="-26.5" />
+      <point x="792.2240338164252" y="1118.0" />
+      <point x="681.2995169082126" y="1118.0" />
+      <point x="-45.75" y="61.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Sum" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.SampledStat" target="org.apache.kafka.common.metrics.MeasurableStat">
+      <point x="0.0" y="-49.5" />
+      <point x="875.0495169082126" y="767.0" />
+      <point x="524.1745169082125" y="767.0" />
+      <point x="52.125" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.SimpleRate" target="org.apache.kafka.common.metrics.stats.Rate">
+      <point x="0.0" y="-15.0" />
+      <point x="187.75" y="946.0" />
+      <point x="200.5" y="946.0" />
+      <point x="-41.5" y="38.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Min" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="0.0" y="-15.0" />
+      <point x="478.5495169082125" y="926.0" />
+      <point x="808.3828502415458" y="926.0" />
+      <point x="-66.66666666666674" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Avg" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="0.0" y="-15.0" />
+      <point x="1059.5495169082126" y="936.0" />
+      <point x="919.4939613526569" y="936.0" />
+      <point x="44.44444444444434" y="49.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.processor.internals.StreamThread.StreamsMetricsThreadImpl" target="org.apache.kafka.streams.processor.internals.metrics.StreamsMetricsImpl">
+      <point x="0.0" y="-84.0" />
+      <point x="0.0" y="107.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.MeasurableStat" target="org.apache.kafka.common.metrics.Stat">
+      <point x="0.0" y="-15.0" />
+      <point x="472.04951690821247" y="692.0" />
+      <point x="970.9245169082126" y="692.0" />
+      <point x="-17.5" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.Meter" target="org.apache.kafka.common.metrics.CompoundStat">
+      <point x="0.0" y="-61.0" />
+      <point x="1910.6745169082124" y="936.0" />
+      <point x="1653.4245169082124" y="936.0" />
+      <point x="50.625" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.common.metrics.stats.SampledStat.Sample" target="org.apache.kafka.common.metrics.stats.SampledStat">
+      <point x="0.0" y="-61.0" />
+      <point x="727.0495169082126" y="946.0" />
+      <point x="852.8272946859904" y="946.0" />
+      <point x="-22.22222222222217" y="49.5" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.9819744869661674" x="565.4273920592865" y="451.491814285329" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Inner Classes</Category>
+    <Category>Fields</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

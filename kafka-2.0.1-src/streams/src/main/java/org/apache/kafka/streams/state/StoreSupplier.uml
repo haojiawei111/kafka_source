@@ -3,48 +3,48 @@
   <ID>JAVA</ID>
   <OriginalElement>org.apache.kafka.streams.state.StoreSupplier</OriginalElement>
   <nodes>
-    <node x="314.5" y="79.0">org.apache.kafka.streams.state.StoreSupplier</node>
-    <node x="276.0" y="158.0">org.apache.kafka.streams.state.KeyValueBytesStoreSupplier</node>
-    <node x="323.5" y="0.0">org.apache.kafka.streams.processor.StateStore</node>
-    <node x="536.0" y="158.0">org.apache.kafka.streams.state.SessionBytesStoreSupplier</node>
-    <node x="0.0" y="237.0">org.apache.kafka.streams.state.internals.RocksDbWindowBytesStoreSupplier</node>
-    <node x="254.0" y="237.0">org.apache.kafka.streams.state.internals.RocksDbKeyValueBytesStoreSupplier</node>
-    <node x="514.0" y="237.0">org.apache.kafka.streams.state.internals.RocksDbSessionBytesStoreSupplier</node>
-    <node x="22.0" y="158.0">org.apache.kafka.streams.state.WindowBytesStoreSupplier</node>
+    <node x="345.0" y="80.0">org.apache.kafka.streams.state.StoreSupplier</node>
+    <node x="303.0" y="160.0">org.apache.kafka.streams.state.KeyValueBytesStoreSupplier</node>
+    <node x="354.5" y="0.0">org.apache.kafka.streams.processor.StateStore</node>
+    <node x="586.0" y="160.0">org.apache.kafka.streams.state.SessionBytesStoreSupplier</node>
+    <node x="0.0" y="240.0">org.apache.kafka.streams.state.internals.RocksDbWindowBytesStoreSupplier</node>
+    <node x="277.0" y="240.0">org.apache.kafka.streams.state.internals.RocksDbKeyValueBytesStoreSupplier</node>
+    <node x="560.0" y="240.0">org.apache.kafka.streams.state.internals.RocksDbSessionBytesStoreSupplier</node>
+    <node x="26.0" y="160.0">org.apache.kafka.streams.state.WindowBytesStoreSupplier</node>
   </nodes>
   <notes />
   <edges>
     <edge source="org.apache.kafka.streams.state.StoreSupplier" target="org.apache.kafka.streams.processor.StateStore">
-      <point x="0.0" y="-14.5" />
-      <point x="0.0" y="14.5" />
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.RocksDbKeyValueBytesStoreSupplier" target="org.apache.kafka.streams.state.KeyValueBytesStoreSupplier">
-      <point x="0.0" y="-14.5" />
-      <point x="0.0" y="14.5" />
-    </edge>
-    <edge source="org.apache.kafka.streams.state.internals.RocksDbSessionBytesStoreSupplier" target="org.apache.kafka.streams.state.SessionBytesStoreSupplier">
-      <point x="0.0" y="-14.5" />
-      <point x="0.0" y="14.5" />
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.RocksDbWindowBytesStoreSupplier" target="org.apache.kafka.streams.state.WindowBytesStoreSupplier">
-      <point x="0.0" y="-14.5" />
-      <point x="0.0" y="14.5" />
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.RocksDbSessionBytesStoreSupplier" target="org.apache.kafka.streams.state.SessionBytesStoreSupplier">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
     </edge>
     <edge source="org.apache.kafka.streams.state.SessionBytesStoreSupplier" target="org.apache.kafka.streams.state.StoreSupplier">
-      <point x="0.0" y="-14.5" />
-      <point x="628.5" y="133.0" />
-      <point x="413.66666666666663" y="133.0" />
-      <point x="39.66666666666663" y="14.5" />
-    </edge>
-    <edge source="org.apache.kafka.streams.state.WindowBytesStoreSupplier" target="org.apache.kafka.streams.state.StoreSupplier">
-      <point x="0.0" y="-14.5" />
-      <point x="117.0" y="133.0" />
-      <point x="334.3333333333333" y="133.0" />
-      <point x="-39.666666666666686" y="14.5" />
+      <point x="0.0" y="-15.0" />
+      <point x="687.0" y="135.0" />
+      <point x="450.83333333333337" y="135.0" />
+      <point x="42.33333333333337" y="15.0" />
     </edge>
     <edge source="org.apache.kafka.streams.state.KeyValueBytesStoreSupplier" target="org.apache.kafka.streams.state.StoreSupplier">
-      <point x="0.0" y="-14.5" />
-      <point x="0.0" y="14.5" />
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.WindowBytesStoreSupplier" target="org.apache.kafka.streams.state.StoreSupplier">
+      <point x="0.0" y="-15.0" />
+      <point x="128.5" y="135.0" />
+      <point x="366.1666666666667" y="135.0" />
+      <point x="-42.333333333333314" y="15.0" />
     </edge>
   </edges>
   <settings layout="Hierarchic Group" zoom="1.0" x="372.0" y="133.0" />
