@@ -35,6 +35,10 @@ import java.util.List;
  * inner KeyValueStore implementation do not need to provide its own metrics collecting functionality.
  * The inner {@link KeyValueStore} of this class is of type &lt;Bytes,byte[]&gt;, hence we use {@link Serde}s
  * to convert from &lt;K,V&gt; to &lt;Bytes,byte[]&gt;
+ *
+ * 这个只能包装InnerMeteredKeyValueStore类型的存储引擎
+ * 在构造函数中直接将KeyValueStore包装成了InnerMeteredKeyValueStore
+ *
  * @param <K>
  * @param <V>
  */

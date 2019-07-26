@@ -109,9 +109,9 @@ public class InternalTopologyBuilder {
 
     // all global topics 所有全局主题
     private final Set<String> globalTopics = new HashSet<>();
-
+    // 最早的重置主题
     private final Set<String> earliestResetTopics = new HashSet<>();
-
+    // 最新的重置主题
     private final Set<String> latestResetTopics = new HashSet<>();
 
     private final Set<Pattern> earliestResetPatterns = new HashSet<>();
@@ -211,6 +211,7 @@ public class InternalTopologyBuilder {
 
     private static abstract class NodeFactory {
         final String name;
+        // 下游一堆节点
         final String[] predecessors;
 
         NodeFactory(final String name,
@@ -226,6 +227,7 @@ public class InternalTopologyBuilder {
 
     private static class ProcessorNodeFactory extends NodeFactory {
         private final ProcessorSupplier<?, ?> supplier;
+        // 添加依赖的中间状态名字
         private final Set<String> stateStoreNames = new HashSet<>();
 
         ProcessorNodeFactory(final String name,
@@ -400,9 +402,11 @@ public class InternalTopologyBuilder {
             maybeAddToResetList(earliestResetTopics, latestResetTopics, offsetReset, topic);
             sourceTopicNames.add(topic);
         }
-
+        // 节点名字和源节点程序之间的映射
         nodeFactories.put(name, new SourceNodeFactory(name, topics, null, timestampExtractor, keyDeserializer, valDeserializer));
+        // 节点名字和topics之间的映射
         nodeToSourceTopics.put(name, Arrays.asList(topics));
+        // 节点名字
         nodeGrouper.add(name);
     }
 
@@ -439,8 +443,11 @@ public class InternalTopologyBuilder {
 
         maybeAddToResetList(earliestResetPatterns, latestResetPatterns, offsetReset, topicPattern);
 
+        // 节点名字和源节点程序之间的映射
         nodeFactories.put(name, new SourceNodeFactory(name, null, topicPattern, timestampExtractor, keyDeserializer, valDeserializer));
+        // 节点名字和topics之间的映射
         nodeToSourcePatterns.put(name, topicPattern);
+        // 节点名字
         nodeGrouper.add(name);
     }
 
@@ -458,6 +465,7 @@ public class InternalTopologyBuilder {
         }
 
         addSink(name, new StaticTopicNameExtractor<K, V>(topic), keySerializer, valSerializer, partitioner, predecessorNames);
+        // 节点名字和topic之间的映射
         nodeToSinkTopic.put(name, topic);
     }
 
@@ -468,7 +476,7 @@ public class InternalTopologyBuilder {
                                      final StreamPartitioner<? super K, ? super V> partitioner,
                                      final String... predecessorNames) {
         Objects.requireNonNull(name, "name must not be null");
-        Objects.requireNonNull(topicExtractor, "topic extractor must not be null");
+        Objects.requireNonNull(topicExtractor, "topic extractor must not be null主题提取器不能为空");
         Objects.requireNonNull(predecessorNames, "predecessor names must not be null");
         if (nodeFactories.containsKey(name)) {
             throw new TopologyException("Processor " + name + " is already added.");
@@ -476,7 +484,7 @@ public class InternalTopologyBuilder {
         if (predecessorNames.length == 0) {
             throw new TopologyException("Sink " + name + " must have at least one parent");
         }
-
+        // 倒数第二层节点
         for (final String predecessor : predecessorNames) {
             Objects.requireNonNull(predecessor, "predecessor name can't be null");
             if (predecessor.equals(name)) {
@@ -489,9 +497,11 @@ public class InternalTopologyBuilder {
                 throw new TopologyException("Sink " + predecessor + " cannot be used a parent.");
             }
         }
-
+        // 节点名和sink的映射
         nodeFactories.put(name, new SinkNodeFactory<>(name, predecessorNames, topicExtractor, keySerializer, valSerializer, partitioner));
+        // 添加节点名
         nodeGrouper.add(name);
+        // 名字为name的取并集存入
         nodeGrouper.unite(name, predecessorNames);
     }
 
@@ -517,9 +527,11 @@ public class InternalTopologyBuilder {
                 throw new TopologyException("Predecessor processor " + predecessor + " is not added yet.");
             }
         }
-
+        // 节点名和sink的映射
         nodeFactories.put(name, new ProcessorNodeFactory(name, predecessorNames, supplier));
+        // 添加节点名
         nodeGrouper.add(name);
+        // 名字为name的取并集存入
         nodeGrouper.unite(name, predecessorNames);
     }
 
@@ -537,6 +549,7 @@ public class InternalTopologyBuilder {
             throw new TopologyException("StateStore " + storeBuilder.name() + " is already added.");
         }
 
+        // 状态名和StoreBuilderFactory的映射
         stateFactories.put(storeBuilder.name(), new StoreBuilderFactory(storeBuilder));
 
         if (processorNames != null) {
@@ -581,6 +594,7 @@ public class InternalTopologyBuilder {
      * @param topic
      */
     private void validateTopicNotAlreadyRegistered(final String topic) {
+        // 同一个topic不能同时在sourceTopicNames或globalTopics中
         if (sourceTopicNames.contains(topic) || globalTopics.contains(topic)) {
             throw new TopologyException("Topic " + topic + " has already been registered by another source.");
         }
@@ -707,9 +721,11 @@ public class InternalTopologyBuilder {
             final String user = iter.next();
             nodeGrouper.unite(user, processorName);
         }
+        // 往stateStoreFactory中添加使用节点的名字
         stateStoreFactory.users().add(processorName);
 
         final NodeFactory nodeFactory = nodeFactories.get(processorName);
+        // 只有ProcessorNodeFactory才支持状态存储
         if (nodeFactory instanceof ProcessorNodeFactory) {
             final ProcessorNodeFactory processorNodeFactory = (ProcessorNodeFactory) nodeFactory;
             processorNodeFactory.addStateStore(stateStoreName);
@@ -726,6 +742,7 @@ public class InternalTopologyBuilder {
             if (nodeFactory instanceof SourceNodeFactory) {
                 sourceNodes.add((SourceNodeFactory) nodeFactory);
             } else if (nodeFactory instanceof ProcessorNodeFactory) {
+                // 递归查询nodeFactory的SourceNodeFactory
                 sourceNodes.addAll(findSourcesForProcessorPredecessors(((ProcessorNodeFactory) nodeFactory).predecessors));
             }
         }
@@ -737,6 +754,8 @@ public class InternalTopologyBuilder {
         // we should never update the mapping from state store names to source topics if the store name already exists
         // in the map; this scenario is possible, for example, that a state store underlying a source KTable is
         // connecting to a join operator whose source topic is not the original KTable's source topic but an internal repartition topic.
+        // 如果商店名称已存在于地图中，我们永远不应该更新从州商店名称到源主题的映射;例如，这种情况是可能的，即源KTable底层的状态存储是
+        // 连接到一个连接运算符，其源主题不是原始KTable的源主题，而是内部重新分区主题。
 
         if (stateStoreNameToSourceTopics.containsKey(stateStoreName) || stateStoreNameToSourceRegex.containsKey(stateStoreName)) {
             return;
@@ -753,12 +772,12 @@ public class InternalTopologyBuilder {
                 sourceTopics.addAll(sourceNodeFactory.topics);
             }
         }
-
+        // sourceTopics非空
         if (!sourceTopics.isEmpty()) {
             stateStoreNameToSourceTopics.put(stateStoreName,
                     Collections.unmodifiableSet(sourceTopics));
         }
-
+        // sourcePatterns非空
         if (!sourcePatterns.isEmpty()) {
             stateStoreNameToSourceRegex.put(stateStoreName,
                     Collections.unmodifiableSet(sourcePatterns));
@@ -770,6 +789,7 @@ public class InternalTopologyBuilder {
                                          final Collection<T> latestResets,
                                          final Topology.AutoOffsetReset offsetReset,
                                          final T item) {
+        // 默认offsetReset是空
         if (offsetReset != null) {
             switch (offsetReset) {
                 case EARLIEST:
@@ -1091,7 +1111,10 @@ public class InternalTopologyBuilder {
 
     // Adjust the generated topology based on the configs.
     // Not exposed as public API and should be removed post 2.0
+    // 根据配置调整生成的拓扑。
+    // 不作为公共API公开，应在2.0之后删除
     public void adjust(final StreamsConfig config) {
+        // 配置文件中topology.optimization如果为all，则进行拓扑优化
         final boolean enableOptimization20 = config.getString(StreamsConfig.TOPOLOGY_OPTIMIZATION).equals(StreamsConfig.OPTIMIZE);
 
         if (enableOptimization20) {

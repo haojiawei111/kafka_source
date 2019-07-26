@@ -37,6 +37,7 @@ public class KeyValueStoreBuilder<K, V> extends AbstractStoreBuilder<K, V, KeyVa
         this.storeSupplier = storeSupplier;
     }
 
+    // MeteredKeyValueBytesStore，统一往storeSupplier.get()添加监控
     @Override
     public KeyValueStore<K, V> build() {
         return new MeteredKeyValueBytesStore<>(maybeWrapCaching(maybeWrapLogging(storeSupplier.get())),storeSupplier.metricsScope(), //return "in-memory-state";
@@ -46,6 +47,7 @@ public class KeyValueStoreBuilder<K, V> extends AbstractStoreBuilder<K, V, KeyVa
     }
 
     private KeyValueStore<Bytes, byte[]> maybeWrapCaching(final KeyValueStore<Bytes, byte[]> inner) {
+        // enableCaching 默认是false，所以默认不用CachingKeyValueStore包装
         if (!enableCaching) {
             return inner;
         }
@@ -53,6 +55,7 @@ public class KeyValueStoreBuilder<K, V> extends AbstractStoreBuilder<K, V, KeyVa
     }
 
     private KeyValueStore<Bytes, byte[]> maybeWrapLogging(final KeyValueStore<Bytes, byte[]> inner) {
+        // enableLogging 默认是true，所以默认用ChangeLoggingKeyValueBytesStore进行一层包装
         if (!enableLogging) {
             return inner;
         }

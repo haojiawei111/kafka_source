@@ -33,16 +33,20 @@ import java.util.Objects;
 
 /**
  * An in-memory LRU cache store based on HashSet and HashMap.
+ * 基于HashSet和HashMap的内存LRU缓存存储。
  *
- *  * Note that the use of array-typed keys is discouraged because they result in incorrect ordering behavior.
+ * Note that the use of array-typed keys is discouraged because they result in incorrect ordering behavior.
  * If you intend to work on byte arrays as key, for example, you may want to wrap them with the {@code Bytes} class,
  * i.e. use {@code RocksDBStore<Bytes, ...>} rather than {@code RocksDBStore<byte[], ...>}.
+ * 请注意，不鼓励使用数组类型的键，因为它们会导致错误的排序行为。 *例如，如果您打算将字节数组作为键，
+ * 可能需要使用{@code Bytes}类包装它们，*即使用{@code RocksDBStore <Bytes，...>}而不是{@code RocksDBStore <byte []，...>}。
  *
  * @param <K> The key type
  * @param <V> The value type
  */
 public class MemoryLRUCache<K, V> implements KeyValueStore<K, V> {
 
+    // 缓存删除策略
     public interface EldestEntryRemovalListener<K, V> {
 
         void apply(K key, V value);
@@ -51,6 +55,7 @@ public class MemoryLRUCache<K, V> implements KeyValueStore<K, V> {
 
     private final Serde<V> valueSerde;
     private final String name;
+    // LinkedHashMap
     protected final Map<K, V> map;
 
     private StateSerdes<K, V> serdes;
@@ -75,6 +80,8 @@ public class MemoryLRUCache<K, V> implements KeyValueStore<K, V> {
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
                 boolean evict = super.size() > maxCacheSize;
+                // restoring表示是否正在状态恢复，如果正在恢复则为true，否则为false
+                // 如果map的大小小于maxCacheSize永远也不会删除缓存
                 if (evict && !restoring && listener != null) {
                     listener.apply(eldest.getKey(), eldest.getValue());
                 }
@@ -123,6 +130,7 @@ public class MemoryLRUCache<K, V> implements KeyValueStore<K, V> {
         });
     }
 
+    // 不是持久存储
     @Override
     public boolean persistent() {
         return false;

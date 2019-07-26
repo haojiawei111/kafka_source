@@ -22,6 +22,7 @@ import org.apache.kafka.streams.processor.ProcessorContext;
 import java.io.IOException;
 import java.util.Objects;
 
+// 增加的Id字段，进行分段存储
 class Segment extends RocksDBStore implements Comparable<Segment> {
     public final long id;
 

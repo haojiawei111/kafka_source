@@ -40,7 +40,9 @@ class CachingKeyValueStore<K, V> extends WrappedStateStore.AbstractStateStore im
     private final KeyValueStore<Bytes, byte[]> underlying;
     private final Serde<K> keySerde;
     private final Serde<V> valueSerde;
+
     private CacheFlushListener<K, V> flushListener;
+
     private boolean sendOldValues;
     private String cacheName;
     private ThreadCache cache;
@@ -64,7 +66,7 @@ class CachingKeyValueStore<K, V> extends WrappedStateStore.AbstractStateStore im
         underlying.init(context, root);
         // save the stream thread as we only ever want to trigger a flush
         // when the stream thread is the current thread.
-        // 拿到执行这点代码的线程
+        // 拿到执行这段代码的线程
         streamThread = Thread.currentThread();
     }
 

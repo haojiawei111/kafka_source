@@ -29,6 +29,11 @@ import java.util.Set;
  * APIs and services to connect to other instances, the Set of state stores available on
  * the instance and the Set of {@link TopicPartition}s available on the instance.
  * NOTE: This is a point in time view. It may change when rebalances happen.
+ *
+ * 表示{@link KafkaStreams}应用程序中的实例（进程）的状态。 它包含用户提供的{@link HostInfo}，
+ * 开发人员可以使用它来构建API和服务以连接到其他实例，实例上可用的状态存储集和
+ * {@link TopicPartition}可用在实例上。
+ * 注意：这是一个时间点视图。重新平衡发生时，它可能会改变。
  */
 @InterfaceStability.Evolving
 public class StreamsMetadata {

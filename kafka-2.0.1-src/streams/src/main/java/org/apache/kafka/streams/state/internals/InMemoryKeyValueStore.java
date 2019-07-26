@@ -90,6 +90,7 @@ public class InMemoryKeyValueStore<K, V> implements KeyValueStore<K, V> {
         this.open = true;
     }
 
+    // 不是持久存储
     @Override
     public boolean persistent() {
         return false;

@@ -33,6 +33,7 @@ public class RocksDbKeyValueBytesStoreSupplier implements KeyValueBytesStoreSupp
         return name;
     }
 
+    // 创建最底层的存储引擎RocksDBStore
     @Override
     public KeyValueStore<Bytes, byte[]> get() {
         return new RocksDBStore(name);

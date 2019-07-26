@@ -36,9 +36,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages the {@link Segment}s that are used by the {@link RocksDBSegmentedBytesStore}
+ *
+ * 管理{@link RocksDBSegmentedBytesStore}使用的{@link Segment}
  */
 class Segments {
     private static final Logger log = LoggerFactory.getLogger(Segments.class);
+    // 最小段间隔
     static final long MIN_SEGMENT_INTERVAL = 60 * 1000L;
 
     static long segmentInterval(long retentionPeriod, int numSegments) {

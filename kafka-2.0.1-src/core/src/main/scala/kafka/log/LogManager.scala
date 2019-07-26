@@ -177,7 +177,7 @@ class LogManager(logDirs: Seq[File],
       _liveLogDirs.asScala.toBuffer
   }
 
-  // 锁定可用日志目录
+  // 锁定可用日志目录 ，添加文件
   private val dirLocks = lockLogDirs(liveLogDirs)
 
   // map <dir,OffsetCheckpointFile>   recovery-point-offset-checkpoint  //恢复点检查点文件

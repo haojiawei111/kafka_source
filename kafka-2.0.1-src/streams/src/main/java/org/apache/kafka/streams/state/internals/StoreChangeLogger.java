@@ -23,6 +23,10 @@ import org.apache.kafka.streams.processor.internals.RecordCollector;
 import org.apache.kafka.streams.state.StateSerdes;
 
 /**
+ *
+ * 这个类负责处理同步内存和kafka Store topic
+ *
+ *
  * Note that the use of array-typed keys is discouraged because they result in incorrect caching behavior.
  * If you intend to work on byte arrays as key, for example, you may want to wrap them with the {@code Bytes} class,
  * i.e. use {@code RocksDBStore<Bytes, ...>} rather than {@code RocksDBStore<byte[], ...>}.
@@ -47,8 +51,10 @@ class StoreChangeLogger<K, V> {
     }
 
     private StoreChangeLogger(String storeName, ProcessorContext context, int partition, StateSerdes<K, V> serialization) {
+        // topic     applicationId + "-" + storeName + "-changelog";
         this.topic = ProcessorStateManager.storeChangelogTopic(context.applicationId(), storeName);
         this.context = context;
+        // context.taskId().partition
         this.partition = partition;
         this.serialization = serialization;
         this.collector = ((RecordCollector.Supplier) context).recordCollector();

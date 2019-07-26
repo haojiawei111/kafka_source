@@ -30,6 +30,10 @@ import java.util.List;
  * inner KeyValueStore implementation do not need to provide its own metrics collecting functionality.
  *
  * 对InnerMeteredKeyValueStore进行put get等操作
+ *
+ * 这个只能包装InnerMeteredKeyValueStore类型的存储引擎
+ * 在构造函数中直接将KeyValueStore包装成了InnerMeteredKeyValueStore
+ *
  * @param <K>
  * @param <V>
  */

@@ -23,6 +23,7 @@ import org.apache.kafka.streams.kstream.KTable;
 /**
  * An interface that allows the Kafka Streams framework to extract a timestamp from an instance of {@link ConsumerRecord}.
  * The extracted timestamp is defined as milliseconds.
+ * 允许Kafka Streams框架从{@link ConsumerRecord}实例中提取时间戳的接口。 提取的时间戳定义为毫秒。
  */
 @InterfaceStability.Evolving
 public interface TimestampExtractor {

@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
+// MemoryLRUCache不支持迭代
+// MemoryNavigableLRUCache拓展了MemoryLRUCache可以支持迭代操作
 public class MemoryNavigableLRUCache<K, V> extends MemoryLRUCache<K, V> {
 
 

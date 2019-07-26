@@ -33,6 +33,7 @@ import java.util.NoSuchElementException;
 /**
  * An in-memory LRU cache store similar to {@link MemoryLRUCache} but byte-based, not
  * record based
+ *
  * 内存LRU缓存存储类似于{@link MemoryLRUCache}但基于字节，而不是基于记录
  *
  */

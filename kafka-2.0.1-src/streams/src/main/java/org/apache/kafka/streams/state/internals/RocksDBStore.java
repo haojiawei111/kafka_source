@@ -199,6 +199,7 @@ public class RocksDBStore implements KeyValueStore<Bytes, byte[]> {
         return this.name;
     }
 
+    // 是持久化存储
     @Override
     public boolean persistent() {
         return true;

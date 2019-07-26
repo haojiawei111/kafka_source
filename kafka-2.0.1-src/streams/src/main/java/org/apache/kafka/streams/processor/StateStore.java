@@ -68,6 +68,8 @@ public interface StateStore {
     void close();
 
     /**
+     * 如果存储是持久的，则返回。
+     *
      * Return if the storage is persistent or not.
      *
      * @return  {@code true} if the storage is persistent&mdash;{@code false} otherwise
@@ -75,6 +77,7 @@ public interface StateStore {
     boolean persistent();
 
     /**
+     *
      * Is this store open for reading and writing
      * @return {@code true} if the store is open
      */

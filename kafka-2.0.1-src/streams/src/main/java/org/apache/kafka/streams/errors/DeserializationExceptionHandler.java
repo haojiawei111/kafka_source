@@ -38,6 +38,7 @@ public interface DeserializationExceptionHandler extends Configurable {
 
     /**
      * Enumeration that describes the response from the exception handler.
+     * 描述异常处理程序响应的枚举。
      */
     enum DeserializationHandlerResponse {
         /* continue with processing */

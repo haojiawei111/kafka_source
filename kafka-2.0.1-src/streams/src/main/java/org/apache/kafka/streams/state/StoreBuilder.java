@@ -28,6 +28,7 @@ public interface StoreBuilder<T extends StateStore> {
 
     /**
      * Enable caching on the store.
+     * 在商店上启用缓存。
      * @return  this
      */
     StoreBuilder<T> withCachingEnabled();

@@ -92,6 +92,8 @@ public class Stores {
     }
 
     /**
+     * 创建最底层存储引擎InMemoryKeyValueStore
+     *
      * Create an in-memory {@link KeyValueBytesStoreSupplier}.
      * @param name  name of the store (cannot be {@code null})
      * @return  an instance of a {@link KeyValueBytesStoreSupplier} than can be used to
@@ -118,6 +120,8 @@ public class Stores {
     }
 
     /**
+     * 创建最底层存储引擎MemoryNavigableLRUCache
+     *
      * Create a LRU Map {@link KeyValueBytesStoreSupplier}.
      * @param name          name of the store (cannot be {@code null})
      * @param maxCacheSize  maximum number of items in the LRU (cannot be negative)

@@ -3,155 +3,292 @@
   <ID>JAVA</ID>
   <OriginalElement>org.apache.kafka.streams.state.KeyValueStore</OriginalElement>
   <nodes>
-    <node x="686.75" y="270.0">org.apache.kafka.streams.state.internals.MeteredKeyValueBytesStore</node>
-    <node x="333.0" y="270.0">org.apache.kafka.streams.state.internals.MemoryNavigableLRUCache</node>
-    <node x="362.5" y="190.0">org.apache.kafka.streams.state.internals.MemoryLRUCache</node>
-    <node x="1151.75" y="270.0">org.apache.kafka.streams.state.internals.InMemoryKeyValueLoggedStore</node>
-    <node x="1305.594696969697" y="80.0">org.apache.kafka.streams.state.internals.WrappedStateStore</node>
-    <node x="1488.75" y="190.0">org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractWrappedStateStore</node>
-    <node x="919.75" y="270.0">org.apache.kafka.streams.state.internals.InnerMeteredKeyValueStore</node>
-    <node x="1068.4507575757575" y="0.0">org.apache.kafka.streams.processor.StateStore</node>
-    <node x="1408.75" y="270.0">org.apache.kafka.streams.state.internals.ChangeLoggingKeyValueBytesStore</node>
-    <node x="674.0" y="80.0">org.apache.kafka.streams.state.KeyValueStore</node>
-    <node x="774.125" y="190.0">org.apache.kafka.streams.state.internals.MeteredKeyValueStore</node>
-    <node x="537.5" y="190.0">org.apache.kafka.streams.state.internals.InMemoryKeyValueStore</node>
-    <node x="992.0" y="190.0">org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore</node>
-    <node x="214.0" y="270.0">org.apache.kafka.streams.state.internals.Segment</node>
-    <node x="198.0" y="190.0">org.apache.kafka.streams.state.internals.RocksDBStore</node>
-    <node x="523.75" y="0.0">org.apache.kafka.streams.state.ReadOnlyKeyValueStore</node>
-    <node x="0.0" y="190.0">org.apache.kafka.streams.state.internals.CachingKeyValueStore</node>
-    <node x="403.0" y="80.0">org.apache.kafka.streams.state.internals.CompositeReadOnlyKeyValueStore</node>
+    <node x="27.0" y="451.0">org.apache.kafka.streams.state.ReadOnlyWindowStore</node>
+    <node x="78.54402006172882" y="198.0">org.apache.kafka.streams.state.internals.RocksDBSegmentedBytesStore</node>
+    <node x="2535.8" y="377.0">org.apache.kafka.streams.state.internals.MemoryNavigableLRUCache</node>
+    <node x="361.0" y="377.0">org.apache.kafka.streams.state.internals.ChangeLoggingWindowBytesStore</node>
+    <node x="1370.8000000000002" y="89.0">org.apache.kafka.streams.state.internals.WrappedStateStore</node>
+    <node x="1534.9" y="377.0">org.apache.kafka.streams.state.internals.RocksDBSessionStore</node>
+    <node x="788.0000000000001" y="377.0">org.apache.kafka.streams.state.internals.CachingSessionStore</node>
+    <node x="303.5440200617288" y="198.0">org.apache.kafka.streams.state.WindowStore</node>
+    <node x="1782.019020061729" y="198.0">org.apache.kafka.streams.state.internals.InMemoryKeyValueStore</node>
+    <node x="2077.425" y="89.0">org.apache.kafka.streams.state.KeyValueStore</node>
+    <node x="0.0" y="377.0">org.apache.kafka.streams.state.internals.RocksDBWindowStore</node>
+    <node x="2055.425" y="198.0">org.apache.kafka.streams.state.internals.MeteredKeyValueStore</node>
+    <node x="2749.8" y="377.0">org.apache.kafka.streams.state.internals.Segment</node>
+    <node x="932.794020061729" y="198.0">org.apache.kafka.streams.state.SessionStore</node>
+    <node x="962.0000000000001" y="377.0">org.apache.kafka.streams.state.internals.ChangeLoggingSessionBytesStore</node>
+    <node x="1346.019020061729" y="198.0">org.apache.kafka.streams.state.internals.CachingKeyValueStore</node>
+    <node x="2221.425" y="89.0">org.apache.kafka.streams.state.internals.CompositeReadOnlyKeyValueStore</node>
+    <node x="100.54402006172882" y="89.0">org.apache.kafka.streams.state.internals.SegmentedBytesStore</node>
+    <node x="571.5341820987658" y="198.0">org.apache.kafka.streams.state.internals.CompositeReadOnlySessionStore</node>
+    <node x="2102.8" y="377.0">org.apache.kafka.streams.state.internals.MeteredKeyValueBytesStore</node>
+    <node x="2561.3" y="198.0">org.apache.kafka.streams.state.internals.MemoryLRUCache</node>
+    <node x="606.0" y="377.0">org.apache.kafka.streams.state.internals.MeteredWindowStore</node>
+    <node x="1867.8000000000002" y="377.0">org.apache.kafka.streams.state.internals.InMemoryKeyValueLoggedStore</node>
+    <node x="2318.8" y="377.0">org.apache.kafka.streams.state.internals.InnerMeteredKeyValueStore</node>
+    <node x="1008.8750000000001" y="0.0">org.apache.kafka.streams.processor.StateStore</node>
+    <node x="1531.019020061729" y="198.0">org.apache.kafka.streams.state.internals.ChangeLoggingKeyValueBytesStore</node>
+    <node x="0.0" y="530.0">org.apache.kafka.streams.state.internals.CompositeReadOnlyWindowStore</node>
+    <node x="1182.019020061729" y="198.0">org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore</node>
+    <node x="2165.925" y="0.0">org.apache.kafka.streams.state.ReadOnlyKeyValueStore</node>
+    <node x="2736.8" y="198.0">org.apache.kafka.streams.state.internals.RocksDBStore</node>
+    <node x="182.0" y="377.0">org.apache.kafka.streams.state.internals.CachingWindowStore</node>
+    <node x="639.2841820987658" y="89.0">org.apache.kafka.streams.state.ReadOnlySessionStore</node>
+    <node x="1202.0" y="377.0">org.apache.kafka.streams.state.internals.MeteredSessionStore</node>
   </nodes>
   <notes />
   <edges>
     <edge source="org.apache.kafka.streams.state.internals.InMemoryKeyValueStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="0.0" y="-15.0" />
-      <point x="633.5" y="170.0" />
-      <point x="725.3333333333334" y="170.0" />
-      <point x="-14.666666666666629" y="15.0" />
+      <point x="0.0" y="-14.5" />
+      <point x="1871.019020061729" y="168.0" />
+      <point x="2111.8694444444445" y="168.0" />
+      <point x="-27.555555555555543" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.InMemoryKeyValueLoggedStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
-      <point x="-59.25" y="-15.0" />
-      <point x="1211.0" y="250.0" />
-      <point x="1122.0" y="250.0" />
-      <point x="52.0" y="15.0" />
+      <point x="-53.75" y="-14.5" />
+      <point x="1921.5500000000002" y="267.0" />
+      <point x="1290.019020061729" y="267.0" />
+      <point x="36.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.WindowStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="0.0" y="-14.5" />
+      <point x="362.5440200617288" y="59.0" />
+      <point x="1039.1750000000002" y="59.0" />
+      <point x="-20.200000000000045" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore">
-      <point x="0.0" y="-15.0" />
-      <point x="1070.0" y="170.0" />
-      <point x="1346.344696969697" y="170.0" />
-      <point x="-40.75" y="15.0" />
+      <point x="0.0" y="-14.5" />
+      <point x="1254.019020061729" y="168.0" />
+      <point x="1395.8000000000002" y="168.0" />
+      <point x="-50.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.SessionStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="28.25" y="-14.5" />
+      <point x="1017.544020061729" y="69.0" />
+      <point x="1059.375" y="69.0" />
+      <point x="0.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.SegmentedBytesStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="0.0" y="-14.5" />
+      <point x="181.04402006172882" y="49.0" />
+      <point x="1018.975" y="49.0" />
+      <point x="-40.40000000000009" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingKeyValueBytesStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="-63.75" y="-15.0" />
-      <point x="1472.5" y="250.0" />
-      <point x="1478.25" y="250.0" />
-      <point x="1478.25" y="140.0" />
-      <point x="798.6666666666666" y="140.0" />
-      <point x="58.66666666666663" y="15.0" />
-    </edge>
-    <edge source="org.apache.kafka.streams.state.KeyValueStore" target="org.apache.kafka.streams.processor.StateStore">
-      <point x="33.0" y="-15.0" />
-      <point x="773.0" y="55.0" />
-      <point x="1095.4507575757575" y="55.0" />
-      <point x="-27.0" y="15.0" />
+      <point x="57.75" y="-14.5" />
+      <point x="1704.269020061729" y="158.0" />
+      <point x="2098.0916666666667" y="158.0" />
+      <point x="-41.33333333333337" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.MemoryNavigableLRUCache" target="org.apache.kafka.streams.state.internals.MemoryLRUCache">
-      <point x="0.0" y="-15.0" />
-      <point x="0.0" y="15.0" />
+      <point x="0.0" y="-14.5" />
+      <point x="0.0" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.InnerMeteredKeyValueStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="-53.0" y="-15.0" />
-      <point x="972.75" y="240.0" />
-      <point x="981.5" y="240.0" />
-      <point x="981.5" y="160.0" />
-      <point x="769.3333333333333" y="160.0" />
-      <point x="29.333333333333258" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.internals.RocksDBSessionStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="39.25" y="-14.5" />
+      <point x="1652.65" y="277.0" />
+      <point x="1275.6190200617289" y="277.0" />
+      <point x="21.59999999999991" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingKeyValueBytesStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractWrappedStateStore">
-      <point x="63.75" y="-15.0" />
-      <point x="1600.0" y="250.0" />
-      <point x="1594.25" y="250.0" />
-      <point x="0.0" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingWindowBytesStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="56.25" y="-14.5" />
+      <point x="529.75" y="327.0" />
+      <point x="1203.6190200617289" y="327.0" />
+      <point x="-50.40000000000009" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.MemoryLRUCache" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="0.0" y="-15.0" />
-      <point x="440.0" y="160.0" />
-      <point x="710.6666666666666" y="160.0" />
-      <point x="-29.33333333333337" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingSessionBytesStore" target="org.apache.kafka.streams.state.SessionStore">
+      <point x="-55.0" y="-14.5" />
+      <point x="1017.0000000000001" y="307.0" />
+      <point x="975.169020061729" y="307.0" />
+      <point x="-14.125" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.InMemoryKeyValueLoggedStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="59.25" y="-15.0" />
-      <point x="1329.5" y="150.0" />
-      <point x="784.0" y="150.0" />
-      <point x="44.0" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingSessionBytesStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="55.0" y="-14.5" />
+      <point x="1127.0" y="357.0" />
+      <point x="1246.8190200617291" y="357.0" />
+      <point x="-7.2000000000000455" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.MeteredKeyValueStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="0.0" y="-15.0" />
-      <point x="865.125" y="170.0" />
-      <point x="754.6666666666666" y="170.0" />
-      <point x="14.666666666666629" y="15.0" />
+      <point x="0.0" y="-14.5" />
+      <point x="0.0" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.MeteredKeyValueBytesStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
-      <point x="53.25" y="-15.0" />
-      <point x="846.5" y="250.0" />
-      <point x="1018.0" y="250.0" />
-      <point x="-52.0" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.internals.CachingWindowStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="39.75" y="-14.5" />
+      <point x="301.25" y="317.0" />
+      <point x="1189.2190200617292" y="317.0" />
+      <point x="-64.79999999999995" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.CompositeReadOnlyKeyValueStore" target="org.apache.kafka.streams.state.ReadOnlyKeyValueStore">
-      <point x="0.0" y="-15.0" />
-      <point x="528.5" y="55.0" />
-      <point x="570.75" y="55.0" />
-      <point x="-47.0" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.SessionStore" target="org.apache.kafka.streams.state.ReadOnlySessionStore">
+      <point x="-28.25" y="-14.5" />
+      <point x="961.044020061729" y="178.0" />
+      <point x="761.5341820987658" y="178.0" />
+      <point x="40.75" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.Segment" target="org.apache.kafka.streams.state.internals.RocksDBStore">
-      <point x="0.0" y="-15.0" />
-      <point x="0.0" y="15.0" />
-    </edge>
-    <edge source="org.apache.kafka.streams.state.internals.CachingKeyValueStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="0.0" y="-15.0" />
-      <point x="89.0" y="140.0" />
-      <point x="681.3333333333334" y="140.0" />
-      <point x="-58.66666666666663" y="15.0" />
-    </edge>
-    <edge source="org.apache.kafka.streams.state.internals.MeteredKeyValueBytesStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="-53.25" y="-15.0" />
-      <point x="0.0" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.internals.CachingWindowStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="-39.75" y="-14.5" />
+      <point x="221.75" y="307.0" />
+      <point x="347.7940200617288" y="307.0" />
+      <point x="-14.75" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.RocksDBStore" target="org.apache.kafka.streams.state.KeyValueStore">
-      <point x="0.0" y="-15.0" />
-      <point x="263.5" y="150.0" />
-      <point x="696.0" y="150.0" />
-      <point x="-44.0" y="15.0" />
+      <point x="0.0" y="-14.5" />
+      <point x="2796.3" y="148.0" />
+      <point x="2194.536111111111" y="148.0" />
+      <point x="55.111111111111086" y="14.5" />
     </edge>
-    <edge source="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractWrappedStateStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore">
-      <point x="0.0" y="-15.0" />
-      <point x="1594.25" y="130.0" />
-      <point x="1427.844696969697" y="130.0" />
-      <point x="40.75" y="15.0" />
+    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingWindowBytesStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="-56.25" y="-14.5" />
+      <point x="417.25" y="307.0" />
+      <point x="377.2940200617288" y="307.0" />
+      <point x="14.75" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingSessionStore" target="org.apache.kafka.streams.state.SessionStore">
+      <point x="-38.5" y="-14.5" />
+      <point x="826.5000000000001" y="307.0" />
+      <point x="946.919020061729" y="307.0" />
+      <point x="-42.375" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.WrappedStateStore" target="org.apache.kafka.streams.processor.StateStore">
-      <point x="0.0" y="-15.0" />
-      <point x="1387.094696969697" y="55.0" />
-      <point x="1149.4507575757575" y="55.0" />
-      <point x="27.0" y="15.0" />
+      <point x="0.0" y="-14.5" />
+      <point x="1445.8000000000002" y="69.0" />
+      <point x="1079.5750000000003" y="69.0" />
+      <point x="20.200000000000045" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CompositeReadOnlyWindowStore" target="org.apache.kafka.streams.state.ReadOnlyWindowStore">
+      <point x="0.0" y="-14.5" />
+      <point x="0.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.RocksDBSegmentedBytesStore" target="org.apache.kafka.streams.state.internals.SegmentedBytesStore">
+      <point x="0.0" y="-14.5" />
+      <point x="0.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredSessionStore" target="org.apache.kafka.streams.state.SessionStore">
+      <point x="-39.25" y="-14.5" />
+      <point x="1241.25" y="297.0" />
+      <point x="1003.419020061729" y="297.0" />
+      <point x="14.125" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.KeyValueStore" target="org.apache.kafka.streams.processor.StateStore">
+      <point x="-31.0" y="-14.5" />
+      <point x="2108.425" y="59.0" />
+      <point x="1099.775" y="59.0" />
+      <point x="40.40000000000009" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredWindowStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="-40.5" y="-14.5" />
+      <point x="646.5" y="297.0" />
+      <point x="406.7940200617288" y="297.0" />
+      <point x="44.25" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.InnerMeteredKeyValueStore" target="org.apache.kafka.streams.state.KeyValueStore">
+      <point x="49.25" y="-14.5" />
+      <point x="2466.55" y="168.0" />
+      <point x="2166.980555555556" y="168.0" />
+      <point x="27.555555555555543" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MemoryLRUCache" target="org.apache.kafka.streams.state.KeyValueStore">
+      <point x="0.0" y="-14.5" />
+      <point x="2632.8" y="158.0" />
+      <point x="2180.758333333333" y="158.0" />
+      <point x="41.33333333333326" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.ChangeLoggingKeyValueBytesStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore">
+      <point x="-57.75" y="-14.5" />
+      <point x="1588.769020061729" y="138.0" />
+      <point x="1495.8000000000002" y="138.0" />
+      <point x="50.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.InMemoryKeyValueLoggedStore" target="org.apache.kafka.streams.state.KeyValueStore">
+      <point x="53.75" y="-14.5" />
+      <point x="2029.0500000000002" y="178.0" />
+      <point x="2125.6472222222224" y="178.0" />
+      <point x="-13.777777777777828" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingKeyValueStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore">
+      <point x="-41.25" y="-14.5" />
+      <point x="1387.269020061729" y="178.0" />
+      <point x="1445.8000000000002" y="178.0" />
+      <point x="0.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredKeyValueBytesStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="-49.0" y="-14.5" />
+      <point x="2151.8" y="257.0" />
+      <point x="1304.419020061729" y="257.0" />
+      <point x="50.40000000000009" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CompositeReadOnlyKeyValueStore" target="org.apache.kafka.streams.state.ReadOnlyKeyValueStore">
+      <point x="0.0" y="-14.5" />
+      <point x="2335.425" y="69.0" />
+      <point x="2296.425" y="69.0" />
+      <point x="43.5" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.Segment" target="org.apache.kafka.streams.state.internals.RocksDBStore">
+      <point x="0.0" y="-14.5" />
+      <point x="0.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredSessionStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="39.25" y="-14.5" />
+      <point x="1319.75" y="357.0" />
+      <point x="1261.2190200617292" y="357.0" />
+      <point x="7.2000000000000455" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingKeyValueStore" target="org.apache.kafka.streams.state.KeyValueStore">
+      <point x="41.25" y="-14.5" />
+      <point x="1469.769020061729" y="148.0" />
+      <point x="2084.313888888889" y="148.0" />
+      <point x="-55.111111111111086" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredKeyValueBytesStore" target="org.apache.kafka.streams.state.KeyValueStore">
+      <point x="49.0" y="-14.5" />
+      <point x="2249.8" y="178.0" />
+      <point x="2153.202777777778" y="178.0" />
+      <point x="13.777777777777828" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CompositeReadOnlySessionStore" target="org.apache.kafka.streams.state.ReadOnlySessionStore">
+      <point x="0.0" y="-14.5" />
+      <point x="-40.75" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.RocksDBSessionStore" target="org.apache.kafka.streams.state.SessionStore">
+      <point x="-39.25" y="-14.5" />
+      <point x="1574.15" y="287.0" />
+      <point x="1031.669020061729" y="287.0" />
+      <point x="42.375" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.MeteredWindowStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="40.5" y="-14.5" />
+      <point x="727.5" y="337.0" />
+      <point x="1218.019020061729" y="337.0" />
+      <point x="-36.0" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.CachingSessionStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
+      <point x="38.5" y="-14.5" />
+      <point x="903.5000000000001" y="347.0" />
+      <point x="1232.419020061729" y="347.0" />
+      <point x="-21.59999999999991" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.KeyValueStore" target="org.apache.kafka.streams.state.ReadOnlyKeyValueStore">
-      <point x="-33.0" y="-15.0" />
-      <point x="707.0" y="55.0" />
-      <point x="664.75" y="55.0" />
-      <point x="47.0" y="15.0" />
+      <point x="31.0" y="-14.5" />
+      <point x="2170.425" y="69.0" />
+      <point x="2209.425" y="69.0" />
+      <point x="-43.5" y="14.5" />
+    </edge>
+    <edge source="org.apache.kafka.streams.state.internals.RocksDBWindowStore" target="org.apache.kafka.streams.state.WindowStore">
+      <point x="0.0" y="-14.5" />
+      <point x="81.0" y="297.0" />
+      <point x="318.2940200617288" y="297.0" />
+      <point x="-44.25" y="14.5" />
     </edge>
     <edge source="org.apache.kafka.streams.state.internals.InnerMeteredKeyValueStore" target="org.apache.kafka.streams.state.internals.WrappedStateStore.AbstractStateStore">
-      <point x="53.0" y="-15.0" />
-      <point x="1078.75" y="250.0" />
-      <point x="1070.0" y="250.0" />
-      <point x="0.0" y="15.0" />
+      <point x="-49.25" y="-14.5" />
+      <point x="2368.05" y="247.0" />
+      <point x="1318.8190200617291" y="247.0" />
+      <point x="64.79999999999995" y="14.5" />
     </edge>
   </edges>
-  <settings layout="Hierarchic Group" zoom="1.0456826882177794" x="1133.4215343312726" y="101.0" />
+  <settings layout="Hierarchic Group" zoom="1.1171014492753624" x="1903.9682374944123" y="308.737883068442" />
   <SelectedNodes>
-    <node>org.apache.kafka.streams.state.internals.WrappedStateStore</node>
+    <node>org.apache.kafka.streams.state.KeyValueStore</node>
   </SelectedNodes>
   <Categories />
   <SCOPE>All</SCOPE>

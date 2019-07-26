@@ -27,6 +27,8 @@ import java.util.Objects;
 /**
  * Factory for creating serializers / deserializers for state stores in Kafka Streams.
  *
+ * 工厂用于为Kafka Streams中的state stores创建序列化器/反序列化器。
+ *
  * @param <K> key type of serde
  * @param <V> value type of serde
  */

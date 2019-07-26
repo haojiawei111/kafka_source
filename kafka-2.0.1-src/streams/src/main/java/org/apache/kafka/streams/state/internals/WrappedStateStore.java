@@ -29,12 +29,17 @@ public interface WrappedStateStore extends StateStore {
     /**
      * Return the inner most storage engine
      *
+     * 返回最内层的存储引擎
+     *
      * @return wrapped inner storage engine
      */
     StateStore inner();
 
     /**
      * Return the state store this store directly wraps
+     *
+     * 返回此商店直接包装的状态存储
+     *
      * @return
      */
     StateStore wrappedStore();
@@ -66,12 +71,14 @@ public interface WrappedStateStore extends StateStore {
             return innerState.isOpen();
         }
 
+        // 验证状态是否开放
         void validateStoreOpen() {
             if (!innerState.isOpen()) {
                 throw new InvalidStateStoreException("Store " + innerState.name() + " is currently closed.");
             }
         }
 
+        // 找到最底层的存储引擎
         @Override
         public StateStore inner() {
             if (innerState instanceof WrappedStateStore) {

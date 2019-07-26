@@ -40,7 +40,7 @@ import java.util.HashMap;
  * Manages the directories where the state of Tasks owned by a {@link StreamThread} are
  * stored. Handles creation/locking/unlocking/cleaning of the Task Directories. This class is not
  * thread-safe.
- * 管理存储{@link StreamThread}所拥有的任务状态的目录。处理任务目录的创建/锁定/解锁/清理。这个类不是*线程安全的。
+ * 管理存储{@link StreamThread}所拥有的任务状态的目录。处理任务目录的创建/锁定/解锁/清理。这个类不是线程安全的。
  */
 public class StateDirectory {
 
@@ -74,6 +74,7 @@ public class StateDirectory {
     public StateDirectory(final StreamsConfig config,
                           final Time time) {
         this.time = time;
+        // /tmp/kafka-streams
         final String stateDirName = config.getString(StreamsConfig.STATE_DIR_CONFIG);
         final File baseDir = new File(stateDirName);
         if (!baseDir.exists() && !baseDir.mkdirs()) {

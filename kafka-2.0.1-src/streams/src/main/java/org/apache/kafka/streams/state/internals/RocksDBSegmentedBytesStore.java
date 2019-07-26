@@ -148,6 +148,7 @@ class RocksDBSegmentedBytesStore implements SegmentedBytesStore {
         segments.close();
     }
 
+    // 是持久化存储
     @Override
     public boolean persistent() {
         return true;

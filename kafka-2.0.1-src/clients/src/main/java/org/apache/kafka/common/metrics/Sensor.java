@@ -146,6 +146,9 @@ public final class Sensor {
 
     /**
      * @return true if the sensor's record level indicates that the metric will be recorded, false otherwise
+     *
+     * 如果传感器的记录级别指示将记录度量，则为true，否则为false
+     *
      */
     public boolean shouldRecord() {
         return this.recordingLevel.shouldRecord(config.recordLevel().id);

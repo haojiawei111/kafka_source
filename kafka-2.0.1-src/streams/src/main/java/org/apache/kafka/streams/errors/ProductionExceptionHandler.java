@@ -20,8 +20,10 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.Configurable;
 
 /**
- * Interface that specifies how an exception when attempting to produce a result to
- * Kafka should be handled.
+ * Interface that specifies how an exception when attempting to produce a result to Kafka should be handled.
+ *
+ * 指定在尝试向Kafka生成结果时如何处理异常的接口。
+ *
  */
 public interface ProductionExceptionHandler extends Configurable {
     /**

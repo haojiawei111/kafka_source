@@ -602,7 +602,7 @@ public class KafkaStreams {
     @Deprecated
     public KafkaStreams(final Topology topology,
                         final StreamsConfig config) {
-        this(topology, config, new DefaultKafkaClientSupplier());
+        this(topology, config, new DefaultKafkaClientSupplier()); // DefaultKafkaClientSupplier
     }
 
     /**
@@ -657,6 +657,7 @@ public class KafkaStreams {
         this.log = logContext.logger(getClass());
 
         try {
+            // 流处理状态文件  默认在/tmp/kafka-streams目录下
             stateDirectory = new StateDirectory(config, time);
         } catch (final ProcessorStateException fatal) {
             throw new StreamsException(fatal);
@@ -675,8 +676,10 @@ public class KafkaStreams {
 
         // sanity check to fail-fast in case we cannot build a ProcessorTopology due to an exception
         // 如果由于异常导致我们无法构建ProcessorTopology，则可以快速检查以快速失败
+        // 创建拓扑结构
         internalTopologyBuilder.build();
 
+        // 线程元数据管理模块
         streamsMetadataState = new StreamsMetadataState(
                 internalTopologyBuilder,
                 parseHostInfo(config.getString(StreamsConfig.APPLICATION_SERVER_CONFIG))); // application.server
@@ -690,6 +693,7 @@ public class KafkaStreams {
             totalCacheSize = 0;
             log.warn("Negative cache size passed in. Reverting to cache size of 0 bytes.传入负缓存大小。恢复为0字节的缓存大小。");
         }
+
         // 构建全局拓扑
         final ProcessorTopology globalTaskTopology = internalTopologyBuilder.buildGlobalStateTopology();
         final long cacheSizePerThread = totalCacheSize / (threads.length + (globalTaskTopology == null ? 0 : 1)); //每线程缓存大小

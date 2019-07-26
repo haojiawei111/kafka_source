@@ -44,6 +44,7 @@ public class ChangeLoggingKeyValueBytesStore extends WrappedStateStore.AbstractS
         this.changeLogger = new StoreChangeLogger<>(inner.name(), context, new StateSerdes<>(topic, Serdes.Bytes(), Serdes.ByteArray()));
 
         // if the inner store is an LRU cache, add the eviction listener to log removed record
+        // 如果内部存储是LRU缓存，则将逐出侦听器添加到日志删除记录中，也就是缓存删除了kafka里面的也要删除
         if (inner instanceof MemoryLRUCache) {
             ((MemoryLRUCache<Bytes, byte[]>) inner).whenEldestRemoved(new MemoryLRUCache.EldestEntryRemovalListener<Bytes, byte[]>() {
                 @Override

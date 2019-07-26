@@ -59,6 +59,9 @@ public class Topology {
      * or {@link KTable} via {@link StreamsBuilder}.
      * 在添加源处理器的* {@link #addSource（AutoOffsetReset，String，String ...）时或在创建{@link KStream}
      * 或{@link KTable}时设置{@code auto.offset.reset}配置{@link StreamsBuilder}。
+     *
+     * 重设Offset
+     * 
      */
     public enum AutoOffsetReset {
         EARLIEST, LATEST

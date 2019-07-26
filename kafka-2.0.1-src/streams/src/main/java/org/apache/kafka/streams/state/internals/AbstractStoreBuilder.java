@@ -47,12 +47,14 @@ abstract public class AbstractStoreBuilder<K, V, T extends StateStore> implement
         this.time = time;
     }
 
+    // 开启CachingKeyValueStore功能
     @Override
     public StoreBuilder<T> withCachingEnabled() {
         enableCaching = true;
         return this;
     }
 
+    // 开启ChangeLoggingKeyValueBytesStore功能
     @Override
     public StoreBuilder<T> withLoggingEnabled(final Map<String, String> config) {
         Objects.requireNonNull(config, "config can't be null");
@@ -61,6 +63,7 @@ abstract public class AbstractStoreBuilder<K, V, T extends StateStore> implement
         return this;
     }
 
+    // 关闭ChangeLoggingKeyValueBytesStore功能
     @Override
     public StoreBuilder<T> withLoggingDisabled() {
         enableLogging = false;

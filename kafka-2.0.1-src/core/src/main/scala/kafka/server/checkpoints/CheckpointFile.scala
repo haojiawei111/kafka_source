@@ -50,7 +50,7 @@ class CheckpointFile[T](val file: File,version: Int,formatter: CheckpointFileFor
         } finally {
           writer.close()
         }
-
+        // 原子随着后退移动
         Utils.atomicMoveWithFallback(tempPath, path)
       } catch {
         case e: IOException =>

@@ -158,7 +158,7 @@ public abstract class AbstractProcessorContext implements InternalProcessorConte
     @Override
     public long timestamp() {
         if (recordContext == null) {
-            throw new IllegalStateException("This should not happen as timestamp() should only be called while a record is processed");
+            throw new IllegalStateException("This should not happen as timestamp() should only be called while a record is processed他不应该发生，因为只应在处理记录时调用timestamp（）");
         }
 
         return recordContext.timestamp();

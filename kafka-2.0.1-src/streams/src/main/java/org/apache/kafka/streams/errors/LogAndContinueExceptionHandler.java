@@ -27,6 +27,9 @@ import java.util.Map;
 /**
  * Deserialization handler that logs a deserialization exception and then
  * signals the processing pipeline to continue processing more records.
+ *
+ * 反序列化处理程序，它记录反序列化异常，然后表示处理管道继续处理更多记录。
+ *
  */
 public class LogAndContinueExceptionHandler implements DeserializationExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(LogAndContinueExceptionHandler.class);
