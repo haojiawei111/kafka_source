@@ -398,7 +398,8 @@ public class KafkaStreams {
     }
 
     /**
-     * Class that handles stream thread transitions处理流线程转换的类
+     * Class that handles stream thread transitions
+     * 处理流线程转换的类
      */
     final class StreamStateListener implements StreamThread.StateListener {
         private final Map<Long, StreamThread.State> threadState;
@@ -475,7 +476,9 @@ public class KafkaStreams {
         }
     }
 
+    // kstream状态恢复调用的类
     final class DelegatingStateRestoreListener implements StateRestoreListener {
+
         private void throwOnFatalException(final Exception fatalUserException,
                                            final TopicPartition topicPartition,
                                            final String storeName) {
@@ -698,6 +701,7 @@ public class KafkaStreams {
         final ProcessorTopology globalTaskTopology = internalTopologyBuilder.buildGlobalStateTopology();
         final long cacheSizePerThread = totalCacheSize / (threads.length + (globalTaskTopology == null ? 0 : 1)); //每线程缓存大小
 
+        // 恢复状态监听器
         final StateRestoreListener delegatingStateRestoreListener = new DelegatingStateRestoreListener();
         GlobalStreamThread.State globalThreadState = null;
         if (globalTaskTopology != null) {
@@ -717,7 +721,7 @@ public class KafkaStreams {
         // use client id instead of thread client id since this admin client may be shared among threads
         // 使用客户端ID而不是线程客户端ID，因为此管理客户端可以在线程之间共享
         adminClient = clientSupplier.getAdminClient(config.getAdminConfigs(clientId));
-
+        // 线程ID和线程状态的映射
         final Map<Long, StreamThread.State> threadState = new HashMap<>(threads.length);
         final ArrayList<StateStoreProvider> storeProviders = new ArrayList<>();
 
@@ -736,7 +740,7 @@ public class KafkaStreams {
                                              stateDirectory,
                                              delegatingStateRestoreListener);
             threadState.put(threads[i].getId(), threads[i].state());
-            //流线程状态存储提供程序
+            //流线程状态存储提供类程序
             storeProviders.add(new StreamThreadStateStoreProvider(threads[i]));
         }
 
@@ -804,13 +808,16 @@ public class KafkaStreams {
         // 在开始线程之前首先将状态设置为RUNNING，确保状态将在REBALANCING之前始终转换为RUNNING
         if (setRunningFromCreated()) {
             if (globalStreamThread != null) {
+                // 启动globalStreamThread
                 globalStreamThread.start();
             }
 
             for (final StreamThread thread : threads) {
+                // 这里启动每个StreamThread
                 thread.start();
             }
 
+            // 配置文件state.cleanup.delay.ms
             final Long cleanupDelay = config.getLong(StreamsConfig.STATE_CLEANUP_DELAY_MS_CONFIG);
             // 启动定时调度任务
             stateDirCleaner.scheduleAtFixedRate(new Runnable() {

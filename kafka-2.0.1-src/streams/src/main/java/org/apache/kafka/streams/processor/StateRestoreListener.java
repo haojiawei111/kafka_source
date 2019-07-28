@@ -21,6 +21,7 @@ import org.apache.kafka.common.TopicPartition;
 
 /**
  * Class for listening to various states of the restoration process of a StateStore.
+ * 用于监听StateStore恢复过程的各种状态的类。
  *
  * When calling {@link org.apache.kafka.streams.KafkaStreams#setGlobalStateRestoreListener(StateRestoreListener)}
  * the passed instance is expected to be stateless since the {@code StateRestoreListener} is shared
@@ -34,11 +35,13 @@ import org.apache.kafka.common.TopicPartition;
  * as each StreamThread has its own StateStore instance.
  *
  * Incremental updates are exposed so users can estimate how much progress has been made.
+ * 显示增量更新，以便用户可以估计已经取得了多少进展。
  */
 public interface StateRestoreListener {
 
     /**
      * Method called at the very beginning of {@link StateStore} restoration.
+     * 在{@link StateStore}恢复的最开始调用的方法。
      *
      * @param topicPartition the TopicPartition containing the values to restore
      * @param storeName      the name of the store undergoing restoration
@@ -59,6 +62,10 @@ public interface StateRestoreListener {
      * whole.
      *
      * If you need to do any extended processing or connecting to an external service consider doing so asynchronously.
+     * 恢复一批记录后调用的方法。在这种情况下，批处理的最大大小是MAX_POLL_RECORDS的值设置为*。 *
+     * 在恢复每个批次后调用此方法，建议将处理保持在最低限度。
+     * 任何繁重的处理都会阻碍恢复下一批，从而减缓恢复过程的整体速度。
+     * 如果您需要进行任何扩展处理或连接到外部服务，请考虑异步执行此操作。
      *
      * @param topicPartition the TopicPartition containing the values to restore
      * @param storeName the name of the store undergoing restoration
@@ -72,6 +79,7 @@ public interface StateRestoreListener {
 
     /**
      * Method called when restoring the {@link StateStore} is complete.
+     * 恢复{@link StateStore}时调用的方法已完成。
      *
      * @param topicPartition the TopicPartition containing the values to restore
      * @param storeName the name of the store just restored

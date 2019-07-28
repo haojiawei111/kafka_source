@@ -1032,6 +1032,11 @@ public class StreamsConfig extends AbstractConfig {
      * version as we only support reading/writing from/to the same Kafka Cluster.
      * If not specified by {@link #GLOBAL_CONSUMER_PREFIX}, global consumer will share the general consumer configs
      * prefixed by {@link #CONSUMER_PREFIX}.
+     * 获取{@link KafkaConsumer全球消费者}的配置。
+     * 使用前缀{@link #GLOBAL_CONSUMER_PREFIX}的属性将优先使用前缀为{@link #CONSUMER_PREFIX}的属性和非前缀版本
+     * （读取{@link #GLOBAL_CONSUMER_PREFIX）中的覆盖优先顺序除外在{@link ConsumerConfig＃BOOTSTRAP_SERVERS_CONFIG}的情况下，
+     * 我们总是使用非前缀版本，因为我们只支持从同一个Kafka集群读取/写入。
+     * 如果{@link #GLOBAL_CONSUMER_PREFIX}未指定，全球消费者将分享以{@link #CONSUMER_PREFIX}为前缀的一般消费者配置*。
      *
      * @param clientId clientId
      * @return Map of the global consumer configuration.

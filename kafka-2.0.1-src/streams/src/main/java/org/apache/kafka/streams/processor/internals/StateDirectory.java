@@ -81,6 +81,7 @@ public class StateDirectory {
             throw new ProcessorStateException(
                 String.format("base state directory [%s] doesn't exist and couldn't be created", stateDirName));
         }
+        // /tmp/kafka-streams/application.id
         stateDir = new File(baseDir, config.getString(StreamsConfig.APPLICATION_ID_CONFIG));
         if (!stateDir.exists() && !stateDir.mkdir()) {
             throw new ProcessorStateException(
@@ -268,6 +269,7 @@ public class StateDirectory {
 
         for (final File taskDir : taskDirs) {
             final String dirName = taskDir.getName();
+            // 包含topicGroupId和partition
             final TaskId id = TaskId.parse(dirName);
             if (!locks.containsKey(id)) {
                 try {
@@ -319,7 +321,7 @@ public class StateDirectory {
     }
 
     /**
-     * List all of the task directories
+     * List all of the task directories 列出所有任务目录
      * @return The list of all the existing local directories for stream tasks
      */
     File[] listTaskDirectories() {

@@ -29,6 +29,7 @@ import java.util.Set;
 
 /**
  * Updates the state for all Global State Stores.
+ * 更新所有全局状态
  */
 public class GlobalStateUpdateTask implements GlobalStateMaintainer {
 

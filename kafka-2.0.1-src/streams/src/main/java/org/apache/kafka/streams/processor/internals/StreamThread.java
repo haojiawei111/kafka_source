@@ -602,7 +602,8 @@ public class StreamThread extends Thread {
 
         log.info("Creating restore consumer client创建还原使用者客户端");
         final Map<String, Object> restoreConsumerConfigs = config.getRestoreConsumerConfigs(threadClientId);
-        final Consumer<byte[], byte[]> restoreConsumer = clientSupplier.getRestoreConsumer(restoreConsumerConfigs);// 这里创建了StreamThread恢复状态的消费线程，从主题中拉取数据恢复状态
+        // 这里创建了StreamThread恢复状态的消费线程，从主题中拉取数据恢复状态
+        final Consumer<byte[], byte[]> restoreConsumer = clientSupplier.getRestoreConsumer(restoreConsumerConfigs);
         final Duration pollTime = Duration.ofMillis(config.getLong(StreamsConfig.POLL_MS_CONFIG));
         final StoreChangelogReader changelogReader = new StoreChangelogReader(restoreConsumer, pollTime, userStateRestoreListener, logContext);
 

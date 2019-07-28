@@ -50,6 +50,7 @@ public class TaskId implements Comparable<TaskId> {
         if (index <= 0 || index + 1 >= taskIdStr.length()) throw new TaskIdFormatException(taskIdStr);
 
         try {
+            // topicGroupId_partition
             final int topicGroupId = Integer.parseInt(taskIdStr.substring(0, index));
             final int partition = Integer.parseInt(taskIdStr.substring(index + 1));
 

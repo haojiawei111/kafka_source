@@ -321,7 +321,7 @@ public class GlobalStreamThread extends Thread {
                 stateDirectory,
                 stateRestoreListener,
                 config);
-
+            // 创建全局运行程序上下文
             final GlobalProcessorContextImpl globalProcessorContext = new GlobalProcessorContextImpl(
                 config,
                 stateMgr,
