@@ -112,18 +112,22 @@ public class StreamThread extends Thread {
      *                +-------------+
      * </pre>
      *
-     * Note the following:
+     * 请注意以下事项：
      * <ul>
-     *     <li>Any state can go to PENDING_SHUTDOWN. That is because streams can be closed at any time.</li>
+     *     <li>Any state can go to PENDING_SHUTDOWN. That is because streams can be closed at any time.任何state都可以去PENDING_SHUTDOWN。这是因为流可以随时关闭。</li>
      *     <li>
      *         State PENDING_SHUTDOWN may want to transit to some other states other than DEAD,
      *         in the corner case when the shutdown is triggered while the thread is still in the rebalance loop.
      *         In this case we will forbid the transition but will not treat as an error.
+     *         状态PENDING_SHUTDOWN可能希望在线程仍处于重新平衡循环中时触发关闭的情况下转移到除DEAD之外的其他一些状态。
+     *         在这种情况下，我们将禁止转换，但不会将其视为错误。
      *     </li>
      *     <li>
      *         State PARTITIONS_REVOKED may want transit to itself indefinitely, in the corner case when
      *         the coordinator repeatedly fails in-between revoking partitions and assigning new partitions.
      *         In this case we will forbid the transition but will not treat as an error.
+     *         状态PARTITIONS_REVOKED可能希望无限期地转移到自身，在协调器在撤销分区和分配新分区之间反复失败的情况下。
+     *         在这种情况下，我们将禁止转换，但不会将其视为错误。
      *     </li>
      * </ul>
      */
@@ -154,6 +158,7 @@ public class StreamThread extends Thread {
 
         /**
          * Called when state changes
+         * 当状态改变时调用
          *
          * @param thread   thread changing state
          * @param newState current state
@@ -235,6 +240,7 @@ public class StreamThread extends Thread {
         }
     }
 
+    // 重平衡监听
     static class RebalanceListener implements ConsumerRebalanceListener {
         private final Time time;
         private final TaskManager taskManager;
@@ -364,6 +370,7 @@ public class StreamThread extends Thread {
             return stateDirectory;
         }
 
+        // 提供统一的接口函数
         Collection<T> createTasks(final Consumer<byte[], byte[]> consumer,
                                   final Map<TaskId, Set<TopicPartition>> tasksToBeCreated) {
             final List<T> createdTasks = new ArrayList<>();
@@ -385,10 +392,12 @@ public class StreamThread extends Thread {
         public void close() {}
     }
 
+    // 创建生产者
     static class TaskCreator extends AbstractTaskCreator<StreamTask> {
         private final ThreadCache cache;
         private final KafkaClientSupplier clientSupplier;
         private final String threadClientId;
+        // 生成线程
         private final Producer<byte[], byte[]> threadProducer;
 
         TaskCreator(final InternalTopologyBuilder builder,
@@ -460,7 +469,7 @@ public class StreamThread extends Thread {
             }
         }
     }
-
+    // 创建备用任务
     static class StandbyTaskCreator extends AbstractTaskCreator<StandbyTask> {
         StandbyTaskCreator(final InternalTopologyBuilder builder,
                            final StreamsConfig config,
@@ -488,6 +497,7 @@ public class StreamThread extends Thread {
             final ProcessorTopology topology = builder.build(taskId.topicGroupId);
 
             if (!topology.stateStores().isEmpty()) {
+                // 待机任务
                 return new StandbyTask(
                     taskId,
                     partitions,
@@ -622,6 +632,7 @@ public class StreamThread extends Thread {
 
         final ThreadCache cache = new ThreadCache(logContext, cacheSizeBytes, streamsMetrics);
 
+        // activeTask和 standbyTask的工厂
         final AbstractTaskCreator<StreamTask> activeTaskCreator = new TaskCreator(
             builder,
             config,
@@ -721,6 +732,7 @@ public class StreamThread extends Thread {
 
     /**
      * Execute the stream processors
+     * 执行流处理器
      *
      * @throws KafkaException   for any Kafka-related exceptions
      * @throws RuntimeException for any other non-Kafka exceptions
@@ -768,7 +780,7 @@ public class StreamThread extends Thread {
             try {
                 recordsProcessedBeforeCommit = runOnce(recordsProcessedBeforeCommit);
                 if (versionProbingFlag.get()) {
-                    log.info("Version probing detected. Triggering new rebalance.");
+                    log.info("Version probing detected. Triggering new rebalance检测到版本探测。触发新的重新平衡.");
                     enforceRebalance();
                 }
             } catch (final TaskMigratedException ignoreAndRejoinGroup) {
@@ -805,14 +817,17 @@ public class StreamThread extends Thread {
         if (state == State.PARTITIONS_ASSIGNED) {
             // try to fetch some records with zero poll millis
             // to unblock the restoration as soon as possible
+            // 尝试获取零轮询毫秒的一些记录，尽快解锁恢复
             records = pollRequests(Duration.ZERO);
         } else if (state == State.PARTITIONS_REVOKED) {
             // try to fetch some records with normal poll time
             // in order to wait long enough to get the join response
+            // 尝试以正常的轮询时间获取一些记录，以便等待足够长的时间来获得连接响应
             records = pollRequests(pollTime);
         } else if (state == State.RUNNING) {
             // try to fetch some records with normal poll time
             // in order to get long polling
+            // 尝试获取一些具有正常轮询时间的记录以获得长轮询
             records = pollRequests(pollTime);
         } else {
             // any other state should not happen
@@ -949,6 +964,7 @@ public class StreamThread extends Thread {
     /**
      * Schedule the records processing by selecting which record is processed next. Commits may
      * happen as records are processed.
+     * 通过选择下一个处理的记录来安排记录处理。提交可能在处理记录时发生。
      *
      * @param recordsProcessedBeforeCommit number of records to be processed before commit is called.
      *                                     if UNLIMITED_RECORDS, then commit is never called
@@ -976,7 +992,7 @@ public class StreamThread extends Thread {
                 totalProcessedSinceLastMaybeCommit = 0;
                 maybeCommit(timerStartedMs);
             }
-            // commit any tasks that have requested a commit
+            // commit any tasks that have requested a commit 提交已请求提交的任何任务
             final int committed = taskManager.maybeCommitActiveTasks();
             if (committed > 0) {
                 streamsMetrics.commitTimeSensor.record(computeLatency() / (double) committed, timerStartedMs);

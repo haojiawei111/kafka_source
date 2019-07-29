@@ -96,6 +96,7 @@ public class StoreChangelogReader implements ChangelogReader {
                 if (restorer.hasCompleted(pos, endOffsets.get(partition))) {
                     restorer.restoreDone();
                     endOffsets.remove(partition);
+                    // 完成重建
                     completedRestorers.add(partition);
                 }
             }
@@ -125,7 +126,7 @@ public class StoreChangelogReader implements ChangelogReader {
 
     private void initialize(final RestoringTasks active) {
         if (!restoreConsumer.subscription().isEmpty()) {
-            throw new StreamsException("Restore consumer should not be subscribed to any topics (" + restoreConsumer.subscription() + ")");
+            throw new StreamsException("Restore consumer should not be subscribed to any topics恢复使用者不应订阅任何主题 (" + restoreConsumer.subscription() + ")");
         }
 
         // first refresh the changelog partition information from brokers, since initialize is only called when

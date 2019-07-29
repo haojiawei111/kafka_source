@@ -25,16 +25,19 @@ import java.util.Map;
  * Performs bulk read operations from a set of partitions. Used to
  * restore  {@link org.apache.kafka.streams.processor.StateStore}s from their
  * change logs
+ * 从一组分区执行批量读取操作。用于从更改日志中恢复{@link org.apache.kafka.streams.processor.StateStore}
  */
 public interface ChangelogReader {
     /**
      * Register a state store and it's partition for later restoration.
+     * 注册状态存储及其分区以便以后恢复。
      * @param restorer the state restorer to register
      */
     void register(final StateRestorer restorer);
 
     /**
      * Restore all registered state stores by reading from their changelogs.
+     * 通过读取更改日志来还原所有已注册的状态存储。
      * @return all topic partitions that have been restored
      */
     Collection<TopicPartition> restore(final RestoringTasks active);

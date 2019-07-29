@@ -46,6 +46,9 @@ public class TaskManager {
     // initialize the task list
     // activeTasks needs to be concurrent as it can be accessed
     // by QueryableState
+    // 初始化任务列表
+    // activeTasks需要是并发的，因为它可以通过QueryableState访问
+
     private final Logger log;
     private final UUID processId;
     private final AssignedStreamsTasks active;
