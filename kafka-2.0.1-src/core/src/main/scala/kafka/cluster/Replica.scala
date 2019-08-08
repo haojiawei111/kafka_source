@@ -24,6 +24,9 @@ import kafka.server.{LogOffsetMetadata, LogReadResult}
 import org.apache.kafka.common.{KafkaException, TopicPartition}
 import org.apache.kafka.common.errors.OffsetOutOfRangeException
 import org.apache.kafka.common.utils.Time
+/*
+    每个 Replica 会对应一个 log 对象，而每个 log 对象会管理相应的 LogSegment 实例。
+ */
 
 class Replica(val brokerId: Int,val topicPartition: TopicPartition,time: Time = Time.SYSTEM,initialHighWatermarkValue: Long = 0L,@volatile var log: Option[Log] = None) extends Logging {
   // the high watermark offset value, in non-leader replicas only its message offsets are kept

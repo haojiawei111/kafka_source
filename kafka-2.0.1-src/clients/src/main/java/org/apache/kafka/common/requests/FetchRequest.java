@@ -270,7 +270,10 @@ public class FetchRequest extends AbstractRequest {
         private int maxBytes = DEFAULT_RESPONSE_MAX_BYTES;
         private FetchMetadata metadata = FetchMetadata.LEGACY;
         private List<TopicPartition> toForget = Collections.<TopicPartition>emptyList();
-
+        // CONSUMER_REPLICA_ID = -1
+        // Replica 同步 Fetch 与 Consumer Fetch 请求进行对比，这里区别仅在于在构造 FetchRequest 时，调用了 setReplicaId() 方法设置了对应的 replicaId，
+        // 而 Consumer 在构造时则没有进行设置，该值默认为 CONSUMER_REPLICA_ID，即 -1
+        // 这个值是作为 Consumer 的 Fetch 请求与 Replica 同步的 Fetch 请求的区分。
         public static Builder forConsumer(int maxWait, int minBytes, Map<TopicPartition, PartitionData> fetchData) {
             return new Builder(ApiKeys.FETCH.oldestVersion(), ApiKeys.FETCH.latestVersion(),
                 CONSUMER_REPLICA_ID, maxWait, minBytes, fetchData);

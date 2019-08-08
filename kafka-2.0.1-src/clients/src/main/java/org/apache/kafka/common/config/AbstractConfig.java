@@ -58,7 +58,7 @@ public class AbstractConfig {
         for (Map.Entry<?, ?> entry : originals.entrySet())
             if (!(entry.getKey() instanceof String))
                 throw new ConfigException(entry.getKey().toString(), entry.getValue(), "Key must be a string.");
-        this.originals = (Map<String, ?>) originals;
+        this.originals = (Map<String, ?>) originals;/* 传入的原始配置参数 */
         this.values = definition.parse(this.originals);
         Map<String, Object> configUpdates = postProcessParsedConfig(Collections.unmodifiableMap(this.values));
         for (Map.Entry<String, Object> update : configUpdates.entrySet()) {

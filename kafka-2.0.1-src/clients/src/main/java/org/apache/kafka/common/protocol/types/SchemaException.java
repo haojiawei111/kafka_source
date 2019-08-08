@@ -20,6 +20,7 @@ import org.apache.kafka.common.KafkaException;
 
 /**
  *  Thrown if the protocol schema validation fails while parsing request or response.
+ *  如果在解析请求或响应时协议模式验证失败，则抛出该异常。
  */
 public class SchemaException extends KafkaException {
 

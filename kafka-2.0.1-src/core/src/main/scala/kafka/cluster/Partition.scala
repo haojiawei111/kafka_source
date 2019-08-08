@@ -644,20 +644,23 @@ class Partition(val topic: String,val partitionId: Int,time: Time,replicaManager
     val (info, leaderHWIncremented) = inReadLock(leaderIsrUpdateLock) {
       leaderReplicaIfLocal match {
         case Some(leaderReplica) =>
+          //note: 获取对应的 Log 对象
           val log = leaderReplica.log.get
           val minIsr = log.config.minInSyncReplicas
           val inSyncSize = inSyncReplicas.size
 
           // Avoid writing to leader if there are not enough insync replicas to make it safe
+          //note: 如果 ack 设置为-1, isr 数小于设置的 min.isr 时,就会向 producer 抛出相应的异常
           if (inSyncSize < minIsr && requiredAcks == -1) {
             throw new NotEnoughReplicasException("Number of insync replicas for partition %s is [%d], below required minimum [%d]"
               .format(topicPartition, inSyncSize, minIsr))
           }
-
+          //note: 向副本对应的 log 追加响应的数据
           val info = log.appendAsLeader(records, leaderEpoch = this.leaderEpoch, isFromClient)
           // probably unblock some follower fetch requests since log end offset has been updated
           replicaManager.tryCompleteDelayedFetch(TopicPartitionOperationKey(this.topic, this.partitionId))
           // we may need to increment high watermark since ISR could be down to 1
+          //note: 判断是否需要增加 HHW（追加日志后会进行一次判断）
           (info, maybeIncrementLeaderHW(leaderReplica))
 
         case None =>

@@ -337,7 +337,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             if (clientId.length() <= 0)
                 clientId = "producer-" + PRODUCER_CLIENT_ID_SEQUENCE.getAndIncrement();
             this.clientId = clientId;
-
+            // ProducerConfig.TRANSACTIONAL_ID_CONFIG = "transactional.id"
             String transactionalId = userProvidedConfigs.containsKey(ProducerConfig.TRANSACTIONAL_ID_CONFIG) ?
                     (String) userProvidedConfigs.get(ProducerConfig.TRANSACTIONAL_ID_CONFIG) : null;
             LogContext logContext;
@@ -347,25 +347,30 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 logContext = new LogContext(String.format("[Producer clientId=%s, transactionalId=%s] ", clientId, transactionalId));
             log = logContext.logger(KafkaProducer.class);
             log.trace("Starting the Kafka producer");
-            //得到一个不变的映射
+            //得到一个不可变的映射
             Map<String, String> metricTags = Collections.singletonMap("client-id", clientId);
             MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ProducerConfig.METRICS_NUM_SAMPLES_CONFIG))
                     .timeWindow(config.getLong(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS)
                     .recordLevel(Sensor.RecordingLevel.forName(config.getString(ProducerConfig.METRICS_RECORDING_LEVEL_CONFIG)))
                     .tags(metricTags);
+            // ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG = "metric.reporters"
             List<MetricsReporter> reporters = config.getConfiguredInstances(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG,
                     MetricsReporter.class);
             reporters.add(new JmxReporter(JMX_PREFIX));
             //获取更新元数据
             this.metrics = new Metrics(metricConfig, reporters, time);
             ProducerMetrics metricsRegistry = new ProducerMetrics(this.metrics);
+            // ProducerConfig.PARTITIONER_CLASS_CONFIG = "partitioner.class"
             this.partitioner = config.getConfiguredInstance(ProducerConfig.PARTITIONER_CLASS_CONFIG, Partitioner.class);
+            // ProducerConfig.RETRY_BACKOFF_MS_CONFIG = "retry.backoff.ms"
             long retryBackoffMs = config.getLong(ProducerConfig.RETRY_BACKOFF_MS_CONFIG);
             if (keySerializer == null) {
+                // ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG = "key.serializer"
                 this.keySerializer = ensureExtended(config.getConfiguredInstance(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
                                                                                          Serializer.class));
                 this.keySerializer.configure(config.originals(), true);
             } else {
+                // "key.serializer"
                 config.ignore(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG);
                 this.keySerializer = ensureExtended(keySerializer);
             }
@@ -379,12 +384,15 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             }
 
             // load interceptors and make sure they get clientId
-            //加载拦截器并确保它们获得clientId
-            //interceptor.classes 拦截器
+            // ProducerConfig.CLIENT_ID_CONFIG = "client.id"
             userProvidedConfigs.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
+            //加载拦截器并确保它们获得clientId
+            //interceptor.classes 拦截器   ProducerConfig.INTERCEPTOR_CLASSES_CONFIG = "interceptor.classes"
             List<ProducerInterceptor<K, V>> interceptorList = (List) (new ProducerConfig(userProvidedConfigs, false)).getConfiguredInstances(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
                     ProducerInterceptor.class);
             this.interceptors = new ProducerInterceptors<>(interceptorList);
+
+            // 群集资源监听器
             ClusterResourceListeners clusterResourceListeners = configureClusterResourceListeners(keySerializer, valueSerializer, interceptorList, reporters);
 
             this.maxRequestSize = config.getInt(ProducerConfig.MAX_REQUEST_SIZE_CONFIG);
@@ -399,6 +407,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             short acks = configureAcks(config, transactionManager != null, log);
 
             this.apiVersions = new ApiVersions();
+
             this.accumulator = new RecordAccumulator(logContext,
                     config.getInt(ProducerConfig.BATCH_SIZE_CONFIG),
                     this.totalMemorySize,
@@ -413,6 +422,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             if (metadata != null) {
                 this.metadata = metadata;
             } else {
+                // ProducerConfig.METADATA_MAX_AGE_CONFIG = "metadata.max.age.ms"
                 this.metadata = new Metadata(retryBackoffMs, config.getLong(ProducerConfig.METADATA_MAX_AGE_CONFIG),
                     true, true, clusterResourceListeners);
                 this.metadata.update(Cluster.bootstrap(addresses), Collections.<String>emptySet(), time.milliseconds());
@@ -436,6 +446,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     apiVersions,
                     throttleTimeSensor,
                     logContext);
+
             //创建发送线程
             // MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION = 1时，即 guaranteeMessageOrder
             this.sender = new Sender(logContext,
@@ -452,6 +463,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     config.getLong(ProducerConfig.RETRY_BACKOFF_MS_CONFIG),
                     this.transactionManager,
                     apiVersions);
+
             String ioThreadName = NETWORK_THREAD_PREFIX + " | " + clientId;
             this.ioThread = new KafkaThread(ioThreadName, this.sender, true);
             this.ioThread.start();
@@ -883,7 +895,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, timestamp, serializedKey,
                     serializedValue, headers, interceptCallback, remainingWaitMs);
             if (result.batchIsFull || result.newBatchCreated) {
-                log.trace("Waking up the sender since topic {} partition {} is either full or getting a new batch", record.topic(), partition);
+                log.trace("Waking up the sender since topic {} partition {} is either full or getting a new batch“由于主题{}分区{}已满或正在获取新批次，因此唤醒发件人", record.topic(), partition);
                 this.sender.wakeup();
             }
             return result.future;

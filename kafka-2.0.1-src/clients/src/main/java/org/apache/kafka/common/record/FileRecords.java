@@ -279,8 +279,8 @@ public class FileRecords extends AbstractRecords implements Closeable {
      * Search forward for the file position of the last offset that is greater than or equal to the target offset
      * and return its physical position and the size of the message (including log overhead) at the returned offset. If
      * no such offsets are found, return null.
-     *
-     * @param targetOffset The offset to search for.
+     * 前面通过 offset 索引文件获取的物理位置是一个接近值，下面通过实际读取数据文件将会得到一个真正的准确值，它是通过遍历数据文件实现的。
+     * @param targetOffset The offset to search for. 要搜索的偏移量。
      * @param startingPosition The starting position in the file to begin searching from.
      */
     public LogOffsetPosition searchForOffsetWithSize(long targetOffset, int startingPosition) {

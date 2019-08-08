@@ -55,6 +55,7 @@ public class RequestContext {
 
         if (isUnsupportedApiVersionsRequest()) {
             // Unsupported ApiVersion requests are treated as v0 requests and are not parsed
+            // 不受支持的ApiVersion请求被视为v0请求，不会被解析
             ApiVersionsRequest apiVersionsRequest = new ApiVersionsRequest((short) 0, header.apiVersion());
             return new RequestAndSize(apiVersionsRequest, 0);
         } else {

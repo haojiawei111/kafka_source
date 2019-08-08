@@ -65,6 +65,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * The accumulator uses a bounded amount of memory and append calls will block when that memory is exhausted, unless
  * this behavior is explicitly disabled.
+ *
+ * 此类充当一个队列，将记录累积到要发送到服务器的{@link MemoryRecords} *实例中。
+ * 累加器使用有限数量的内存，追加调用将在内存耗尽时阻塞，除非明确禁用此行为。
+ *
  */
 public final class RecordAccumulator {
 

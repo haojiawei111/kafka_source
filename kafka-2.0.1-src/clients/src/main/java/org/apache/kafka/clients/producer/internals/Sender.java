@@ -154,6 +154,7 @@ public class Sender implements Runnable {
 
     /**
      * The main run loop for the sender thread
+     * 发送方线程的主要运行循环
      */
     public void run() {
         log.debug("Starting Kafka producer I/O thread.");
@@ -206,6 +207,7 @@ public class Sender implements Runnable {
 
     /**
      * Run a single iteration of sending
+     * 运行一次迭代的发送
      *
      * @param now The current POSIX time in milliseconds
      */
@@ -250,10 +252,12 @@ public class Sender implements Runnable {
         client.poll(pollTimeout, now);
     }
 
+    // 向kafka集群发送数据
     private long sendProducerData(long now) {
         Cluster cluster = metadata.fetch();
 
         // get the list of partitions with data ready to send
+        // 获取准备发送数据的分区列表
         RecordAccumulator.ReadyCheckResult result = this.accumulator.ready(cluster, now);
 
         // if there are any partitions whose leaders are not known yet, force metadata update
@@ -270,6 +274,7 @@ public class Sender implements Runnable {
         }
 
         // remove any nodes we aren't ready to send to
+        // 删除我们尚未准备发送的任何节点
         Iterator<Node> iter = result.readyNodes.iterator();
         long notReadyTimeout = Long.MAX_VALUE;
         while (iter.hasNext()) {
@@ -669,6 +674,7 @@ public class Sender implements Runnable {
 
     /**
      * Create a produce request from the given record batches
+     * 从给定的记录批次创建生产请求
      */
     private void sendProduceRequest(long now, int destination, short acks, int timeout, List<ProducerBatch> batches) {
         if (batches.isEmpty())
@@ -678,6 +684,7 @@ public class Sender implements Runnable {
         final Map<TopicPartition, ProducerBatch> recordsByPartition = new HashMap<>(batches.size());
 
         // find the minimum magic version used when creating the record sets
+        // 找到创建记录集时使用的最小魔术版本
         byte minUsedMagic = apiVersions.maxUsableProduceMagic();
         for (ProducerBatch batch : batches) {
             if (batch.magic() < minUsedMagic)

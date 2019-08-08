@@ -110,8 +110,8 @@ class KafkaApis(val requestChannel: RequestChannel,
         s"securityProtocol:${request.context.securityProtocol},principal:${request.context.principal}")
 
       request.header.apiKey match {
-        case ApiKeys.PRODUCE => handleProduceRequest(request)
-        case ApiKeys.FETCH => handleFetchRequest(request)
+        case ApiKeys.PRODUCE => handleProduceRequest(request) /* 生产者发送数据的请求 Produce*/
+        case ApiKeys.FETCH => handleFetchRequest(request) /* 消费者消费数据发送的请求 Fetch  */
         case ApiKeys.LIST_OFFSETS => handleListOffsetRequest(request)
         case ApiKeys.METADATA => handleTopicMetadataRequest(request)
         case ApiKeys.LEADER_AND_ISR => handleLeaderAndIsrRequest(request)
@@ -401,17 +401,23 @@ class KafkaApis(val requestChannel: RequestChannel,
   /**
    * Handle a produce request
     * 处理produce要求
+    *总体来说，处理过程是（在权限系统的情况下）：
+    *       查看 topic 是否存在，以及 client 是否有相应的 Desribe 权限；
+    *       对于已经有 Describe 权限的 topic 查看是否有 Write 权限；
+    *       调用 replicaManager.appendRecords() 方法向有 Write 权限的 topic-partition 追加相应的 record。
    */
   def handleProduceRequest(request: RequestChannel.Request) {
     val produceRequest = request.body[ProduceRequest]
     val numBytesAppended = request.header.toStruct.sizeOf + request.sizeOfBodyInBytes
 
     if (produceRequest.isTransactional) {
+      //note: 判断有没有 Write 权限
       if (!authorize(request.session, Write, Resource(TransactionalId, produceRequest.transactionalId, LITERAL))) {
         sendErrorResponseMaybeThrottle(request, Errors.TRANSACTIONAL_ID_AUTHORIZATION_FAILED.exception)
         return
       }
       // Note that authorization to a transactionalId implies ProducerId authorization
+      // Note: 对transactionalId的授权意味着ProducerId授权
 
     } else if (produceRequest.isIdempotent && !authorize(request.session, IdempotentWrite, Resource.ClusterResource)) {
       sendErrorResponseMaybeThrottle(request, Errors.CLUSTER_AUTHORIZATION_FAILED.exception)
@@ -432,6 +438,7 @@ class KafkaApis(val requestChannel: RequestChannel,
     }
 
     // the callback for sending a produce response
+    // note: 回调函数
     def sendResponseCallback(responseStatus: Map[TopicPartition, PartitionResponse]) {
       val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses
       var errorInResponse = false
@@ -469,6 +476,8 @@ class KafkaApis(val requestChannel: RequestChannel,
         // no operation needed if producer request.required.acks = 0; however, if there is any error in handling
         // the request, since no response is expected by the producer, the server will close socket server so that
         // the producer client will know that some error has happened and will refresh its metadata
+        //note: 因为设置的 ack=0, 相当于 client 会默认发送成功了,如果 server 在处理的过程出现了错误,那么就会关闭 socket 连接来间接地通知 client
+        //note: client 会重新刷新 meta,重新建立相应的连接
         if (errorInResponse) {
           val exceptionsSummary = mergedResponseStatus.map { case (topicPartition, status) =>
             topicPartition -> status.error.exceptionName
@@ -501,6 +510,7 @@ class KafkaApis(val requestChannel: RequestChannel,
       val internalTopicsAllowed = request.header.clientId == AdminUtils.AdminClientId
 
       // call the replica manager to append messages to the replicas
+      //note: 追加 Record
       replicaManager.appendRecords(
         timeout = produceRequest.timeout.toLong,
         requiredAcks = produceRequest.acks,
@@ -512,6 +522,8 @@ class KafkaApis(val requestChannel: RequestChannel,
 
       // if the request is put into the purgatory, it will have a held reference and hence cannot be garbage collected;
       // hence we clear its data here in order to let GC reclaim its memory since it is already appended to log
+      // 如果请求被提入炼狱，它将有一个保留的参考，因此不能被垃圾收集;
+      // 因此我们在这里清除它的数据，以便让GC回收它的内存，因为它已经附加到日志中
       produceRequest.clearPartitionRecords()
     }
   }
@@ -558,11 +570,12 @@ class KafkaApis(val requestChannel: RequestChannel,
       }
     } else {//否则这里是从Consumer 来的请求
       // Regular Kafka consumers need READ permission on each partition they are fetching.
+      // 普通的Kafka消费者需要对他们提取的每个分区具有READ权限。
       fetchContext.foreachPartition { (topicPartition, data) =>
         if (!authorize(request.session, Read, Resource(Topic, topicPartition.topic, LITERAL)))
-          erroneous += topicPartition -> errorResponse(Errors.TOPIC_AUTHORIZATION_FAILED)
+          erroneous += topicPartition -> errorResponse(Errors.TOPIC_AUTHORIZATION_FAILED) /* Topic authorization failed. */
         else if (!metadataCache.contains(topicPartition))
-          erroneous += topicPartition -> errorResponse(Errors.UNKNOWN_TOPIC_OR_PARTITION)
+          erroneous += topicPartition -> errorResponse(Errors.UNKNOWN_TOPIC_OR_PARTITION) /* This server does not host this topic-partition */
         else
           interesting += (topicPartition -> data)
       }
@@ -609,7 +622,7 @@ class KafkaApis(val requestChannel: RequestChannel,
       }
     }
 
-    // the callback for process a fetch response, invoked before throttling
+    // the callback for process a fetch response, invoked before throttling 进程的回调是一个获取响应，在限制之前调用
     def processResponseCallback(responsePartitionData: Seq[(TopicPartition, FetchPartitionData)]): Unit = {
       val partitions = new util.LinkedHashMap[TopicPartition, FetchResponse.PartitionData[Records]]
       responsePartitionData.foreach { case (tp, data) =>

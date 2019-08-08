@@ -58,6 +58,7 @@ public class ApiVersionsRequest extends AbstractRequest {
         public String toString() {
             return "(type=ApiVersionsRequest)";
         }
+
     }
 
     private final Short unsupportedRequestVersion;

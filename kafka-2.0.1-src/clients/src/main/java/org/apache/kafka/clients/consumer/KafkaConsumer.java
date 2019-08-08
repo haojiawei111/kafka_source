@@ -675,6 +675,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
             this.requestTimeoutMs = config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG); //request.timeout.ms
             this.defaultApiTimeoutMs = config.getInt(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG); //default.api.timeout.ms
             this.time = Time.SYSTEM;
+
             // 监控的biaoqian
             Map<String, String> metricsTags = Collections.singletonMap("client-id", clientId);
             MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ConsumerConfig.METRICS_NUM_SAMPLES_CONFIG))//metrics.num.samples
@@ -1270,6 +1271,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         }
 
         // send any new fetches (won't resend pending fetches)
+		// 发送任何新的提取（不会重新发送待处理的提取）
         fetcher.sendFetches();
 
         // We do not want to be stuck blocking in poll if we are missing some positions

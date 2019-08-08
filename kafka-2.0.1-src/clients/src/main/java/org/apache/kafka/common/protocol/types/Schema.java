@@ -23,6 +23,7 @@ import java.util.Objects;
 
 /**
  * The schema for a compound record definition
+ * 复合记录定义的模式
  */
 public class Schema extends Type {
 

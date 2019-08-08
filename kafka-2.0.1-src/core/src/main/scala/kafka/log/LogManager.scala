@@ -531,6 +531,11 @@ class LogManager(logDirs: Seq[File],
 
   /**
    *  Start the background threads to flush logs and do log cleanup
+    *
+    * cleanupLogs：定时清理过期的日志 segment，并维护日志的大小（默认5min）；
+    * flushDirtyLogs：定时刷新将还没有写到磁盘上日志刷新到磁盘（默认 无限大）；
+    * checkpointRecoveryPointOffsets：定时将所有数据目录所有日志的检查点写到检查点文件中（默认 60s）；
+    * deleteLogs：定时删除标记为 delete 的日志文件（默认 30s）。
    */
   def startup() {
     /* Schedule the cleanup task to delete old logs */
@@ -542,26 +547,31 @@ class LogManager(logDirs: Seq[File],
                          period = retentionCheckMs,
                          TimeUnit.MILLISECONDS)
       info("Starting log flusher with a default period of %d ms.".format(flushCheckMs))
+      //note: 定时刷新还没有写到磁盘上日志
       scheduler.schedule("kafka-log-flusher",
                          flushDirtyLogs _,
                          delay = InitialTaskDelayMs,
                          period = flushCheckMs,
                          TimeUnit.MILLISECONDS)
+      //note: 定时将所有数据目录所有日志的检查点写到检查点文件中
       scheduler.schedule("kafka-recovery-point-checkpoint",
                          checkpointLogRecoveryOffsets _,
                          delay = InitialTaskDelayMs,
                          period = flushRecoveryOffsetCheckpointMs,
                          TimeUnit.MILLISECONDS)
+      //note: 定时对partition的offset进行checkpoint操作
       scheduler.schedule("kafka-log-start-offset-checkpoint",
                          checkpointLogStartOffsets _,
                          delay = InitialTaskDelayMs,
                          period = flushStartOffsetCheckpointMs,
                          TimeUnit.MILLISECONDS)
+      //note: 定时删除标记为 delete 的日志文件
       scheduler.schedule("kafka-delete-logs", // will be rescheduled after each delete logs with a dynamic period
                          deleteLogs _,
                          delay = InitialTaskDelayMs,
                          unit = TimeUnit.MILLISECONDS)
     }
+    //note: 如果设置为 true， 自动清理 compaction 类型的 topic
     if (cleanerConfig.enableCleaner)
       cleaner.startup()
   }
@@ -709,8 +719,10 @@ class LogManager(logDirs: Seq[File],
   /**
    * Write out the current log start offset for all logs to a text file in the log directory
    * to avoid exposing data that have been deleted by DeleteRecordsRequest
+    * 将所有日志的当前日志开始偏移写入日志目录中的文本文件，以避免暴露已被DeleteRecordsRequest删除的数据
    */
   def checkpointLogStartOffsets() {
+    // 这里对每个dir中存储的partition的最后一个offset进行checkpoint的操作.
     liveLogDirs.foreach(checkpointLogStartOffsetsInDir)
   }
 
@@ -735,6 +747,7 @@ class LogManager(logDirs: Seq[File],
 
   /**
    * Checkpoint log start offset for all logs in provided directory.
+    * 提供的目录中的所有日志的检查点日志启动偏移量。
    */
   private def checkpointLogStartOffsetsInDir(dir: File): Unit = {
     for {
@@ -1053,7 +1066,15 @@ class LogManager(logDirs: Seq[File],
 
   /**
    * Flush any log which has exceeded its flush interval and has unwritten messages.
+    * 刷新任何超过其刷新间隔的日志，并显示未写入的消息。
    */
+  //note: LogManager 启动时，会启动一个周期性调度任务，调度这个方法，定时刷新日志。
+
+  // 日志管理器会定时调度 flushDirtyLogs() 方法，定期将页面缓存中的数据真正刷新到磁盘文件中。
+  // 如果缓存中的数据（在 pagecache 中）在 flush 到磁盘之前，Broker 宕机了，那么会导致数据丢失（多副本减少了这个风险）。
+  // 在 Kafka 中有两种策略，将日志刷新到磁盘上：
+  //        1.时间策略，（log.flush.interval.ms 中配置调度周期，默认为无限大，即选择大小策略）：
+  //        2.大小策略，（log.flush.interval.messages 中配置当未刷新的 msg 数超过这个值后，进行刷新）。
   private def flushDirtyLogs(): Unit = {
     debug("Checking for dirty logs to flush...")
 

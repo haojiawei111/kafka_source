@@ -85,22 +85,25 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
   def lastOffset: Long = _lastOffset
 
   /**
-    * 找到小于或等于给定targetOffset 的最大偏移量，并返回保持此偏移量及其对应物理文件位置的对。
+    * =查找小于等于指定 offset 的最大 offset,并且返回对应的 offset 和实际物理位置
    *
    * @param targetOffset The offset to look up.
    * @return The offset found and the corresponding file position for this offset
    *         If the target offset is smaller than the least entry in the index (or the index is empty),
    *         the pair (baseOffset, 0) is returned.
    */
+  // offset 索引文件是使用内存映射的方式加载到内存中的，
+  // 在查询的过程中，内存映射是会发生变化，所以在 lookup() 中先拷贝出来了一个（idx），然后再进行查询，具体实现如下：
   def lookup(targetOffset: Long): OffsetPosition = {
     maybeLock(lock) {
       //mmap是一个Buffer类
       //duplicate复制当前的ByteBuffer
-      val idx: ByteBuffer = mmap.duplicate
+      val idx: ByteBuffer = mmap.duplicate //note: 查询时,mmap 会发生变化,先复制出来一个
       val slot = largestLowerBoundSlotFor(idx, targetOffset, IndexSearchType.KEY)
       if(slot == -1)
         OffsetPosition(baseOffset, 0)
       else
+      //note: 先计算绝对偏移量,再计算物理位置
         parseEntry(idx, slot).asInstanceOf[OffsetPosition]
     }
   }

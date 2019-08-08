@@ -20,6 +20,8 @@ package org.apache.kafka.common.errors;
  * Thrown when a request breaks basic wire protocol rules.
  * This most likely occurs because of a request being malformed by the client library or
  * the message was sent to an incompatible broker.
+ * 当请求违反基本的协议规则时抛出。
+ * 这很可能是因为请求客户端库格式错误或消息发送到不兼容的broker。
  */
 public class InvalidRequestException extends ApiException {
 

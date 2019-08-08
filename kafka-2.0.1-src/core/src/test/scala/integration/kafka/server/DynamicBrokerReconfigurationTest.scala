@@ -353,8 +353,8 @@ class DynamicBrokerReconfigurationTest extends ZooKeeperTestHarness with SaslSet
     props.put(KafkaConfig.LogRollTimeMillisProp, TimeUnit.HOURS.toMillis(2).toString)
     props.put(KafkaConfig.LogRollTimeJitterMillisProp, TimeUnit.HOURS.toMillis(1).toString)
     props.put(KafkaConfig.LogIndexSizeMaxBytesProp, "100000")
-    props.put(KafkaConfig.LogFlushIntervalMessagesProp, "1000")
-    props.put(KafkaConfig.LogFlushIntervalMsProp, "60000")
+    props.put(KafkaConfig.LogFlushIntervalMessagesProp, "1000") // log.flush.interval.messages
+    props.put(KafkaConfig.LogFlushIntervalMsProp, "60000")  // log.flush.interval.ms
     props.put(KafkaConfig.LogRetentionBytesProp, "10000000")
     props.put(KafkaConfig.LogRetentionTimeMillisProp, TimeUnit.DAYS.toMillis(1).toString)
     props.put(KafkaConfig.MessageMaxBytesProp, "100000")
