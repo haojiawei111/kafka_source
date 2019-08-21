@@ -26,6 +26,7 @@ public interface Send {
 
     /**
      * The id for the destination of this send
+     * 此发送目标的ID
      */
     String destination();
 

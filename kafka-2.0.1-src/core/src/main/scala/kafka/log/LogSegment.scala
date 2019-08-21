@@ -325,6 +325,7 @@ class LogSegment private[log] (val log: FileRecords,
       else maxSize
 
     // return a log segment but with zero size in the case below
+    // 返回一个日志段，但在下面的情况下为零
     if (adjustedMaxSize == 0)
       return FetchDataInfo(offsetMetadata, MemoryRecords.EMPTY)
 

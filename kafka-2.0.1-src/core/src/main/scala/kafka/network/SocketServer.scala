@@ -627,9 +627,8 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
     Map(NetworkProcessorMetricTag -> id.toString)
   )
 
-
   // 选择器
-  private val selector = createSelector(
+  private val selector: KSelector = createSelector(
     ChannelBuilders.serverChannelBuilder(listenerName,
       listenerName == config.interBrokerListenerName,
       securityProtocol,
@@ -813,8 +812,9 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
   }
 
   private def processCompletedReceives() {
-
+    // NetworkClient.poll之后对已经完成发送和已经完成接收的都进行了handler处理.
     selector.completedReceives.asScala.foreach { receive =>
+      //receive是NetworkReceive, 其中包含了源节点地址, 对应configureNewConnections注册的第一个参数connectionId
       try {
         openOrClosingChannel(receive.source) match {
           case Some(channel) =>
@@ -844,6 +844,7 @@ private[kafka] class Processor(val id: Int,time: Time,maxRequestSize: Int,reques
 
 
   private def processCompletedSends() {
+    // completedReceives是服务端接收到客户端的请求,下面的completedSends是服务端要将响应返回给客户端
     selector.completedSends.asScala.foreach { send =>
       try {
         val response = inflightResponses.remove(send.destination).getOrElse {

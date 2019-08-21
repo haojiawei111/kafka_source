@@ -441,9 +441,10 @@ public class Selector implements Selectable, AutoCloseable {
 
             Set<SelectionKey> readyKeys = this.nioSelector.selectedKeys();
 
-            // Poll from channels that have buffered data (but nothing more from the underlying socket)从具有缓冲数据的通道轮询（但不再是来自底层套接字的通道）
+            // Poll from channels that have buffered data (but nothing more from the underlying socket)
+            // 从具有缓冲数据的通道轮询（但不再是来自底层套接字的通道）
             if (dataInBuffers) {
-                keysWithBufferedRead.removeAll(readyKeys); //so no channel gets polled twice
+                keysWithBufferedRead.removeAll(readyKeys); //so no channel gets polled twice所以没有channel被轮询两次
                 Set<SelectionKey> toPoll = keysWithBufferedRead;
                 keysWithBufferedRead = new HashSet<>(); //poll() calls will repopulate if needed
                 pollSelectionKeys(toPoll, false, endSelect);
@@ -847,7 +848,7 @@ public class Selector implements Selectable, AutoCloseable {
 
     /**
      * Get the channel associated with selectionKey
-     * 获取与selectionKey关联的频道
+     * 获取与selectionKey关联的KafkaChannel对象
      */
     private KafkaChannel channel(SelectionKey key) {
         return (KafkaChannel) key.attachment();
