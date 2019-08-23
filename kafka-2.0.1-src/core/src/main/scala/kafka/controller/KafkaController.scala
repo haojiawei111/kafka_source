@@ -713,6 +713,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     // update the leader and isr cache for all existing partitions from Zookeeper
     updateLeaderAndIsrCache()
     // start the channel manager
+    // 初始化 ControllerChannelManager 对象
     startChannelManager()
     initializePartitionReassignment()
     info(s"Currently active brokers in the cluster: ${controllerContext.liveBrokerIds}")
@@ -765,6 +766,14 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
     (topicsToBeDeleted, topicsIneligibleForDeletion)
   }
 
+  /**
+    * ControllerChannelManager 在初始化时，会为集群中的每个节点初始化一个 ControllerBrokerStateInfo 对象，该对象包含四个部分：
+    *
+    * NetworkClient：网络连接对象；
+    * Node：节点信息；
+    * BlockingQueue：请求队列；
+    * RequestSendThread：请求的发送线程。
+    */
   private def startChannelManager() {
     controllerContext.controllerChannelManager = new ControllerChannelManager(controllerContext, config, time, metrics,
       stateChangeLogger, threadNamePrefix)
@@ -1597,6 +1606,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
   }
 
 
+  // 注册Broker并且重新选举
   case object RegisterBrokerAndReelect extends ControllerEvent {
     override def state: ControllerState = ControllerState.ControllerChange
 
@@ -1726,6 +1736,7 @@ class PreferredReplicaElectionHandler(controller: KafkaController, eventManager:
   override def handleCreation(): Unit = eventManager.put(controller.PreferredReplicaLeaderElection)
 }
 
+// Controller 变化，重新选举
 class ControllerChangeHandler(controller: KafkaController, eventManager: ControllerEventManager) extends ZNodeChangeHandler {
   //          /controller
   override val path: String = ControllerZNode.path

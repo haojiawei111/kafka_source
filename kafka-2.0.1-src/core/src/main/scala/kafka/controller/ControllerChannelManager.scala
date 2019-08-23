@@ -41,6 +41,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.{Set, mutable}
 
 
+// 控制所有已经存活 broker 的网络连接
 object ControllerChannelManager {
   val QueueSizeMetricName = "QueueSize"
   val RequestRateAndQueueTimeMetricName = "RequestRateAndQueueTimeMs"
@@ -76,6 +77,8 @@ class ControllerChannelManager(controllerContext: ControllerContext, config: Kaf
     }
   }
 
+  //note: 向 broker 发送请求（并没有真正发送,只是添加到对应的 queue 中）
+  // 它实际上只是把对应的请求添加到该 Broker 对应的 MessageQueue 中，并没有真正的去发送请求，请求的的发送是在 每台 Broker 对应的 RequestSendThread 中处理的。
   def sendRequest(brokerId: Int, apiKey: ApiKeys, request: AbstractRequest.Builder[_ <: AbstractRequest],
                   callback: AbstractResponse => Unit = null) {
     brokerLock synchronized {
@@ -105,11 +108,14 @@ class ControllerChannelManager(controllerContext: ControllerContext, config: Kaf
     }
   }
 
+  //note: 添加一个新的 broker（初始化时,这个方法相当于连接当前存活的所有 broker）
+  //note: 建立网络连接、启动请求发送线程
   private def addNewBroker(broker: Broker) {
     val messageQueue = new LinkedBlockingQueue[QueueItem]
     debug(s"Controller ${config.brokerId} trying to connect to broker ${broker.id}")
     val brokerNode = broker.node(config.interBrokerListenerName)
     val logContext = new LogContext(s"[Controller id=${config.brokerId}, targetBrokerId=${brokerNode.idString}] ")
+    //note: 初始化 NetworkClient
     val networkClient = {
       val channelBuilder = ChannelBuilders.clientChannelBuilder(
         config.interBrokerSecurityProtocol,
@@ -156,8 +162,8 @@ class ControllerChannelManager(controllerContext: ControllerContext, config: Kaf
     )
 
     val requestThread = new RequestSendThread(config.brokerId, controllerContext, messageQueue, networkClient,
-      brokerNode, config, time, requestRateAndQueueTimeMetrics, stateChangeLogger, threadName)
-    requestThread.setDaemon(false)
+      brokerNode, config, time, requestRateAndQueueTimeMetrics, stateChangeLogger, threadName)//note: 初始化 requestThread
+    requestThread.setDaemon(false)//note: 非守护进程
 
     val queueSizeGauge = newGauge(
       QueueSizeMetricName,
