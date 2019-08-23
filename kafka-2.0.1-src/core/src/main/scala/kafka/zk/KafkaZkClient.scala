@@ -142,6 +142,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * @return SetDataResponse
    */
   def setControllerEpochRaw(epoch: Int, epochZkVersion: Int): SetDataResponse = {
+    // "/controller_epoch"
     val setDataRequest = SetDataRequest(ControllerEpochZNode.path, ControllerEpochZNode.encode(epoch), epochZkVersion)
     retryRequestUntilConnected(setDataRequest)
   }
@@ -437,8 +438,10 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
 
   /**
    * Deletes all log dir event notifications.
+    * 删除所有日志目录事件通知。
    */
   def deleteLogDirEventNotifications(): Unit = {
+    //  "/log_dir_event_notification"
     val getChildrenResponse = retryRequestUntilConnected(GetChildrenRequest(LogDirEventNotificationZNode.path))
     if (getChildrenResponse.resultCode == Code.OK) {
       deleteLogDirEventNotifications(getChildrenResponse.children.map(LogDirEventNotificationSequenceZNode.sequenceNumber))
@@ -449,6 +452,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
 
   /**
    * Deletes the log dir event notifications associated with the given sequence numbers.
+    * 删除与给定序列号关联的日志目录事件通知。
    * @param sequenceNumbers the sequence numbers associated with the log dir event notifications to be deleted.
    */
   def deleteLogDirEventNotifications(sequenceNumbers: Seq[String]): Unit = {
@@ -662,6 +666,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * @return sequence of topics marked for deletion.
    */
   def getTopicDeletions: Seq[String] = {
+    // "/admin/delete_topics"
     val getChildrenResponse = retryRequestUntilConnected(GetChildrenRequest(DeleteTopicsZNode.path))
     getChildrenResponse.resultCode match {
       case Code.OK => getChildrenResponse.children
@@ -849,6 +854,7 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * Deletes all isr change notifications.
    */
   def deleteIsrChangeNotifications(): Unit = {
+    // "/isr_change_notification"
     val getChildrenResponse = retryRequestUntilConnected(GetChildrenRequest(IsrChangeNotificationZNode.path))
     if (getChildrenResponse.resultCode == Code.OK) {
       deleteIsrChangeNotifications(getChildrenResponse.children.map(IsrChangeNotificationSequenceZNode.sequenceNumber))
@@ -926,10 +932,12 @@ class KafkaZkClient private (zooKeeperClient: ZooKeeperClient, isSecure: Boolean
    * @return optional (Int, Stat) that is Some if the controller epoch path exists and None otherwise.
    */
   def getControllerEpoch: Option[(Int, Stat)] = {
+    // ""/controller_epoch""
     val getDataRequest = GetDataRequest(ControllerEpochZNode.path)
     val getDataResponse = retryRequestUntilConnected(getDataRequest)
     getDataResponse.resultCode match {
       case Code.OK =>
+        // 解码
         val epoch = ControllerEpochZNode.decode(getDataResponse.data)
         Option(epoch, getDataResponse.stat)
       case Code.NONODE => None

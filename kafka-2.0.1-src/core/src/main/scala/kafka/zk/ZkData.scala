@@ -373,6 +373,7 @@ object AdminZNode {
 }
 
 object DeleteTopicsZNode {
+  // "/admin/delete_topics"
   def path = s"${AdminZNode.path}/delete_topics"
 }
 
