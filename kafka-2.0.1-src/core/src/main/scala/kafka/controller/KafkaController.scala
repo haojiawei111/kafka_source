@@ -464,6 +464,7 @@ class KafkaController(val config: KafkaConfig, zkClient: KafkaZkClient, time: Ti
 
   /**
     * This method marks the given replicas as offline. It does the following -
+    * 此方法将给定的副本标记为脱机。它做了以下 -
     * 1. Marks the given partitions as offline
     * 2. Triggers the OnlinePartition state change for all new/offline partitions
     * 3. Invokes the OfflineReplica state change on the input list of newly offline replicas
